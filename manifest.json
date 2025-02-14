@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "QuickBooks Time Manager",
+    "version": "1.0",
+    "description": "Manage QuickBooks Time data from a Chrome extension",
+    "permissions": ["identity", "storage", "activeTab"],
+    "host_permissions": ["https://rest.tsheets.com/api/*"],
+    "action": {
+      "default_popup": "popup/popup.html"
+    }
+  }
+  
