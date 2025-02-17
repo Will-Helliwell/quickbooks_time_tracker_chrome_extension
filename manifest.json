@@ -7,6 +7,9 @@
     "host_permissions": ["https://rest.tsheets.com/api/*"],
     "action": {
       "default_popup": "popup/popup.html"
+    },
+    "background": {
+      "service_worker": "background/auth.js"
     }
   }
   

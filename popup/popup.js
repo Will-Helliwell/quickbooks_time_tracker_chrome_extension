@@ -6,22 +6,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tabContents = document.querySelectorAll(".tab-content");
 
     // Check if user is already authenticated
-    const token = await chrome.storage.local.get("authToken");
-
-    if (token.authToken) {
-        loginScreen.classList.add("hidden");
-        mainContent.classList.remove("hidden");
-        loadClients();
-        loadSettings();
-    }
+    chrome.storage.local.get("authToken", (result) => {
+        if (result.authToken) {
+            loginScreen.classList.add("hidden");
+            mainContent.classList.remove("hidden");
+        }
+    });
 
     // Handle login
-    loginButton.addEventListener("click", async () => {
-        console.log("button clicked");
-        
-        await authenticateUser(); // OAuth function
-        loginScreen.classList.add("hidden");
-        mainContent.classList.remove("hidden");
+    loginButton.addEventListener("click", async () => {        
+        authenticateUser(); // OAuth function
+        // loginScreen.classList.add("hidden");
+        // mainContent.classList.remove("hidden");
         // loadClients();
         // loadSettings();
     });
