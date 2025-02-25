@@ -14,12 +14,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Handle login
-    loginButton.addEventListener("click", async () => {        
-        authenticateUser(); // OAuth function
-        // loginScreen.classList.add("hidden");
-        // mainContent.classList.remove("hidden");
-        // loadClients();
-        // loadSettings();
+    loginButton.addEventListener("click", async () => {
+        const isAuthenticated = await authenticateUser(); // Wait for OAuth result
+
+        if (isAuthenticated) {
+            loginScreen.classList.add("hidden");
+            mainContent.classList.remove("hidden");
+
+            // loadClients();
+            // loadSettings();
+        }
     });
 
     // Handle tab switching

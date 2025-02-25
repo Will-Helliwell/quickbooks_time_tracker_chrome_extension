@@ -12,34 +12,42 @@ const STATE = "123";
  * @returns {void}
  */
 function authenticateUser() {
-    chrome.identity.launchWebAuthFlow(
-        {
-            url: `https://rest.tsheets.com/api/v1/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URL}&state=${STATE}`,
-            interactive: true
-        },
-        (redirectUrl) => {
-            if (chrome.runtime.lastError) {
-                console.error("OAuth failed:", chrome.runtime.lastError);
-                return;
-            }
-            const params = new URLSearchParams(new URL(redirectUrl).search);
-            const authCode = params.get("code");
+    return new Promise((resolve) => {
+        chrome.identity.launchWebAuthFlow(
+            {
+                url: `https://rest.tsheets.com/api/v1/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URL}&state=${STATE}`,
+                interactive: true
+            },
+            (redirectUrl) => {
+                if (chrome.runtime.lastError) {
+                    console.error("OAuth failed:", chrome.runtime.lastError);
+                    resolve(false);
+                    return;
+                }
+                const params = new URLSearchParams(new URL(redirectUrl).search);
+                const authCode = params.get("code");
 
-            if (authCode) {
-                // Send the auth code to the background script for token exchange
-                const CLIENT_SECRET = document.getElementById("client-secret").value;
-                chrome.runtime.sendMessage(
-                    { action: "exchangeToken", code: authCode, clientSecret: CLIENT_SECRET }, 
-                    (response) => {
-                        if (response && !response.success) {
-                            alert("Login failed. Did you enter the client secret correctly?");
+                if (authCode) {
+                    const CLIENT_SECRET = document.getElementById("client-secret").value;
+                    chrome.runtime.sendMessage(
+                        { action: "exchangeToken", code: authCode, clientSecret: CLIENT_SECRET },
+                        (response) => {
+                            if (response && response.success) {
+                                resolve(true);
+                            } else {
+                                alert("Did you enter the client secret correctly?");
+                                resolve(false);
+                            }
                         }
-                    }
-                );
+                    );
+                } else {
+                    resolve(false);
+                }
             }
-        }
-    );
+        );
+    });
 }
+
 
 
 
