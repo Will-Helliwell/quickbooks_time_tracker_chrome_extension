@@ -1,7 +1,6 @@
 const CLIENT_ID = "c68135e240a7e3c9e314171a1acec86e";
 const REDIRECT_URL = `https://pcdfconcmbacamhingpjnbhjjhapkjke.chromiumapp.org/`
 const STATE = "123";
-const CLIENT_SECRET = "my_secret";
 
 /**
  * Initiates the OAuth authentication process using Chrome's identity API.
