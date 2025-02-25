@@ -1,15 +1,15 @@
 const CLIENT_ID = "c68135e240a7e3c9e314171a1acec86e";
 const REDIRECT_URL = `https://pcdfconcmbacamhingpjnbhjjhapkjke.chromiumapp.org/`
 const STATE = "123";
-const CLIENT_SECRET = "my_secret";
-
 /**
  * Listens for messages from other parts of the extension and exchanges an authorization code for an access token.
+ * Note - this is in a background script because QBT has a CORS policy that prevents the exchange from happening in a content script.
  *
  * @callback messageListener
  * @param {Object} request - The message sent from the sender.
  * @param {string} request.action - The action type, expected to be "exchangeToken".
  * @param {string} request.code - The authorization code received from QuickBooks Time.
+ * @param {string} request.client_secret - The client secret entered by the user.
  * @param {chrome.runtime.MessageSender} sender - The sender of the message.
  * @param {function} sendResponse - A callback function to send a response back to the sender.
  * @returns {boolean} Returns true to indicate the response will be sent asynchronously.
@@ -25,18 +25,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             body: new URLSearchParams({
                 grant_type: "authorization_code",
                 client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,  // Store securely!
-                code: request.code,  // The auth code from QuickBooks Time
+                client_secret: request.clientSecret, 
+                code: request.code,
                 redirect_uri: REDIRECT_URL
             })
         })
         .then(response => response.json())
         .then(data => {
-            
             if (data.access_token) {                
-                // Store token securely in Chrome storage
                 chrome.storage.local.set({ authToken: data.access_token, refreshToken: data.refresh_token });
-
                 sendResponse({ success: true, token: data.access_token });
             } else {
                 console.error("Token exchange failed:", data);

@@ -27,7 +27,15 @@ function authenticateUser() {
 
             if (authCode) {
                 // Send the auth code to the background script for token exchange
-                chrome.runtime.sendMessage({ action: "exchangeToken", code: authCode });
+                const CLIENT_SECRET = document.getElementById("client-secret").value;
+                chrome.runtime.sendMessage(
+                    { action: "exchangeToken", code: authCode, clientSecret: CLIENT_SECRET }, 
+                    (response) => {
+                        if (response && !response.success) {
+                            alert("Login failed. Did you enter the client secret correctly?");
+                        }
+                    }
+                );
             }
         }
     );
