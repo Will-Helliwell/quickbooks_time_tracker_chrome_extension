@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const loginScreen = document.getElementById("login-screen");
-    const mainContent = document.getElementById("main-content");
     const loginButton = document.getElementById("login-button");
+    const clientSecretInput = document.getElementById("client-secret");
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const mainContent = document.getElementById("main-content");
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabContents = document.querySelectorAll(".tab-content");
 
@@ -15,8 +17,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Handle login
     loginButton.addEventListener("click", async () => {
-        const isAuthenticated = await authenticateUser(); // Wait for OAuth result
-
+        loginButton.classList.add("hidden");
+        clientSecretInput.classList.add("hidden");
+        loadingSpinner.classList.remove("hidden");
+        const isAuthenticated = await authenticateUser();
+        loginButton.classList.remove("hidden");
+        clientSecretInput.classList.remove("hidden");
+        loadingSpinner.classList.add("hidden");
         if (isAuthenticated) {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
