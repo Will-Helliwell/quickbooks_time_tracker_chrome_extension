@@ -1,5 +1,5 @@
 const CLIENT_ID = "c68135e240a7e3c9e314171a1acec86e";
-const REDIRECT_URL = `https://pcdfconcmbacamhingpjnbhjjhapkjke.chromiumapp.org/`
+const REDIRECT_URL = chrome.identity.getRedirectURL();
 const STATE = "123";
 
 /**
