@@ -53,47 +53,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-/**
- * Loads the user profile by first checking local storage and updating the UI immediately if found.
- * If no stored profile is available, it fetches the latest user data from QuickBooks Time,
- * updates the UI, and stores the data for future use.
- * 
- * @async
- * @returns {Promise<void>} Resolves when the user data is retrieved and UI is updated.
- */
 async function loadUser() {
-    
-    // Try to get user data from local storage first and UI immediately if so
-    const storedUserProfile = await getUserProfileFromStorage();
-
-    if (storedUserProfile) {
-        updateUserUI(storedUserProfile);
-    } else {
-        // If no stored data, fetch from QuickBooks Time, save in storage and update UI
-        const updatedUserProfile = await fetchCurrentUserFromQuickBooks();
-        updateUserUI(updatedUserProfile);
-        saveUserProfileToStorage(updatedUserProfile);
-    }
-}
-
-/**
- * Retrieves the user profile from Chrome storage.
- * @returns {Promise<object|null>} The user profile object or null if not found.
- */
-function getUserProfileFromStorage() {
-    return new Promise((resolve) => {
-        chrome.storage.local.get("userProfile", (data) => {
-            resolve(data.userProfile || null);
-        });
-    });
-}
-
-/**
- * Saves the user profile to Chrome storage.
- * @param {object} user The user profile object to save.
- */
-function saveUserProfileToStorage(user) {
-    chrome.storage.local.set({ userProfile: user });
+    const userProfile = await getUserProfile();
+    updateUserUI(userProfile);
 }
 
 /**
@@ -107,20 +69,4 @@ function updateUserUI(user) {
     document.getElementById("user-full-name").textContent = userFullName;
     document.getElementById("user-company").textContent = user.company_name;
     document.getElementById("user-initials").textContent = userInitials;
-}
-
-
-async function fetchCurrentUserFromQuickBooks() {
-    return new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-            { action: "fetchCurrentUser" },
-            (response) => {                    
-                if (response && response.success) {
-                    resolve(response.user);
-                } else {
-                    resolve(false);
-                }
-            }
-        );
-    });
 }
