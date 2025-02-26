@@ -7,7 +7,7 @@ const STATE = "123";
  * 
  * This function launches a web authentication flow for the TSheets API, prompting
  * the user to authorize access. If successful, it retrieves the authorization code
- * from the redirect URL.
+ * from the redirect URL and exchanges it for an access token and refresh token by calling the background script.
  * 
  * @returns {void}
  */
@@ -46,6 +46,12 @@ function authenticateUser() {
             }
         );
     });
+}
+
+function logout() {
+    // remove all local storage
+    chrome.storage.local.clear();
+    window.location.reload();
 }
 
 

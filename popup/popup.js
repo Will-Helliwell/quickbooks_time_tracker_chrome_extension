@@ -32,6 +32,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    // Handle logout
+    document.getElementById("logout-button").addEventListener("click", () => {
+        logout();
+    });
+
     // Handle tab switching
     tabButtons.forEach(button => {
         button.addEventListener("click", () => {
