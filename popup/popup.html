@@ -6,10 +6,10 @@
     <title>QuickBooks Time Extension</title>
     <script src="/tailwind_cdn_v408.js"></script>
 </head>
-<body class="w-96 bg-gray-100 p-4">
+<body class="w-96 bg-gray-100">
 
     <!-- Login Screen -->
-    <div id="login-screen" class="flex flex-col items-center justify-center space-y-4">
+    <div id="login-screen" class="flex flex-col items-center justify-center space-y-4 p-4">
         <h1 class="text-xl font-semibold">QuickBooks Time Tracker</h1>
         <div class="w-64 flex flex-col items-center justify-center">
             <input id="client-secret" type="password" class="w-full border rounded-md p-2 mb-2" placeholder="Enter Secret">
@@ -28,6 +28,20 @@
 
     <!-- Main Content (Hidden Until Logged In) -->
     <div id="main-content" class="hidden">
+        <!-- User Info Top Bar -->
+        <div id="user-info" class="bg-white border-b px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold mr-2" id="user-initials"></div>
+                <div>
+                    <span class="text-sm font-medium text-gray-800" id="user-full-name"></span>
+                    <span class="text-xs text-gray-500 ml-1" id="user-company"></span>
+                </div>
+            </div>
+            <!-- <button id="logout-button" class="text-xs text-gray-500 hover:text-red-600">
+                Logout
+            </button> -->
+        </div>
+        
         <!-- Tab Navigation -->
         <div class="flex justify-between border-b mb-4">
             <button class="tab-button px-4 py-2 text-gray-600 hover:text-black active" data-tab="clients-screen">
@@ -39,7 +53,7 @@
         </div>
 
         <!-- Clients Page -->
-        <div id="clients-screen" class="tab-content">
+        <div id="clients-screen" class="tab-content p-4">
             <h2 class="text-lg font-semibold mb-2">Clients</h2>
             <table class="w-full bg-white shadow-md rounded-lg">
                 <thead>
@@ -55,7 +69,7 @@
         </div>
 
         <!-- Settings Page -->
-        <div id="settings-screen" class="tab-content hidden">
+        <div id="settings-screen" class="tab-content hidden p-4">
             <h2 class="text-lg font-semibold mb-2">Settings</h2>
             <label for="color-theme" class="block text-sm font-medium text-gray-700">Theme Color:</label>
             <input type="color" id="color-theme" class="mt-1 w-full border rounded-md p-1">

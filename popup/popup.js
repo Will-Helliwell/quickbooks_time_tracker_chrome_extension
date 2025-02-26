@@ -27,7 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (isAuthenticated) {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
-
+            
+            loadUser();
             // loadClients();
             // loadSettings();
         }
@@ -46,23 +47,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // Load clients data
-    async function loadClients() {
-        const clientsTable = document.querySelector("#clients-screen tbody");
-        clientsTable.innerHTML = ""; // Clear table
-        const clients = await fetchClientsFromQuickBooks(); // Fetch data from API
-
-        clients.forEach(client => {
-            const row = document.createElement("tr");
-            row.innerHTML = `<td class="p-2">${client.name}</td><td class="p-2">${client.hoursWorked}</td>`;
-            clientsTable.appendChild(row);
-        });
+    async function loadUser() {
+        const userInitialsContainer = document.getElementById("user-initials");
+        const userFullNameContainer = document.getElementById("user-full-name");
+        const userCompanyContainer = document.getElementById("user-company");
+        const user = await fetchCurrentUserFromQuickBooks();
+        const userFirstName = user.first_name;
+        const userLastName = user.last_name;
+        const userCompany = user.company_name;
+        const userFullName = `${userFirstName} ${userLastName}`;
+        const userInitials = `${userFirstName[0]}${userLastName[0]}`;
+        userFullNameContainer.textContent = userFullName;
+        userCompanyContainer.textContent = userCompany;
+        userInitialsContainer.textContent = userInitials;
     }
 
-    // Load settings
-    async function loadSettings() {
-        const result = await chrome.storage.local.get("colorTheme");
-        document.getElementById("color-theme").value = result.colorTheme || "#000000";
+    async function fetchCurrentUserFromQuickBooks() {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage(
+                { action: "fetchCurrentUser" },
+                (response) => {                    
+                    if (response && response.success) {
+                        resolve(response.user);
+                    } else {
+                        resolve(false);
+                    }
+                }
+            );
+        });
     }
 
     // Save settings
