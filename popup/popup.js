@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (result.authToken) {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
+            loadUser();
         }
     });
 
@@ -27,10 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (isAuthenticated) {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
-            
             loadUser();
-            // loadClients();
-            // loadSettings();
         }
     });
 
@@ -47,36 +45,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    async function loadUser() {
-        const userInitialsContainer = document.getElementById("user-initials");
-        const userFullNameContainer = document.getElementById("user-full-name");
-        const userCompanyContainer = document.getElementById("user-company");
-        const user = await fetchCurrentUserFromQuickBooks();
-        const userFirstName = user.first_name;
-        const userLastName = user.last_name;
-        const userCompany = user.company_name;
-        const userFullName = `${userFirstName} ${userLastName}`;
-        const userInitials = `${userFirstName[0]}${userLastName[0]}`;
-        userFullNameContainer.textContent = userFullName;
-        userCompanyContainer.textContent = userCompany;
-        userInitialsContainer.textContent = userInitials;
-    }
-
-    async function fetchCurrentUserFromQuickBooks() {
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage(
-                { action: "fetchCurrentUser" },
-                (response) => {                    
-                    if (response && response.success) {
-                        resolve(response.user);
-                    } else {
-                        resolve(false);
-                    }
-                }
-            );
-        });
-    }
-
     // Save settings
     document.getElementById("save-settings").addEventListener("click", async () => {
         const color = document.getElementById("color-theme").value;
@@ -84,3 +52,75 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Settings saved!");
     });
 });
+
+/**
+ * Loads the user profile by first checking local storage and updating the UI immediately if found.
+ * If no stored profile is available, it fetches the latest user data from QuickBooks Time,
+ * updates the UI, and stores the data for future use.
+ * 
+ * @async
+ * @returns {Promise<void>} Resolves when the user data is retrieved and UI is updated.
+ */
+async function loadUser() {
+    
+    // Try to get user data from local storage first and UI immediately if so
+    const storedUserProfile = await getUserProfileFromStorage();
+
+    if (storedUserProfile) {
+        updateUserUI(storedUserProfile);
+    } else {
+        // If no stored data, fetch from QuickBooks Time, save in storage and update UI
+        const updatedUserProfile = await fetchCurrentUserFromQuickBooks();
+        updateUserUI(updatedUserProfile);
+        saveUserProfileToStorage(updatedUserProfile);
+    }
+}
+
+/**
+ * Retrieves the user profile from Chrome storage.
+ * @returns {Promise<object|null>} The user profile object or null if not found.
+ */
+function getUserProfileFromStorage() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get("userProfile", (data) => {
+            resolve(data.userProfile || null);
+        });
+    });
+}
+
+/**
+ * Saves the user profile to Chrome storage.
+ * @param {object} user The user profile object to save.
+ */
+function saveUserProfileToStorage(user) {
+    chrome.storage.local.set({ userProfile: user });
+}
+
+/**
+ * Updates the DOM with user data.
+ * @param {object} user The user profile object.
+ */
+function updateUserUI(user) {
+    const userFullName = `${user.first_name} ${user.last_name}`;
+    const userInitials = `${user.first_name[0]}${user.last_name[0]}`;
+
+    document.getElementById("user-full-name").textContent = userFullName;
+    document.getElementById("user-company").textContent = user.company_name;
+    document.getElementById("user-initials").textContent = userInitials;
+}
+
+
+async function fetchCurrentUserFromQuickBooks() {
+    return new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+            { action: "fetchCurrentUser" },
+            (response) => {                    
+                if (response && response.success) {
+                    resolve(response.user);
+                } else {
+                    resolve(false);
+                }
+            }
+        );
+    });
+}

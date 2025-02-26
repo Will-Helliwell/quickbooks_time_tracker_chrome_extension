@@ -35,7 +35,7 @@ function authenticateUser() {
                             if (response && response.success) {
                                 resolve(true);
                             } else {
-                                alert("Did you enter the client secret correctly?");
+                                alert("Login failed. Did you enter the client secret correctly?");
                                 resolve(false);
                             }
                         }
