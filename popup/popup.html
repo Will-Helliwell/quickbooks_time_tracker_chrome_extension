@@ -16,8 +16,12 @@
             <button id="login-button" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700">
                 Proceed to login with QuickBooks Time
             </button>
-            <div id="loading-spinner" class="hidden">
-                <span>Redirecting you to QuickBooks Login...</span> <!-- This can be replaced with a spinner icon -->
+            <div id="loading-spinner" class="hidden flex flex-col items-center justify-center">
+                <svg class="animate-spin h-12 w-12 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V4a12 12 0 00-12 12h4z"></path>
+                </svg>                
+                <span>Redirecting you to login with QuickBooks...</span> <!-- This can be replaced with a spinner icon -->
             </div>
         </div>
     </div>
