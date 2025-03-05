@@ -1,6 +1,6 @@
 /**
  * Listens for messages from other parts of the extension and processes requests.
- * Handles fetching the current user from the TSheets API using the stored access token.
+ * Handles requests to the TSheets API (excluding authentication).
  * 
  * @param {Object} request - The message request object.
  * @param {chrome.runtime.MessageSender} sender - The sender of the message.

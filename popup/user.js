@@ -5,7 +5,7 @@
  * @async
  * @returns {Promise<object>} The user profile object.
  */
-async function getUserProfile() {
+export async function getUserProfile() {
     
     // Try to get user data from local storage first and UI immediately if so
     const storedUserProfile = await getUserProfileFromStorage();

@@ -1,3 +1,7 @@
+import { authenticateUser } from "/popup/auth.js";
+import { getUserProfile } from "/popup/user.js";
+import { logout } from "/popup/auth.js";
+
 document.addEventListener("DOMContentLoaded", async () => {
     const loginScreen = document.getElementById("login-screen");
     const loginButton = document.getElementById("login-button");

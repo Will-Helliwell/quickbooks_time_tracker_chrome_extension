@@ -1,15 +1,23 @@
 {
-    "manifest_version": 3,
-    "name": "QuickBooks Time Manager",
-    "version": "1.0",
-    "description": "Manage QuickBooks Time data from a Chrome extension",
-    "permissions": ["identity", "storage", "activeTab"],
-    "host_permissions": ["https://rest.tsheets.com/api/*"],
-    "action": {
-      "default_popup": "popup/popup.html"
-    },
-    "background": {
-      "service_worker": "background/background.js"
-    }
+  "manifest_version": 3,
+  "name": "QuickBooks Time Manager",
+  "version": "1.0",
+  "description": "Manage QuickBooks Time data from a Chrome extension",
+  "permissions": [
+    "identity",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://rest.tsheets.com/api/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "env": {
+    "CLIENT_ID": "c68135e240a7e3c9e314171a1acec86e"
   }
-  
+}

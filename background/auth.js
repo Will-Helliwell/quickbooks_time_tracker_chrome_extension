@@ -1,6 +1,5 @@
-const CLIENT_ID = "c68135e240a7e3c9e314171a1acec86e";
+const CLIENT_ID = chrome.runtime.getManifest().env.CLIENT_ID;
 const REDIRECT_URL = chrome.identity.getRedirectURL();
-const STATE = "123";
 /**
  * Listens for messages from other parts of the extension and exchanges an authorization code for an access token.
  * Note - this is in a background script because QBT has a CORS policy that prevents the exchange from happening in a content script.
@@ -16,7 +15,7 @@ const STATE = "123";
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {    
     // exchange the authorization code for an access token and refresh token, then store both locally
-    if (request.action === "exchangeToken") {
+    if (request.action === "exchangeToken") {        
         fetch("https://rest.tsheets.com/api/v1/grant", { 
             method: "POST",
             headers: {
@@ -31,8 +30,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             })
         })
         .then(response => response.json())
-        .then(data => {
-            if (data.access_token) {                
+        .then(data => {            
+            if (data.access_token) {        
                 chrome.storage.local.set({ authToken: data.access_token, refreshToken: data.refresh_token });
                 sendResponse({ success: true, token: data.access_token });
             } else {

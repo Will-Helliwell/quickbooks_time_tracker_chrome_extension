@@ -1,5 +1,5 @@
-const CLIENT_ID = "c68135e240a7e3c9e314171a1acec86e";
-const REDIRECT_URL = chrome.identity.getRedirectURL();
+const CLIENT_ID = chrome.runtime.getManifest().env.CLIENT_ID;
+import { REDIRECT_URL } from '/src/config.js';
 const STATE = "123";
 
 /**
@@ -11,7 +11,7 @@ const STATE = "123";
  * 
  * @returns {void}
  */
-function authenticateUser() {
+export function authenticateUser() {    
     return new Promise((resolve) => {
         chrome.identity.launchWebAuthFlow(
             {
@@ -48,7 +48,7 @@ function authenticateUser() {
     });
 }
 
-function logout() {
+export function logout() {
     // remove all local storage
     chrome.storage.local.clear();
     window.location.reload();
