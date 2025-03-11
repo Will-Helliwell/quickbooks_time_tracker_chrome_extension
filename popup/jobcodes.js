@@ -1,6 +1,7 @@
 export async function updateJobcodesFromAPI() {
   const jobcodesAPIResponse = await getJobcodesFromAPI();
   const jobcodes = processJobcodesAPIResponse(jobcodesAPIResponse);
+  await updateJobcodesInStorage(jobcodes);
   return jobcodes;
 }
 
@@ -17,11 +18,8 @@ async function getJobcodesFromAPI() {
 }
 
 function processJobcodesAPIResponse(response) {
-
   const jobcodes = response.jobcodesResponse.results.jobcodes;
-
   addParentPathName(jobcodes);
-
   return jobcodes;
 }
 
@@ -60,4 +58,43 @@ function getParentPathName(jobcodes, parent_id) {
     parentPathName = jobcodes[parent_id].name;
   }
   return parentPathName + "/";
+}
+
+/**
+ * Retrieves the user profile from Chrome storage.
+ * @returns {Promise<object|null>} The user profile object or null if not found.
+ */
+function getJobcodesFromStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(null, (data) => {
+      console.log("Full storage contents:", data);
+      resolve(data["jobcodes"] || null);
+    });
+  });
+}
+
+async function updateJobcodesInStorage(jobcodesFromAPI) {
+  let jobcodesFromStorage = await getJobcodesFromStorage();
+
+  // iterate over each jobcode received from the API
+  for (const APIJobcodeId in jobcodesFromAPI) {
+    // if there are no jobcodes in local storage, initialize it
+    if (jobcodesFromStorage === null) {
+      jobcodesFromStorage = {};
+    }
+
+    // if the jobcode does not exist in local storage, then add it
+    if (!jobcodesFromStorage.hasOwnProperty(APIJobcodeId)) {
+      jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+    } else if (
+      // if the jobcode already exists in local storage and the last_modified timestamp is different, then update it
+      jobcodesFromStorage[APIJobcodeId].last_modified !==
+      jobcodesFromAPI[APIJobcodeId].last_modified
+    ) {
+      jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+    }
+  }
+
+  // overwrite the jobcodes local storage with the updated version
+  chrome.storage.local.set({ jobcodes: jobcodesFromStorage });
 }
