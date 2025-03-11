@@ -1,5 +1,6 @@
 import { authenticateUser } from "/popup/auth.js";
 import { getUserProfile } from "/popup/user.js";
+import { getJobcodesFromAPI } from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
             loadUser();
+            // get jobcodes from local storage to update UI
         }
     });
 
@@ -33,7 +35,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             loginScreen.classList.add("hidden");
             mainContent.classList.remove("hidden");
             loadUser();
+            // get jobcodes from local storage to update UI (for instant rendering)
+            // update jobcodes in local storage from api
+            // get jobcodes from local storage to update UI
         }
+    });
+
+    // Handle get jobcodes
+    document.getElementById("get-jobcodes").addEventListener("click", async () => {
+        handleJobcodesButton();
     });
 
     // Handle logout
@@ -78,4 +88,9 @@ function updateUserUI(user) {
     document.getElementById("user-full-name").textContent = userFullName;
     document.getElementById("user-company").textContent = user.company_name;
     document.getElementById("user-initials").textContent = userInitials;
+}
+
+
+async function handleJobcodesButton() {
+    const jobcodes = await getJobcodesFromAPI();
 }
