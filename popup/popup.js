@@ -1,6 +1,6 @@
 import { authenticateUser } from "/popup/auth.js";
 import { getUserProfile } from "/popup/user.js";
-import { getJobcodesFromAPI } from "/popup/jobcodes.js";
+import { updateJobcodesFromAPI } from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -92,5 +92,5 @@ function updateUserUI(user) {
 
 
 async function handleJobcodesButton() {
-    const jobcodes = await getJobcodesFromAPI();
+    const jobcodes = await updateJobcodesFromAPI();
 }
