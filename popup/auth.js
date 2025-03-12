@@ -55,7 +55,7 @@ export function authenticateUser() {
 }
 
 export function logout() {
-  // remove all local storage
-  chrome.storage.local.clear();
+  chrome.storage.local.remove("authToken");
+  chrome.storage.local.remove("refreshToken");
   window.location.reload();
 }
