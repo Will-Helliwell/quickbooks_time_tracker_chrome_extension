@@ -1,4 +1,5 @@
 export async function updateJobcodesFromAPI() {
+  // update jobcodes from API
   let jobcodesAPIResponse = await getJobcodesFromAPI();
   jobcodesAPIResponse = processJobcodesAPIResponse(jobcodesAPIResponse);
   let jobcodesFromStorage = await getJobcodesFromStorage();
@@ -7,16 +8,12 @@ export async function updateJobcodesFromAPI() {
     jobcodesFromStorage
   );
 
+  // update timesheets from API
   const timesheetsAPIResponse = await getTimesheetsFromAPI();
-  console.log("Timesheets API response:");
-  console.log(timesheetsAPIResponse);
   updatedJobcodes = updateMemoryWithTimesheetsFromAPI(
     timesheetsAPIResponse,
     updatedJobcodes
   );
-
-  console.log("final updatedJobcodes:");
-  console.log(updatedJobcodes);
 
   chrome.storage.local.set({ jobcodes: updatedJobcodes });
 
@@ -87,7 +84,6 @@ function getParentPathName(jobcodes, parent_id) {
 function getJobcodesFromStorage() {
   return new Promise((resolve) => {
     chrome.storage.local.get(null, (data) => {
-      console.log("Full storage contents:", data);
       resolve(data["jobcodes"] || null);
     });
   });
@@ -110,14 +106,19 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
     // if the jobcode does not exist in the arrayToUpdate, then add it
     if (!arrayToUpdate.hasOwnProperty(APIJobcodeId)) {
       arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
-      // add a timesheets object to the jobcode, initialized as an empty object
+
       arrayToUpdate[APIJobcodeId].timesheets = {};
     } else if (
-      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update it
+      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update it (preserving the timesheets object)
       arrayToUpdate[APIJobcodeId].last_modified !==
       jobcodesFromAPI[APIJobcodeId].last_modified
     ) {
-      arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+      // arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+      // update, preserving the timsheets object
+      arrayToUpdate[APIJobcodeId] = {
+        ...jobcodesFromAPI[APIJobcodeId],
+        timesheets: arrayToUpdate[APIJobcodeId].timesheets,
+      };
     }
   }
 
