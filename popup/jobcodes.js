@@ -1,11 +1,18 @@
 export async function updateJobcodesFromAPI() {
-  const jobcodesAPIResponse = await getJobcodesFromAPI();
-  const jobcodes = processJobcodesAPIResponse(jobcodesAPIResponse);
-  await updateJobcodesInStorage(jobcodes);
+  let jobcodesAPIResponse = await getJobcodesFromAPI();
+  jobcodesAPIResponse = processJobcodesAPIResponse(jobcodesAPIResponse);
+  let jobcodesFromStorage = await getJobcodesFromStorage();
+  const updatedJobcodes = updateJobcodesArray(
+    jobcodesAPIResponse,
+    jobcodesFromStorage
+  );
+  chrome.storage.local.set({ jobcodes: updatedJobcodes });
 
   const timesheetsAPIResponse = await getTimesheetsFromAPI();
+  console.log("Timesheets API response in :");
+  console.log(timesheetsAPIResponse);
 
-  return jobcodes;
+  return true;
 }
 
 // JOBCODES
@@ -78,33 +85,47 @@ function getJobcodesFromStorage() {
   });
 }
 
-async function updateJobcodesInStorage(jobcodesFromAPI) {
-  let jobcodesFromStorage = await getJobcodesFromStorage();
+function updateJobcodesArray(jobcodesFromAPI, jobcodesFromStorage) {
+  console.log("in updateJobcodesArray()");
+  console.log("jobcodesFromAPI:");
+  console.log(jobcodesFromAPI);
+  console.log("jobcodesFromStorage:");
+  console.log(jobcodesFromStorage);
 
   // iterate over each jobcode received from the API
   for (const APIJobcodeId in jobcodesFromAPI) {
     // if there are no jobcodes in local storage, initialize it
+    console.log("APIJobcodeId: " + APIJobcodeId);
     if (jobcodesFromStorage === null) {
+      console.log("initializing jobcodesFromStorage");
       jobcodesFromStorage = {};
     }
 
     // if the jobcode does not exist in local storage, then add it
     if (!jobcodesFromStorage.hasOwnProperty(APIJobcodeId)) {
+      console.log("adding jobcode to jobcodesFromStorage");
       jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
     } else if (
       // if the jobcode already exists in local storage and the last_modified timestamp is different, then update it
       jobcodesFromStorage[APIJobcodeId].last_modified !==
       jobcodesFromAPI[APIJobcodeId].last_modified
     ) {
+      console.log("updating jobcode in jobcodesFromStorage");
       jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+    } else {
+      console.log(
+        "jobcode already exists in jobcodesFromStorage, doing nothing"
+      );
     }
   }
+  console.log("final jobcodesFromStorage:");
+  console.log(jobcodesFromStorage);
 
-  // overwrite the jobcodes local storage with the updated version
-  chrome.storage.local.set({ jobcodes: jobcodesFromStorage });
+  return jobcodesFromStorage;
 }
 
 // TIMESHEETS
+
 async function getTimesheetsFromAPI() {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ action: "fetchTimesheets" }, (response) => {
