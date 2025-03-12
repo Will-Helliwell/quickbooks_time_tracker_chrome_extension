@@ -35,7 +35,8 @@ export async function updateUserProfileFromAPI() {
     return userProfileStored;
   } else {
     // If the same user has logged in and stored user profile is outdated, then update the storage with the latest data and return it
-    userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
+    userProfileAPI.last_fetched_timesheets =
+      userProfileStored.last_fetched_timesheets; // preserve last_fetched_timesheets
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }

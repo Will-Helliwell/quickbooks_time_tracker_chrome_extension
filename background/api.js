@@ -105,12 +105,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
 
             const userId = userProfile.id;
+
+            // if the user has fetched timesheets before, limit the fetch to the last fetched date. Else fetch from the user's created date
             const userCreatedTimestamp = userProfile.created;
             const userCreatedDate = new Date(userCreatedTimestamp);
             const userCreatedDateString = `${userCreatedDate.getFullYear()}-${userCreatedDate.getMonth()}-${userCreatedDate.getDate()}`; // format YYYY-MM-DD
+            const fetch_timesheets_from_date =
+              userProfile.last_fetched_timesheets
+                ? userProfile.last_fetched_timesheets.substring(0, 10)
+                : userCreatedDateString;
 
             fetch(
-              `https://rest.tsheets.com/api/v1/timesheets?start_date=${userCreatedDateString}&user_ids=${userId}`,
+              `https://rest.tsheets.com/api/v1/timesheets?start_date=${fetch_timesheets_from_date}&user_ids=${userId}`,
               {
                 method: "GET",
                 headers: {
@@ -122,6 +128,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               .then((response) => response.json())
               .then((data) => {
                 if (data.results) {
+                  // save the last fetched timesheets timestamp to the userProfile object in chrome storage
+                  userProfile.last_fetched_timesheets =
+                    new Date().toISOString();
+                  chrome.storage.local.set({ userProfile: userProfile });
                   sendResponse({ success: true, timesheetsResponse: data });
                 } else {
                   console.error("Get timesheets failed:", data);
