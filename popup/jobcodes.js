@@ -2,15 +2,23 @@ export async function updateJobcodesFromAPI() {
   let jobcodesAPIResponse = await getJobcodesFromAPI();
   jobcodesAPIResponse = processJobcodesAPIResponse(jobcodesAPIResponse);
   let jobcodesFromStorage = await getJobcodesFromStorage();
-  const updatedJobcodes = updateJobcodesArray(
+  let updatedJobcodes = updateMemoryWithJobcodesFromAPI(
     jobcodesAPIResponse,
     jobcodesFromStorage
   );
-  chrome.storage.local.set({ jobcodes: updatedJobcodes });
 
   const timesheetsAPIResponse = await getTimesheetsFromAPI();
-  console.log("Timesheets API response in :");
+  console.log("Timesheets API response:");
   console.log(timesheetsAPIResponse);
+  updatedJobcodes = updateMemoryWithTimesheetsFromAPI(
+    timesheetsAPIResponse,
+    updatedJobcodes
+  );
+
+  console.log("final updatedJobcodes:");
+  console.log(updatedJobcodes);
+
+  chrome.storage.local.set({ jobcodes: updatedJobcodes });
 
   return true;
 }
@@ -85,43 +93,35 @@ function getJobcodesFromStorage() {
   });
 }
 
-function updateJobcodesArray(jobcodesFromAPI, jobcodesFromStorage) {
-  console.log("in updateJobcodesArray()");
-  console.log("jobcodesFromAPI:");
-  console.log(jobcodesFromAPI);
-  console.log("jobcodesFromStorage:");
-  console.log(jobcodesFromStorage);
-
+/**
+ * Updates the jobcodes in memory with the jobcodes received from the API.
+ * @param {object} jobcodesFromAPI - The jobcodes object received from the API.
+ * @param {object|null} arrayToUpdate - The jobcodes object in memory to update.
+ * @returns {object} The updated jobcodes object.
+ */
+function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
   // iterate over each jobcode received from the API
   for (const APIJobcodeId in jobcodesFromAPI) {
-    // if there are no jobcodes in local storage, initialize it
-    console.log("APIJobcodeId: " + APIJobcodeId);
-    if (jobcodesFromStorage === null) {
-      console.log("initializing jobcodesFromStorage");
-      jobcodesFromStorage = {};
+    // if there are no jobcodes in the arrayToUpdate, initialize it
+    if (arrayToUpdate === null) {
+      arrayToUpdate = {};
     }
 
-    // if the jobcode does not exist in local storage, then add it
-    if (!jobcodesFromStorage.hasOwnProperty(APIJobcodeId)) {
-      console.log("adding jobcode to jobcodesFromStorage");
-      jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+    // if the jobcode does not exist in the arrayToUpdate, then add it
+    if (!arrayToUpdate.hasOwnProperty(APIJobcodeId)) {
+      arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
+      // add a timesheets object to the jobcode, initialized as an empty object
+      arrayToUpdate[APIJobcodeId].timesheets = {};
     } else if (
-      // if the jobcode already exists in local storage and the last_modified timestamp is different, then update it
-      jobcodesFromStorage[APIJobcodeId].last_modified !==
+      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update it
+      arrayToUpdate[APIJobcodeId].last_modified !==
       jobcodesFromAPI[APIJobcodeId].last_modified
     ) {
-      console.log("updating jobcode in jobcodesFromStorage");
-      jobcodesFromStorage[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
-    } else {
-      console.log(
-        "jobcode already exists in jobcodesFromStorage, doing nothing"
-      );
+      arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
     }
   }
-  console.log("final jobcodesFromStorage:");
-  console.log(jobcodesFromStorage);
 
-  return jobcodesFromStorage;
+  return arrayToUpdate;
 }
 
 // TIMESHEETS
@@ -136,4 +136,56 @@ async function getTimesheetsFromAPI() {
       }
     });
   });
+}
+
+/**
+ * Updates the jobcodes in memory with the timesheets received from the API.
+ * @param {object} timesheetsAPIResponse - The timesheets object received from the API.
+ * @param {object} arrayToUpdate - The jobcodes object in memory to update.
+ * @returns {object} The updated jobcodes object.
+ */
+function updateMemoryWithTimesheetsFromAPI(
+  timesheetsAPIResponse,
+  arrayToUpdate
+) {
+  const timesheetsFromAPI =
+    timesheetsAPIResponse.timesheetsResponse.results.timesheets;
+
+  // iterate over each timesheet received from the API
+  for (const APITimesheetId in timesheetsFromAPI) {
+    const APITimesheetJobcodeId = timesheetsFromAPI[APITimesheetId].jobcode_id;
+
+    // if the jobcode for the timesheet doesn't exist in memory yet, then skip it for now
+    if (!arrayToUpdate.hasOwnProperty(APITimesheetJobcodeId)) {
+      continue;
+    }
+
+    // find the jobcode associated with the timesheet
+    const memoryJobcode = arrayToUpdate[APITimesheetJobcodeId];
+
+    // if there are no timesheets for the jobcode in memory, initialize an empty object
+    if (!memoryJobcode.hasOwnProperty("timesheets")) {
+      memoryJobcode.timesheets = {};
+    }
+    // get the timesheets we already have for the jobcode in memory
+    const memoryJobcodeTimesheets = memoryJobcode.timesheets;
+
+    // if the timesheet does not exist in memory, then add it
+    if (!memoryJobcodeTimesheets.hasOwnProperty(APITimesheetId)) {
+      memoryJobcodeTimesheets[APITimesheetId] =
+        timesheetsFromAPI[APITimesheetId];
+    } else if (
+      // if the timesheet already exists in memory and the last_modified timestamp is different, then update it
+      memoryJobcodeTimesheets[APITimesheetId].last_modified !==
+      timesheetsFromAPI[APITimesheetId].last_modified
+    ) {
+      memoryJobcodeTimesheets[APITimesheetId] =
+        timesheetsFromAPI[APITimesheetId];
+    }
+
+    // update the jobcode in arrayToUpdate with the new timesheets
+    arrayToUpdate[APITimesheetJobcodeId].timesheets = memoryJobcodeTimesheets;
+  }
+
+  return arrayToUpdate;
 }
