@@ -1,5 +1,8 @@
 import { authenticateUser } from "/popup/auth.js";
-import { getUserProfile } from "/popup/user.js";
+import {
+  updateUserProfileFromAPI,
+  getUserProfileFromStorage,
+} from "/popup/user.js";
 import { updateJobcodesFromAPI } from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
@@ -17,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (result.authToken) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
-      loadUser();
+      loadUserFromLocalStorage();
       // get jobcodes from local storage to update UI
     }
   });
@@ -34,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isAuthenticated) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
-      loadUser();
+      loadUserFromAPI();
       // get jobcodes from local storage to update UI (for instant rendering)
       // update jobcodes in local storage from api
       // get jobcodes from local storage to update UI
@@ -78,8 +81,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-async function loadUser() {
-  const userProfile = await getUserProfile();
+async function loadUserFromAPI() {
+  const userProfile = await updateUserProfileFromAPI();
+  updateUserUI(userProfile);
+}
+
+async function loadUserFromLocalStorage() {
+  const userProfile = await getUserProfileFromStorage();
   updateUserUI(userProfile);
 }
 

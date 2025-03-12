@@ -97,7 +97,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // get the user id and created from the userProfile object in chrome storage
-        getUserProfile()
+        getUserProfileFromLocalStorage()
           .then((userProfile) => {
             if (!userProfile) {
               sendResponse({ success: false, error: "No user profile found" });
@@ -167,7 +167,7 @@ async function getAuthToken() {
  * Retrieves the User Profile from Chrome's local storage.
  * @returns {Promise<string>} A promise that resolves to the user profile.
  */
-async function getUserProfile() {
+async function getUserProfileFromLocalStorage() {
   return new Promise((resolve) => {
     chrome.storage.local.get("userProfile", (result) => {
       if (chrome.runtime.lastError) {

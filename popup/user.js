@@ -5,19 +5,39 @@
  * @async
  * @returns {Promise<object>} The user profile object.
  */
-export async function getUserProfile() {
-  // Try to get user data from local storage first and UI immediately if so
-  const storedUserProfile = await getUserProfileFromStorage();
+export async function updateUserProfileFromAPI() {
+  const userProfileAPI = await fetchCurrentUserFromQuickBooks();
+  const userProfileAPILastModifiedTimestamp = userProfileAPI.last_modified;
+  const userProfileStored = await getUserProfileFromStorage();
 
-  if (storedUserProfile) {
-    // updateUserUI(storedUserProfile);
-    return storedUserProfile;
+  // If no nobody has logged in before, save the fetched user profile and return it
+  if (!userProfileStored) {
+    userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
+    saveUserProfileToStorage(userProfileAPI);
+    return userProfileAPI;
+  }
+
+  const userProfileStoredLastModifiedTimestamp =
+    userProfileStored.last_modified;
+  const userProfileStoredUserId = userProfileStored.id;
+
+  // If a different user has logged in on the same machine, log the old user out and save the fetched user profile
+  if (userProfileStoredUserId !== userProfileAPI.id) {
+    userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
+    saveUserProfileToStorage(userProfileAPI);
+    chrome.storage.local.remove("jobcodes"); // delete jobcodes from local storage to log the old user out
+    return userProfileAPI;
+  } else if (
+    // If the same user has logged in and the stored user profile is up-to-date, return it
+    userProfileStoredLastModifiedTimestamp ===
+    userProfileAPILastModifiedTimestamp
+  ) {
+    return userProfileStored;
   } else {
-    // If no stored data, fetch from QuickBooks Time, save in storage and update UI
-    const updatedUserProfile = await fetchCurrentUserFromQuickBooks();
-    // updateUserUI(updatedUserProfile);
-    saveUserProfileToStorage(updatedUserProfile);
-    return updatedUserProfile;
+    // If the same user has logged in and stored user profile is outdated, then update the storage with the latest data and return it
+    userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
+    saveUserProfileToStorage(userProfileAPI);
+    return userProfileAPI;
   }
 }
 
@@ -25,7 +45,7 @@ export async function getUserProfile() {
  * Retrieves the user profile from Chrome storage.
  * @returns {Promise<object|null>} The user profile object or null if not found.
  */
-function getUserProfileFromStorage() {
+export async function getUserProfileFromStorage() {
   return new Promise((resolve) => {
     chrome.storage.local.get("userProfile", (data) => {
       resolve(data.userProfile || null);
