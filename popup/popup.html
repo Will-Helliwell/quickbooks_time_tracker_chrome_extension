@@ -1,27 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickBooks Time Extension</title>
     <script src="/tailwind_cdn_v408.js"></script>
 </head>
+
 <body class="w-96 bg-gray-100">
 
     <!-- Login Screen -->
     <div id="login-screen" class="flex flex-col items-center justify-center space-y-4 p-4">
         <h1 class="text-xl font-semibold">QuickBooks Time Tracker</h1>
         <div class="w-64 flex flex-col items-center justify-center">
-            <input id="client-secret" type="password" class="w-full border rounded-md p-2 mb-2" placeholder="Enter Secret">
-            <button id="login-button" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700">
+            <input id="client-secret" type="password" class="w-full border rounded-md p-2 mb-2"
+                placeholder="Enter Secret">
+            <button id="login-button"
+                class="w-full px-4 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700">
                 Proceed to login with QuickBooks Time
             </button>
             <div id="loading-spinner" class="hidden flex flex-col items-center justify-center">
-                <svg class="animate-spin h-12 w-12 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-12 w-12 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V4a12 12 0 00-12 12h4z"></path>
-                </svg>                
-                <span class="text-center">Redirecting you to login with QuickBooks Time...</span> <!-- This can be replaced with a spinner icon -->
+                </svg>
+                <span class="text-center">Redirecting you to login with QuickBooks Time...</span>
+                <!-- This can be replaced with a spinner icon -->
             </div>
         </div>
     </div>
@@ -31,7 +37,8 @@
         <!-- User Info Top Bar -->
         <div id="user-info" class="bg-white border-b px-4 py-2 flex items-center justify-between">
             <div class="flex items-center">
-                <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold mr-2" id="user-initials"></div>
+                <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold mr-2"
+                    id="user-initials"></div>
                 <div>
                     <span class="text-sm font-medium text-gray-800" id="user-full-name"></span>
                     <span class="text-xs text-gray-500 ml-1" id="user-company"></span>
@@ -46,7 +53,7 @@
         <button id="get-jobcodes" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
             Get Jobcodes
         </button>
-        
+
         <!-- Tab Navigation -->
         <div class="flex justify-between border-b mb-4">
             <button class="tab-button px-4 py-2 text-gray-600 hover:text-black active" data-tab="clients-screen">
@@ -90,4 +97,5 @@
     <script type="module" src="/popup/jobcodes.js"></script>
     <script type="module" src="popup.js"></script>
 </body>
+
 </html>
