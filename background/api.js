@@ -12,7 +12,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     getAuthToken()
       .then((ACCESS_TOKEN) => {
         if (!ACCESS_TOKEN) {
-          sendResponse({ success: false, error: "No access token found" });
+          sendResponse({
+            success: false,
+            error: "No access token found in fetchCurrentUser",
+          });
           return;
         }
 
@@ -48,7 +51,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     getAuthToken()
       .then((ACCESS_TOKEN) => {
         if (!ACCESS_TOKEN) {
-          sendResponse({ success: false, error: "No access token found" });
+          sendResponse({
+            success: false,
+            error: "No access token found in fetchJobcodes",
+          });
           return;
         }
 
@@ -79,11 +85,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
 
     return true; // Keeps the message channel open for async response
-  } else if ((request.action = "fetchTimesheets")) {
+  } else if (request.action === "fetchTimesheets") {
     getAuthToken()
       .then((ACCESS_TOKEN) => {
         if (!ACCESS_TOKEN) {
-          sendResponse({ success: false, error: "No access token found" });
+          sendResponse({
+            success: false,
+            error: "No access token found in fetchTimesheets",
+          });
           return;
         }
 
