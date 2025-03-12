@@ -79,6 +79,62 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
 
     return true; // Keeps the message channel open for async response
+  } else if ((request.action = "fetchTimesheets")) {
+    getAuthToken()
+      .then((ACCESS_TOKEN) => {
+        if (!ACCESS_TOKEN) {
+          sendResponse({ success: false, error: "No access token found" });
+          return;
+        }
+
+        // get the user id and created from the userProfile object in chrome storage
+        getUserProfile()
+          .then((userProfile) => {
+            if (!userProfile) {
+              sendResponse({ success: false, error: "No user profile found" });
+              return;
+            }
+
+            const userId = userProfile.id;
+            const userCreatedTimestamp = userProfile.created;
+            const userCreatedDate = new Date(userCreatedTimestamp);
+            const userCreatedDateString = `${userCreatedDate.getFullYear()}-${userCreatedDate.getMonth()}-${userCreatedDate.getDate()}`; // format YYYY-MM-DD
+
+            fetch(
+              `https://rest.tsheets.com/api/v1/timesheets?start_date=${userCreatedDateString}&user_ids=${userId}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  Authorization: `Bearer ${ACCESS_TOKEN}`,
+                },
+              }
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.results) {
+                  sendResponse({ success: true, timesheetsResponse: data });
+                } else {
+                  console.error("Get timesheets failed:", data);
+                  sendResponse({ success: false, error: data });
+                }
+              })
+              .catch((error) => {
+                console.error("Fetch error:", error);
+                sendResponse({ success: false, error: error.message });
+              });
+          })
+          .catch((error) => {
+            console.error("Error getting user profile:", error);
+            sendResponse({ success: false, error: error.message });
+          });
+      })
+      .catch((error) => {
+        console.error("Error getting auth token:", error);
+        sendResponse({ success: false, error: error.message });
+      });
+
+    return true; // Keeps the message channel open for async response
   }
 });
 
@@ -93,6 +149,22 @@ async function getAuthToken() {
         reject(chrome.runtime.lastError);
       } else {
         resolve(result.authToken);
+      }
+    });
+  });
+}
+
+/**
+ * Retrieves the User Profile from Chrome's local storage.
+ * @returns {Promise<string>} A promise that resolves to the user profile.
+ */
+async function getUserProfile() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("userProfile", (result) => {
+      if (chrome.runtime.lastError) {
+        resolve(null);
+      } else {
+        resolve(result.userProfile);
       }
     });
   });

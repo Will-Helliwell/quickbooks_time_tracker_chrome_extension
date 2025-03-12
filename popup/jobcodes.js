@@ -2,8 +2,13 @@ export async function updateJobcodesFromAPI() {
   const jobcodesAPIResponse = await getJobcodesFromAPI();
   const jobcodes = processJobcodesAPIResponse(jobcodesAPIResponse);
   await updateJobcodesInStorage(jobcodes);
+
+  const timesheetsAPIResponse = await getTimesheetsFromAPI();
+
   return jobcodes;
 }
+
+// JOBCODES
 
 async function getJobcodesFromAPI() {
   return new Promise((resolve) => {
@@ -61,8 +66,8 @@ function getParentPathName(jobcodes, parent_id) {
 }
 
 /**
- * Retrieves the user profile from Chrome storage.
- * @returns {Promise<object|null>} The user profile object or null if not found.
+ * Retrieves the jobcodes from Chrome storage.
+ * @returns {Promise<object|null>} The jobcodes object or null if not found.
  */
 function getJobcodesFromStorage() {
   return new Promise((resolve) => {
@@ -97,4 +102,17 @@ async function updateJobcodesInStorage(jobcodesFromAPI) {
 
   // overwrite the jobcodes local storage with the updated version
   chrome.storage.local.set({ jobcodes: jobcodesFromStorage });
+}
+
+// TIMESHEETS
+async function getTimesheetsFromAPI() {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ action: "fetchTimesheets" }, (response) => {
+      if (response && response.success) {
+        resolve(response);
+      } else {
+        resolve(false);
+      }
+    });
+  });
 }
