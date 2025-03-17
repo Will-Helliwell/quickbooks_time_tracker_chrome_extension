@@ -3,7 +3,7 @@ import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
 } from "/popup/user.js";
-import { updateJobcodesFromAPI } from "/popup/jobcodes.js";
+import { updateJobcodesAndTimesheetsFromAPI } from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -105,5 +105,5 @@ function updateUserUI(user) {
 }
 
 async function handleJobcodesButton() {
-  const jobcodes = await updateJobcodesFromAPI();
+  const jobcodes = await updateJobcodesAndTimesheetsFromAPI();
 }

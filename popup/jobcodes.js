@@ -1,4 +1,4 @@
-export async function updateJobcodesFromAPI() {
+export async function updateJobcodesAndTimesheetsFromAPI() {
   // update jobcodes from API
   let jobcodesAPIResponse = await getJobcodesFromAPI();
   jobcodesAPIResponse = processJobcodesAPIResponse(jobcodesAPIResponse);
@@ -105,19 +105,22 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
 
     // if the jobcode does not exist in the arrayToUpdate, then add it
     if (!arrayToUpdate.hasOwnProperty(APIJobcodeId)) {
+      // add the jobcode with the new data from the API
       arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
-
+      // add any keys that do not orginate from the API
       arrayToUpdate[APIJobcodeId].timesheets = {};
+      arrayToUpdate[APIJobcodeId].seconds_completed = 0;
     } else if (
-      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update it (preserving the timesheets object)
+      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update itd
       arrayToUpdate[APIJobcodeId].last_modified !==
       jobcodesFromAPI[APIJobcodeId].last_modified
     ) {
-      // arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
-      // update, preserving the timsheets object
       arrayToUpdate[APIJobcodeId] = {
+        // update the jobcode with the new data from the API
         ...jobcodesFromAPI[APIJobcodeId],
+        // preserve any keys that do not orginate from the API
         timesheets: arrayToUpdate[APIJobcodeId].timesheets,
+        seconds_completed: arrayToUpdate[APIJobcodeId].seconds_completed,
       };
     }
   }
