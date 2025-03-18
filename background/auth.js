@@ -32,6 +32,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then((response) => response.json())
       .then((data) => {
         if (data.access_token) {
+          updateLoginDetails(
+            data.access_token,
+            data.refresh_token,
+            data.expires_in,
+            data.user_id
+          );
+
+          // keep old storage method for now
           chrome.storage.local.set({
             authToken: data.access_token,
             refreshToken: data.refresh_token,
@@ -50,3 +58,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keeps the message channel open for async response
   }
 });
+
+/**
+ * Overwrites the stored login details in Chrome's local storage.
+ *
+ * If `loginDetails` does not exist, it initializes it with default values.
+ * Then, it updates the authentication token, refresh token, expiry date,
+ * and current user ID based on the provided API response.
+ *
+ * @param {string} accessToken - The new authentication token.
+ * @param {string} refreshToken - The new refresh token.
+ * @param {number} expiresIn - The token expiry time in seconds.
+ * @param {string} userId - The ID of the currently logged-in user.
+ */ function updateLoginDetails(accessToken, refreshToken, expiresIn, userId) {
+  chrome.storage.local.get("loginDetails", (data) => {
+    let loginDetails = data.loginDetails || {
+      authToken: "",
+      refreshToken: "",
+      authTokenExpiryDate: "",
+      currentUserId: "",
+    };
+
+    // Update with new values from API response
+    loginDetails.authToken = accessToken;
+    loginDetails.refreshToken = refreshToken;
+    loginDetails.authTokenExpiryDate = new Date(Date.now() + expiresIn * 1000);
+    loginDetails.currentUserId = userId;
+
+    chrome.storage.local.set({ loginDetails }, () => {
+      // console.log("Updated loginDetails:", loginDetails);
+    });
+  });
+}
