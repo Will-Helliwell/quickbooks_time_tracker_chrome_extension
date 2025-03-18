@@ -152,6 +152,7 @@ function updateMemoryWithTimesheetsFromAPI(
   timesheetsAPIResponse,
   arrayToUpdate
 ) {
+  let jobcodesWithAddedUpdatedTimesheets = [];
   const timesheetsFromAPI =
     timesheetsAPIResponse.timesheetsResponse.results.timesheets;
 
@@ -178,6 +179,7 @@ function updateMemoryWithTimesheetsFromAPI(
     if (!memoryJobcodeTimesheets.hasOwnProperty(APITimesheetId)) {
       memoryJobcodeTimesheets[APITimesheetId] =
         timesheetsFromAPI[APITimesheetId];
+      jobcodesWithAddedUpdatedTimesheets.push(APITimesheetJobcodeId);
     } else if (
       // if the timesheet already exists in memory and the last_modified timestamp is different, then update it
       memoryJobcodeTimesheets[APITimesheetId].last_modified !==
@@ -185,11 +187,30 @@ function updateMemoryWithTimesheetsFromAPI(
     ) {
       memoryJobcodeTimesheets[APITimesheetId] =
         timesheetsFromAPI[APITimesheetId];
+      jobcodesWithAddedUpdatedTimesheets.push(APITimesheetJobcodeId);
     }
 
     // update the jobcode in arrayToUpdate with the new timesheets
     arrayToUpdate[APITimesheetJobcodeId].timesheets = memoryJobcodeTimesheets;
   }
 
+  // once all timesheets have been added or updated, update the seconds completed for each jobcode that was affected
+  jobcodesWithAddedUpdatedTimesheets = [
+    ...new Set(jobcodesWithAddedUpdatedTimesheets),
+  ];
+  for (const jobcodeId of jobcodesWithAddedUpdatedTimesheets) {
+    arrayToUpdate[jobcodeId].seconds_completed = sumSecondsCompleted(
+      arrayToUpdate[jobcodeId].timesheets
+    );
+  }
+
   return arrayToUpdate;
+}
+
+function sumSecondsCompleted(timesheets) {
+  let secondsCompleted = 0;
+  for (const timesheetId in timesheets) {
+    secondsCompleted += timesheets[timesheetId].duration;
+  }
+  return secondsCompleted;
 }
