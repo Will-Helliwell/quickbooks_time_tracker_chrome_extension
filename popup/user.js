@@ -7,8 +7,10 @@
  */
 export async function updateUserProfileFromAPI() {
   const userProfileAPI = await fetchCurrentUserFromQuickBooks();
+  const userProfileId = userProfileAPI.id;
   const userProfileAPILastModifiedTimestamp = userProfileAPI.last_modified;
-  const userProfileStored = await getUserProfileFromStorage();
+  await initialiseUserProfiles();
+  const userProfileStored = await getUserProfileFromStorage(userProfileId);
 
   // If no nobody has logged in before, save the fetched user profile and return it
   if (!userProfileStored) {
@@ -43,23 +45,46 @@ export async function updateUserProfileFromAPI() {
 }
 
 /**
- * Retrieves the user profile from Chrome storage.
- * @returns {Promise<object|null>} The user profile object or null if not found.
+ * Retrieves the user profile for the given user ID from local storage.
+ *
+ * @param {string} userProfileId - The ID of the user profile to retrieve.
+ * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
  */
-export async function getUserProfileFromStorage() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("userProfile", (data) => {
-      resolve(data.userProfile || null);
+export async function getUserProfileFromStorage(userProfileId) {
+  const userProfiles = await new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      resolve(data.userProfiles || {}); // Ensure we always return an object
     });
   });
+
+  // console.log("userProfiles found in storage = ", userProfiles);
+
+  // Return the profile if it exists, otherwise null
+  return userProfiles[userProfileId] || null;
 }
 
 /**
- * Saves the user profile to Chrome storage.
- * @param {object} user The user profile object to save.
+ * Saves the user profile to Chrome storage under its ID.
+ * If the userProfiles object doesn't exist, it initializes it first.
+ *
+ * @param {object} user - The user profile object to save. Must contain an `id` property.
  */
 function saveUserProfileToStorage(user) {
-  chrome.storage.local.set({ userProfile: user });
+  if (!user || !user.id) {
+    console.error("Invalid user object. Missing 'id' property.");
+    return;
+  }
+
+  chrome.storage.local.get("userProfiles", (data) => {
+    let userProfiles = data.userProfiles || {}; // Ensure it’s an object
+
+    // Save user profile under its ID
+    userProfiles[user.id] = user;
+
+    chrome.storage.local.set({ userProfiles }, () => {
+      // console.log(`User profile saved for ID: ${user.id}`);
+    });
+  });
 }
 
 /**
@@ -78,4 +103,35 @@ async function fetchCurrentUserFromQuickBooks() {
       }
     });
   });
+}
+
+/**
+ * Initializes the userProfiles object in Chrome storage if it doesn't exist.
+ * This function ensures that the `userProfiles` object is available in local storage,
+ * defaulting to an empty object if it's not already set.
+ *
+ * @async
+ * @function initialiseUserProfiles
+ * @returns {Promise<void>} Resolves when the initialization is complete.
+ */
+async function initialiseUserProfiles() {
+  chrome.storage.local.get("userProfiles", (data) => {
+    if (!data.userProfiles) {
+      chrome.storage.local.set({ userProfiles: {} });
+    }
+  });
+}
+
+// DELETE THESE
+document
+  .getElementById("reset-last-fetched-timesheets")
+  .addEventListener("click", function () {
+    // Reset userProfile.lastFetchedTimesheets to force a new fetch
+    // chrome.storage.local.set({ userProfile: { lastFetchedTimesheets: null } });
+    resetLastFetchedTimesheets();
+  });
+async function resetLastFetchedTimesheets() {
+  const userProfile = await getUserProfileFromStorage();
+  userProfile.last_fetched_timesheets = null;
+  saveUserProfileToStorage(userProfile);
 }
