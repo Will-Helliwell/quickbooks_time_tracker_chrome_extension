@@ -16,12 +16,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tabContents = document.querySelectorAll(".tab-content");
 
   // Check if user is already authenticated
-  chrome.storage.local.get("authToken", (result) => {
-    if (result.authToken) {
+  chrome.storage.local.get("loginDetails", (result) => {
+    const loginDetails = result.loginDetails;
+    if (loginDetails.authToken && loginDetails.currentUserId) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
-      loadUserFromLocalStorage();
-      // get jobcodes from local storage to update UI
+      loadUserFromLocalStorage(loginDetails.currentUserId);
+      // TODO - get jobcodes from local storage to update UI
     }
   });
 
@@ -86,8 +87,8 @@ async function loadUserFromAPI() {
   updateUserUI(userProfile);
 }
 
-async function loadUserFromLocalStorage() {
-  const userProfile = await getUserProfileFromStorage();
+async function loadUserFromLocalStorage(userProfileId) {
+  const userProfile = await getUserProfileFromStorage(userProfileId);
   updateUserUI(userProfile);
 }
 

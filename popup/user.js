@@ -12,7 +12,7 @@ export async function updateUserProfileFromAPI() {
   await initialiseUserProfiles();
   const userProfileStored = await getUserProfileFromStorage(userProfileId);
 
-  // If no nobody has logged in before, save the fetched user profile and return it
+  // If the current user has never logged in on this machine, save the fetched user profile and return it
   if (!userProfileStored) {
     userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
     saveUserProfileToStorage(userProfileAPI);
@@ -21,22 +21,15 @@ export async function updateUserProfileFromAPI() {
 
   const userProfileStoredLastModifiedTimestamp =
     userProfileStored.last_modified;
-  const userProfileStoredUserId = userProfileStored.id;
 
-  // If a different user has logged in on the same machine, log the old user out and save the fetched user profile
-  if (userProfileStoredUserId !== userProfileAPI.id) {
-    userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
-    saveUserProfileToStorage(userProfileAPI);
-    chrome.storage.local.remove("jobcodes"); // delete jobcodes from local storage to log the old user out
-    return userProfileAPI;
-  } else if (
-    // If the same user has logged in and the stored user profile is up-to-date, return it
+  // If the stored user profile is up-to-date, return it
+  if (
     userProfileStoredLastModifiedTimestamp ===
     userProfileAPILastModifiedTimestamp
   ) {
     return userProfileStored;
   } else {
-    // If the same user has logged in and stored user profile is outdated, then update the storage with the latest data and return it
+    // If the stored user profile is outdated, then update the storage with the latest data and return it
     userProfileAPI.last_fetched_timesheets =
       userProfileStored.last_fetched_timesheets; // preserve last_fetched_timesheets
     saveUserProfileToStorage(userProfileAPI);
@@ -78,11 +71,11 @@ function saveUserProfileToStorage(user) {
   chrome.storage.local.get("userProfiles", (data) => {
     let userProfiles = data.userProfiles || {}; // Ensure it’s an object
 
-    // Save user profile under its ID
+    // Overwrite the user profile with the same ID
     userProfiles[user.id] = user;
 
     chrome.storage.local.set({ userProfiles }, () => {
-      // console.log(`User profile saved for ID: ${user.id}`);
+      console.log(`User profile saved for ID: ${user.id}`);
     });
   });
 }
