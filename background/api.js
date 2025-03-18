@@ -166,11 +166,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  */
 async function getAuthToken() {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get("authToken", (result) => {
+    chrome.storage.local.get("loginDetails", (result) => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
-        resolve(result.authToken);
+        resolve(result.loginDetails.authToken);
       }
     });
   });

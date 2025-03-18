@@ -38,12 +38,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             data.expires_in,
             data.user_id
           );
-
-          // keep old storage method for now
-          chrome.storage.local.set({
-            authToken: data.access_token,
-            refreshToken: data.refresh_token,
-          });
           sendResponse({ success: true, token: data.access_token });
         } else {
           console.error("Token exchange failed:", data);
