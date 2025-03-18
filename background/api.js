@@ -106,13 +106,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             const userId = userProfile.id;
 
-            // if the user has fetched timesheets before, limit the fetch to the last fetched date. Else fetch from the user's created date
+            // if the user has fetched timesheets before, limit the fetch to the day before last fetched date. Else fetch from the user's created date
             const userCreatedTimestamp = userProfile.created;
             const userCreatedDate = new Date(userCreatedTimestamp);
             const userCreatedDateString = `${userCreatedDate.getFullYear()}-${userCreatedDate.getMonth()}-${userCreatedDate.getDate()}`; // format YYYY-MM-DD
+            const dayBeforeLastFetchedDate = new Date(
+              new Date(userProfile.last_fetched_timesheets).getTime() - 86400000
+            ); // 86400000 ms in a day
             const fetch_timesheets_from_date =
               userProfile.last_fetched_timesheets
-                ? userProfile.last_fetched_timesheets.substring(0, 10)
+                ? `${dayBeforeLastFetchedDate.getFullYear()}-${dayBeforeLastFetchedDate.getMonth()}-${dayBeforeLastFetchedDate.getDate()}`
                 : userCreatedDateString;
 
             fetch(
