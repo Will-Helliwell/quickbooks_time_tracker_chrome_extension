@@ -97,7 +97,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // get the user id and created from the userProfile object in chrome storage
-        getUserProfileFromLocalStorage()
+        getUserProfileFromStorage()
           .then((userProfile) => {
             if (!userProfile) {
               sendResponse({ success: false, error: "No user profile found" });
@@ -177,17 +177,26 @@ async function getAuthToken() {
 }
 
 /**
- * Retrieves the User Profile from Chrome's local storage.
- * @returns {Promise<string>} A promise that resolves to the user profile.
+ * Retrieves the user profile for the given user ID from local storage.
+ *
+ * @param {string} userProfileId - The ID of the user profile to retrieve.
+ * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
  */
-async function getUserProfileFromLocalStorage() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("userProfile", (result) => {
-      if (chrome.runtime.lastError) {
-        resolve(null);
-      } else {
-        resolve(result.userProfile);
-      }
+async function getUserProfileFromStorage() {
+  const loginDetails = await new Promise((resolve) => {
+    chrome.storage.local.get("loginDetails", (data) => {
+      resolve(data.loginDetails || {}); // Ensure we always return an object
     });
   });
+  const userProfileId = loginDetails.currentUserId;
+  const userProfiles = await new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      resolve(data.userProfiles || {}); // Ensure we always return an object
+    });
+  });
+
+  // console.log("userProfiles found in storage = ", userProfiles);
+
+  // Return the profile if it exists, otherwise null
+  return userProfiles[userProfileId] || null;
 }
