@@ -6,7 +6,8 @@
   "permissions": [
     "identity",
     "storage",
-    "activeTab"
+    "activeTab",
+    "alarms"
   ],
   "host_permissions": [
     "https://rest.tsheets.com/api/*"
