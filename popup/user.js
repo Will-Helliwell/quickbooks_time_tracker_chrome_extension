@@ -113,15 +113,3 @@ async function initialiseUserProfiles() {
     }
   });
 }
-
-// DELETE THESE
-document
-  .getElementById("reset-last-fetched-timesheets")
-  .addEventListener("click", function () {
-    resetLastFetchedTimesheets();
-  });
-async function resetLastFetchedTimesheets() {
-  const userProfile = await getUserProfileFromStorage();
-  userProfile.last_fetched_timesheets = null;
-  saveUserProfileToStorage(userProfile);
-}
