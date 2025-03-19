@@ -15,6 +15,7 @@ export async function updateUserProfileFromAPI() {
   // If the current user has never logged in on this machine, save the fetched user profile and return it
   if (!userProfileStored) {
     userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
+    userProfileAPI.jobcodes = {}; // add jobcodes to the user profile
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }
@@ -32,6 +33,7 @@ export async function updateUserProfileFromAPI() {
     // If the stored user profile is outdated, then update the storage with the latest data and return it
     userProfileAPI.last_fetched_timesheets =
       userProfileStored.last_fetched_timesheets; // preserve last_fetched_timesheets
+    userProfileAPI.jobcodes = userProfileStored.jobcodes; // preserve jobcodes
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }
@@ -50,9 +52,6 @@ export async function getUserProfileFromStorage(userProfileId) {
     });
   });
 
-  // console.log("userProfiles found in storage = ", userProfiles);
-
-  // Return the profile if it exists, otherwise null
   return userProfiles[userProfileId] || null;
 }
 
@@ -119,8 +118,6 @@ async function initialiseUserProfiles() {
 document
   .getElementById("reset-last-fetched-timesheets")
   .addEventListener("click", function () {
-    // Reset userProfile.lastFetchedTimesheets to force a new fetch
-    // chrome.storage.local.set({ userProfile: { lastFetchedTimesheets: null } });
     resetLastFetchedTimesheets();
   });
 async function resetLastFetchedTimesheets() {
