@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (loginDetails.authToken && loginDetails.currentUserId) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
+
       loadUserFromLocalStorage(loginDetails.currentUserId);
-      // TODO - get jobcodes from local storage to update UI
     }
   });
 
@@ -88,7 +88,10 @@ async function loadUserFromAPI() {
 }
 
 async function loadUserFromLocalStorage(userProfileId) {
-  const userProfile = await getUserProfileFromStorage(userProfileId);
+  let userProfile = await getUserProfileFromStorage(userProfileId);
+  if (userProfile === null) {
+    userProfile = await updateUserProfileFromAPI();
+  }
   updateUserUI(userProfile);
 }
 
