@@ -84,3 +84,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   });
 }
+
+/**
+ * Retrieves the current user ID from the local storage.
+ *
+ * @returns {Promise<string|null>} A promise that resolves to the `currentUserId` if it is found in local storage,
+ *                                 or `null` if the `currentUserId` is not available.
+ */ async function getCurrentUserId() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("loginDetails", (data) => {
+      resolve(data.loginDetails?.currentUserId || null);
+    });
+  });
+}

@@ -1,21 +1,25 @@
 let countdownInterval = null;
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create("pollForActivity", { periodInMinutes: 0.25 }); // 0.25 = 15 seconds
+  //   chrome.alarms.create("pollForActivity", { periodInMinutes: 0.02 }); // 0.25 = 15 seconds
+  pollForActivity(); // only do this once for testing purposes
 });
-
 // Listen for the alarm to trigger the polling function
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "pollForActivity") {
-    pollForActivity();
-  }
-});
+// chrome.alarms.onAlarm.addListener((alarm) => {
+//   if (alarm.name === "pollForActivity") {
+//     pollForActivity();
+//   }
+// });
 
 async function pollForActivity() {
-  const activeData = await fetchActiveTimesheet();
+  console.log("Polling for activity...");
 
-  if (activeData) {
-    const remainingSeconds = calculateRemainingTime(activeData);
+  const currentUserId = await getCurrentUserId();
+  const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
+  console.log("currentTotalsResponse:", currentTotalsResponse);
+
+  if (currentTotalsResponse) {
+    const remainingSeconds = calculateRemainingTime(currentTotalsResponse);
 
     // TODO - store in local storage
     // chrome.storage.local.set({ remainingTime: remainingSeconds });
@@ -37,9 +41,9 @@ async function fetchActiveTimesheet() {
   };
 }
 
-function calculateRemainingTime(activeData) {
+function calculateRemainingTime(currentTotalsResponse) {
   // Mocking a calculation; replace with real logic
-  return activeData.seconds_active;
+  return currentTotalsResponse.seconds_active;
 }
 
 function updateBadge(seconds) {

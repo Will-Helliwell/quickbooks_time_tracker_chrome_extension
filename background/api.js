@@ -194,3 +194,67 @@ async function getUserProfileFromStorage() {
   // Return the profile if it exists, otherwise null
   return userProfiles[userProfileId] || null;
 }
+
+/**
+ * Fetches the current totals of logged time for a given user from the Tsheets API.
+ *
+ * This function sends a POST request to the Tsheets API to retrieve current time tracking data
+ * for the specified user. The request includes an authorization token and the user ID. If the
+ * request is successful, the function returns the current time totals for the given user.
+ * In case of failure, it logs errors and returns `null`.
+ *
+ * @param {string|number} currentUserId - The ID of the current user for whom the time totals are being fetched.
+ *                                      It should be a valid user ID from the Tsheets API.
+ *
+ * @returns {Object|null} The current time totals for the user if the request is successful,
+ *                       or `null` if there is an error or if the user’s data is not found.
+ *
+ * @throws {Error} Will throw an error if the fetch request fails or if the response status is not OK.
+ */
+async function fetchCurrentTotals(currentUserId) {
+  const ACCESS_TOKEN = await getAuthToken();
+
+  if (!ACCESS_TOKEN) {
+    console.error("No access token found in fetchCurrentTotals");
+    return null;
+  }
+
+  const postData = {
+    data: {
+      on_the_clock: "both",
+      user_ids: currentUserId,
+    },
+  };
+
+  try {
+    const response = await fetch(
+      "https://rest.tsheets.com/api/v1/reports/current_totals",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify(postData),
+      }
+    );
+
+    if (!response.ok) {
+      // Check if the response status is OK
+      console.error("Request failed with status:", response.status);
+      return null;
+    }
+
+    const data = await response.json(); // Parse the JSON response
+
+    if (data.results) {
+      return data.results.current_totals[currentUserId];
+    } else {
+      console.error("No results found in response:", data);
+      return null;
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return null;
+  }
+}
