@@ -16,8 +16,13 @@ export async function updateJobcodesAndTimesheetsFromAPI() {
     timesheetsAPIResponse,
     updatedJobcodes
   );
+  const lastFetchedTimesheets = new Date().toISOString();
 
-  overwriteJobcodesInStorage(updatedJobcodes, currentUserId);
+  overwriteJobcodesInStorage(
+    updatedJobcodes,
+    currentUserId,
+    lastFetchedTimesheets
+  );
 
   return true;
 }
@@ -86,8 +91,6 @@ function getParentPathName(jobcodes, parent_id) {
  * @returns {Promise<object|null>} A promise resolving to the jobcodes object or null if not found.
  */
 function getJobcodesFromStorage(currentUserId) {
-  console.log("currentUserId in getJobcodesFromStorage:", currentUserId);
-
   return new Promise((resolve) => {
     chrome.storage.local.get("userProfiles", (data) => {
       const userProfiles = data.userProfiles || {};
@@ -137,12 +140,16 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
 }
 
 /**
- * Updates the jobcodes for the current user in Chrome storage by overwriting the existing jobcodes.
+ * Updates the jobcodes and last_fetched_timestamps for the current user in Chrome storage by overwriting the existing jobcodes.
  *
  * @param {string} currentUserId - The ID of the currently logged-in user.
  * @param {object} updatedJobcodes - The updated jobcodes object to store.
  */
-async function overwriteJobcodesInStorage(updatedJobcodes, currentUserId) {
+async function overwriteJobcodesInStorage(
+  updatedJobcodes,
+  currentUserId,
+  lastFetchedTimesheets
+) {
   chrome.storage.local.get("userProfiles", (data) => {
     chrome.storage.local.set({
       userProfiles: {
@@ -150,6 +157,7 @@ async function overwriteJobcodesInStorage(updatedJobcodes, currentUserId) {
         [currentUserId]: {
           ...data.userProfiles?.[currentUserId],
           jobcodes: updatedJobcodes,
+          last_fetched_timesheets: lastFetchedTimesheets,
         },
       },
     });

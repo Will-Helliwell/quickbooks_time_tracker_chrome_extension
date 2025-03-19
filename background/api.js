@@ -131,10 +131,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               .then((response) => response.json())
               .then((data) => {
                 if (data.results) {
-                  // save the last fetched timesheets timestamp to the userProfile object in chrome storage
-                  userProfile.last_fetched_timesheets =
-                    new Date().toISOString();
-                  chrome.storage.local.set({ userProfile: userProfile });
                   sendResponse({ success: true, timesheetsResponse: data });
                 } else {
                   console.error("Get timesheets failed:", data);
@@ -194,8 +190,6 @@ async function getUserProfileFromStorage() {
       resolve(data.userProfiles || {}); // Ensure we always return an object
     });
   });
-
-  // console.log("userProfiles found in storage = ", userProfiles);
 
   // Return the profile if it exists, otherwise null
   return userProfiles[userProfileId] || null;
