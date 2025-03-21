@@ -1,7 +1,7 @@
 let countdownInterval = null;
 
 chrome.runtime.onInstalled.addListener(() => {
-  //   chrome.alarms.create("pollForActivity", { periodInMinutes: 0.02 }); // 0.25 = 15 seconds
+  //   chrome.alarms.create("pollForActivity", { periodInMinutes: 0.25 }); // 0.25 = 15 seconds
   pollForActivity(); // only do this once for testing purposes
 });
 // Listen for the alarm to trigger the polling function
@@ -18,40 +18,48 @@ async function pollForActivity() {
   const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
   console.log("currentTotalsResponse:", currentTotalsResponse);
 
-  if (currentTotalsResponse) {
-    const remainingSeconds = calculateRemainingTime(currentTotalsResponse);
+  if (!currentTotalsResponse) {
+    return;
+  }
 
-    // TODO - store in local storage
-    // chrome.storage.local.set({ remainingTime: remainingSeconds });
+  // TODO - if there is a currentRecording sored, then check if it has changed
+  //   const currentRecording = await getCurrentRecording();
+  //   console.log("currentRecording:");
+  //   console.log(currentRecording);
+
+  // if currently on the clock, then update the badge with time remaining
+  const onTheClock = currentTotalsResponse.on_the_clock;
+  if (onTheClock) {
+    const shiftSeconds = currentTotalsResponse.shift_seconds;
+    const jobcodeId = currentTotalsResponse.jobcode_id;
+    const jobcodeDetails = await getJobcodeFromStorage(
+      currentUserId,
+      jobcodeId
+    );
+    const secondsAssigned = jobcodeDetails.seconds_assigned;
+    const secondsCompleted = jobcodeDetails.seconds_completed;
+    const remainingSeconds = secondsAssigned - secondsCompleted - shiftSeconds;
 
     updateBadge(remainingSeconds);
 
     startLiveCountdown(remainingSeconds);
   } else {
-    // No active timesheet, clear badge
-    chrome.action.setBadgeText({ text: "" });
+    // TODO - No active timesheet, clear badge and stop live countdown
+    // chrome.action.setBadgeText({ text: "" });
   }
-}
-
-async function fetchActiveTimesheet() {
-  // Mocking API response; replace with actual fetch call
-  return {
-    client: "Client A",
-    seconds_active: 300, // 5 minutes left
-  };
-}
-
-function calculateRemainingTime(currentTotalsResponse) {
-  // Mocking a calculation; replace with real logic
-  return currentTotalsResponse.seconds_active;
 }
 
 function updateBadge(seconds) {
   const minutes = Math.floor(seconds / 60);
   const displayText = `${seconds}s`;
 
-  chrome.action.setBadgeText({ text: displayText });
-  chrome.action.setBadgeBackgroundColor({ color: "#FF0000" });
+  if (seconds > 0) {
+    chrome.action.setBadgeText({ text: displayText });
+    chrome.action.setBadgeBackgroundColor({ color: "#FFA500" }); // orange
+  } else {
+    chrome.action.setBadgeText({ text: displayText });
+    chrome.action.setBadgeBackgroundColor({ color: "#FF0000" }); // red
+  }
 }
 
 // Keep the countdown running every second and update the badge
@@ -62,12 +70,16 @@ function startLiveCountdown(remainingSeconds) {
 
   countdownInterval = setInterval(() => {
     remainingSeconds--;
-    if (remainingSeconds <= 0) {
-      chrome.action.setBadgeText({ text: "" });
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-    } else {
-      updateBadge(remainingSeconds);
-    }
+
+    updateBadge(remainingSeconds);
   }, 1000);
+}
+
+// gets the currentRecording from local storage
+async function getCurrentRecording() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("currentRecording", (data) => {
+      resolve(data.currentRecording || {});
+    });
+  });
 }
