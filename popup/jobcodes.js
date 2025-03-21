@@ -121,7 +121,7 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
       // add any keys that do not orginate from the API
       arrayToUpdate[APIJobcodeId].timesheets = {};
       arrayToUpdate[APIJobcodeId].seconds_completed = 0;
-      arrayToUpdate[APIJobcodeId].seconds_assigned = 0;
+      arrayToUpdate[APIJobcodeId].seconds_assigned = null;
     } else if (
       // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update itd
       arrayToUpdate[APIJobcodeId].last_modified !==
@@ -142,7 +142,7 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
       arrayToUpdate[APIJobcodeId].seconds_completed =
         arrayToUpdate[APIJobcodeId].seconds_completed || 0;
       arrayToUpdate[APIJobcodeId].seconds_assigned =
-        arrayToUpdate[APIJobcodeId].seconds_assigned || 0;
+        arrayToUpdate[APIJobcodeId].seconds_assigned || null;
     }
   }
 
