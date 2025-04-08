@@ -1,15 +1,19 @@
 let countdownInterval = null;
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create("pollForActivity", { periodInMinutes: 0.1 }); // 0.25 = 15 seconds
-  pollForActivity(); // only do this once for testing purposes
+  // chrome.alarms.create("pollForActivity", { periodInMinutes: 0.1 }); // 0.25 = 15 seconds
+  // wait for 2 seconds before polling
+  setTimeout(() => {
+    console.log("About to call pollForActivity()");
+    pollForActivity(); // only do this once for testing purposes
+  }, 2000);
 });
 // Listen for the alarm to trigger the polling function
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "pollForActivity") {
-    pollForActivity();
-  }
-});
+// chrome.alarms.onAlarm.addListener((alarm) => {
+//   if (alarm.name === "pollForActivity") {
+//     pollForActivity();
+//   }
+// });
 
 async function pollForActivity() {
   console.log("Polling for activity...");
@@ -22,7 +26,7 @@ async function pollForActivity() {
     return;
   }
 
-  // TODO - if the timesheet id has changed, then will need to update jobcodes again so that seconds_completed has updated.
+  chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
 
   // Update local storage with the latest active timesheet
   overwriteActiveRecordingInStorage(currentTotalsResponse);

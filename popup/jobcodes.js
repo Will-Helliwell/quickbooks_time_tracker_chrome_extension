@@ -29,6 +29,16 @@ export async function updateJobcodesAndTimesheetsFromAPI() {
 
 // JOBCODES
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "updateJobcodesAndTimesheets") {
+    updateJobcodesAndTimesheetsFromAPI().then(() => {
+      sendResponse({ success: true });
+    });
+
+    return true;
+  }
+});
+
 async function getJobcodesFromAPI() {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ action: "fetchJobcodes" }, (response) => {
@@ -118,19 +128,19 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
     if (!arrayToUpdate.hasOwnProperty(APIJobcodeId)) {
       // add the jobcode with the new data from the API
       arrayToUpdate[APIJobcodeId] = jobcodesFromAPI[APIJobcodeId];
-      // add any keys that do not orginate from the API
+      // add any keys that do not originate from the API
       arrayToUpdate[APIJobcodeId].timesheets = {};
       arrayToUpdate[APIJobcodeId].seconds_completed = 0;
       arrayToUpdate[APIJobcodeId].seconds_assigned = null;
     } else if (
-      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update itd
+      // if the jobcode already exists in the arrayToUpdate and the last_modified timestamp is different, then update it
       arrayToUpdate[APIJobcodeId].last_modified !==
       jobcodesFromAPI[APIJobcodeId].last_modified
     ) {
       arrayToUpdate[APIJobcodeId] = {
         // update the jobcode with the new data from the API
         ...jobcodesFromAPI[APIJobcodeId],
-        // preserve any keys that do not orginate from the API
+        // preserve any keys that do not originate from the API
         timesheets: arrayToUpdate[APIJobcodeId].timesheets,
         seconds_completed: arrayToUpdate[APIJobcodeId].seconds_completed,
         seconds_assigned: arrayToUpdate[APIJobcodeId].seconds_assigned,
