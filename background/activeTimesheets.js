@@ -1,19 +1,29 @@
 let countdownInterval = null;
+const pollFrequencyMinutes = 0.15; // 0.25 = 15 seconds
+const inTestMode = true; // TODO - get rid of this when finished testing
 
-chrome.runtime.onInstalled.addListener(() => {
-  // chrome.alarms.create("pollForActivity", { periodInMinutes: 0.1 }); // 0.25 = 15 seconds
-  // wait for 2 seconds before polling
-  setTimeout(() => {
-    console.log("About to call pollForActivity()");
-    pollForActivity(); // only do this once for testing purposes
-  }, 2000);
-});
-// Listen for the alarm to trigger the polling function
-// chrome.alarms.onAlarm.addListener((alarm) => {
-//   if (alarm.name === "pollForActivity") {
-//     pollForActivity();
-//   }
-// });
+if (inTestMode) {
+  console.log("Running in test mode");
+  chrome.runtime.onInstalled.addListener(() => {
+    // wait for 2 seconds before polling
+    setTimeout(() => {
+      pollForActivity(); // only do this once for testing purposes
+    }, 2000);
+  });
+} else {
+  console.log("Running in production mode");
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.alarms.create("pollForActivity", {
+      periodInMinutes: pollFrequencyMinutes,
+    });
+  });
+  // Listen for the alarm to trigger the polling function
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "pollForActivity") {
+      pollForActivity();
+    }
+  });
+}
 
 async function pollForActivity() {
   console.log("Polling for activity...");
@@ -26,13 +36,24 @@ async function pollForActivity() {
     return;
   }
 
-  chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
+  // extract variables from API response
+  const onTheClock = currentTotalsResponse.on_the_clock;
+  const APITimesheetId = currentTotalsResponse.timesheet_id;
+
+  // get the active recording from local storage
+  const storedActiveRecording = await getActiveRecordingFromLocalStorage();
+  const storedActiveRecordingTimesheetId =
+    storedActiveRecording.timesheet_id || null;
+
+  // only update jobcodes if the active recording has changed
+  if (storedActiveRecordingTimesheetId !== APITimesheetId) {
+    chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
+  }
 
   // Update local storage with the latest active timesheet
   overwriteActiveRecordingInStorage(currentTotalsResponse);
 
   // if currently on the clock, then update the badge with time remaining
-  const onTheClock = currentTotalsResponse.on_the_clock;
   if (onTheClock) {
     const shiftSeconds = currentTotalsResponse.shift_seconds;
     const jobcodeId = currentTotalsResponse.jobcode_id;
@@ -108,5 +129,21 @@ async function overwriteActiveRecordingInStorage(currentTotalsResponse) {
     //   "Active recording updated in local storage:",
     //   currentTotalsResponse
     // );
+  });
+}
+
+/**
+ * Retrieves the active recording data from Chrome's local storage.
+ *
+ * @async
+ * @function
+ * @returns {Promise<Object>} A promise that resolves to the active recording object
+ *                            stored in local storage, or an empty object if none exists.
+ */
+async function getActiveRecordingFromLocalStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("activeRecording", (data) => {
+      resolve(data.activeRecording || {});
+    });
   });
 }
