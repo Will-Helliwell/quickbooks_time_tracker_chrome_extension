@@ -16,16 +16,14 @@ async function pollForActivity() {
 
   const currentUserId = await getCurrentUserId();
   const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
-  console.log("currentTotalsResponse:", currentTotalsResponse);
+  currentTotalsResponse.api_call_timestamp = new Date().toISOString();
 
   if (!currentTotalsResponse) {
     return;
   }
 
-  // TODO - if there is a currentRecording sored, then check if it has changed
-  //   const currentRecording = await getCurrentRecording();
-  //   console.log("currentRecording:");
-  //   console.log(currentRecording);
+  // Update local storage with the latest active timesheet
+  overwriteActiveRecordingInStorage(currentTotalsResponse);
 
   // if currently on the clock, then update the badge with time remaining
   const onTheClock = currentTotalsResponse.on_the_clock;
@@ -81,5 +79,22 @@ async function getCurrentRecording() {
     chrome.storage.local.get("currentRecording", (data) => {
       resolve(data.currentRecording || {});
     });
+  });
+}
+
+/**
+ * Updates the active recording data in Chrome's local storage.
+ *
+ * @async
+ * @function overwriteActiveRecordingInStorage
+ * @param {Object} currentTotalsResponse - The data to be stored as the active recording.
+ * @returns {Promise<void>} Resolves when the data has been successfully stored.
+ */
+async function overwriteActiveRecordingInStorage(currentTotalsResponse) {
+  chrome.storage.local.set({ activeRecording: currentTotalsResponse }, () => {
+    // console.log(
+    //   "Active recording updated in local storage:",
+    //   currentTotalsResponse
+    // );
   });
 }
