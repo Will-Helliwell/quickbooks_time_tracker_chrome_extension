@@ -8,7 +8,7 @@
     <script src="/tailwind_cdn_v408.js"></script>
 </head>
 
-<body class="w-96 bg-gray-100">
+<body class="w-[600px] bg-gray-100">
 
     <!-- Login Screen -->
     <div id="login-screen" class="flex flex-col items-center justify-center space-y-4 p-4">
@@ -57,7 +57,7 @@
         <!-- Tab Navigation -->
         <div class="flex justify-between border-b mb-4">
             <button class="tab-button px-4 py-2 text-gray-600 hover:text-black active" data-tab="clients-screen">
-                Clients
+                All Clients
             </button>
             <button class="tab-button px-4 py-2 text-gray-600 hover:text-black" data-tab="settings-screen">
                 Settings
@@ -66,18 +66,8 @@
 
         <!-- Clients Page -->
         <div id="clients-screen" class="tab-content p-4">
-            <h2 class="text-lg font-semibold mb-2">Clients</h2>
-            <table class="w-full bg-white shadow-md rounded-lg">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="p-2 text-left">Name</th>
-                        <th class="p-2 text-left">Hours Worked</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <!-- Clients will be populated here -->
-                </tbody>
-            </table>
+            <h2 class="text-lg font-semibold mb-2">All Clients</h2>
+            <div id="all-clients-table"> </div>
         </div>
 
         <!-- Settings Page -->

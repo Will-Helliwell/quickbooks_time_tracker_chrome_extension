@@ -44,9 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
       loadUserFromAPI();
-      // get jobcodes from local storage to update UI (for instant rendering)
-      // update jobcodes in local storage from api
-      // get jobcodes from local storage to update UI
+      // TODO - re-render frontend
     }
   });
 
@@ -98,6 +96,11 @@ async function loadUserFromLocalStorage(userProfileId) {
     userProfile = await updateUserProfileFromAPI();
   }
   updateUserUI(userProfile);
+  const allJobcodesArray = Object.values(userProfile.jobcodes);
+  console.log("allJobcodesArray:", allJobcodesArray);
+  console.log("typeof allJobcodesArray:", typeof allJobcodesArray);
+  console.log(Array.isArray(allJobcodesArray)); // Should be true
+  renderAllClientsTable(allJobcodesArray);
 }
 
 /**
@@ -111,6 +114,42 @@ function updateUserUI(user) {
   document.getElementById("user-full-name").textContent = userFullName;
   document.getElementById("user-company").textContent = user.company_name;
   document.getElementById("user-initials").textContent = userInitials;
+}
+
+function renderAllClientsTable(jobcodes) {
+  console.log("jobcodes:", jobcodes);
+  console.log("typeof jobcodes:", typeof jobcodes);
+  let allClientsTableHtml = "";
+  allClientsTableHtml += `<table class="w-full bg-white shadow-md rounded-lg">
+    <thead>
+      <tr class="bg-gray-200">
+        <th class="p-2 text-left">Name</th>
+        <th class="p-2 text-left">Completed (s)</th>
+        <th class="p-2 text-left">Assigned (s)</th>
+        <th class="p-2 text-left">Current Session (s)</th>
+      </tr>
+    </thead>
+    <tbody id="all-clients-table-body" class="divide-y">`;
+
+  jobcodes.forEach((jobcode) => {
+    console.log("jobcode:", jobcode);
+    const jobcodeName = jobcode.name;
+    console.log("jobcodeName:", jobcodeName);
+
+    allClientsTableHtml += `
+      <tr>
+        <td class="p-2">${jobcode.name}</td>
+        <td class="p-2">${jobcode.seconds_completed}</td>
+        <td class="p-2">${jobcode.seconds_assigned}</td>
+        <td class="p-2">-</td>
+      </tr>`;
+  });
+
+  allClientsTableHtml += `</tbody>
+  </table>`;
+
+  const allClientsTable = document.getElementById("all-clients-table");
+  allClientsTable.innerHTML = allClientsTableHtml;
 }
 
 async function handleJobcodesButton() {
