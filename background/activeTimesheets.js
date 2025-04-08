@@ -1,15 +1,15 @@
 let countdownInterval = null;
 
 chrome.runtime.onInstalled.addListener(() => {
-  //   chrome.alarms.create("pollForActivity", { periodInMinutes: 0.25 }); // 0.25 = 15 seconds
+  chrome.alarms.create("pollForActivity", { periodInMinutes: 0.1 }); // 0.25 = 15 seconds
   pollForActivity(); // only do this once for testing purposes
 });
 // Listen for the alarm to trigger the polling function
-// chrome.alarms.onAlarm.addListener((alarm) => {
-//   if (alarm.name === "pollForActivity") {
-//     pollForActivity();
-//   }
-// });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "pollForActivity") {
+    pollForActivity();
+  }
+});
 
 async function pollForActivity() {
   console.log("Polling for activity...");
@@ -21,6 +21,8 @@ async function pollForActivity() {
   if (!currentTotalsResponse) {
     return;
   }
+
+  // TODO - if the timesheet id has changed, then will need to update jobcodes again so that seconds_completed has updated.
 
   // Update local storage with the latest active timesheet
   overwriteActiveRecordingInStorage(currentTotalsResponse);
@@ -42,8 +44,14 @@ async function pollForActivity() {
 
     startLiveCountdown(remainingSeconds);
   } else {
-    // TODO - No active timesheet, clear badge and stop live countdown
-    // chrome.action.setBadgeText({ text: "" });
+    // clear badge entirely (text and colour)
+    chrome.action.setBadgeText({ text: "" });
+    chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
+    // clear countdown in memory
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
   }
 }
 
