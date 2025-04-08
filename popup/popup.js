@@ -18,7 +18,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Check if user is already authenticated
   chrome.storage.local.get("loginDetails", (result) => {
     const loginDetails = result.loginDetails;
-    if (loginDetails.authToken && loginDetails.currentUserId) {
+    if (
+      loginDetails.authToken &&
+      loginDetails.currentUserId &&
+      loginDetails.authTokenExpiryTimestamp &&
+      new Date(loginDetails.authTokenExpiryTimestamp) > new Date()
+    ) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
 

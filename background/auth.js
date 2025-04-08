@@ -69,14 +69,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     let loginDetails = data.loginDetails || {
       authToken: "",
       refreshToken: "",
-      authTokenExpiryDate: "",
+      authTokenExpiryTimestamp: "",
       currentUserId: "",
     };
+
+    // convert expiresIn to milliseconds and add to current time
+    const authTokenExpiryTimestamp = new Date(
+      Date.now() + expiresIn * 1000
+    ).toISOString();
 
     // Update with new values from API response
     loginDetails.authToken = accessToken;
     loginDetails.refreshToken = refreshToken;
-    loginDetails.authTokenExpiryDate = new Date(Date.now() + expiresIn * 1000);
+    loginDetails.authTokenExpiryTimestamp = authTokenExpiryTimestamp;
     loginDetails.currentUserId = userId;
 
     chrome.storage.local.set({ loginDetails }, () => {
