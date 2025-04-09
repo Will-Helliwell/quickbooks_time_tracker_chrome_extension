@@ -8,6 +8,7 @@ import {
   updateJobcodesAndTimesheetsFromAPI,
   updateSecondsAssigned,
 } from "/popup/jobcodes.js";
+import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
 import { logout } from "/popup/auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -125,7 +126,35 @@ async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
   const allJobcodesArray = Object.values(userProfile.jobcodes);
   renderAllClientsTable(allJobcodesArray);
-  // TODO - re-render frontend from currently active recording
+  updateUIWithActiveRecording();
+}
+
+async function updateUIWithActiveRecording() {
+  const activeRecording = await getActiveRecordingFromLocalStorage();
+  const activeRecordingOnTheClock = activeRecording.on_the_clock;
+  const activeRecordingJobcodeId = activeRecording.jobcode_id;
+
+  // return all rows to default
+  const allJobRows = document.querySelectorAll(".job-row");
+  allJobRows.forEach((row) => {
+    row.classList.remove("bg-blue-100");
+    const nameField = row.querySelector(".job-name");
+    nameField.classList.remove("text-blue-600", "font-bold");
+  });
+
+  // if there is an active recording, then highlight the row
+  if (activeRecordingOnTheClock) {
+    // Find the job row container using the jobcode ID
+    const jobRow = document.querySelector(
+      `.job-row[data-jobcode-id="${activeRecordingJobcodeId}"]`
+    );
+    if (jobRow) {
+      // Update the job row UI to indicate that it is active
+      jobRow.classList.add("bg-blue-100");
+      const nameField = jobRow.querySelector(".job-name");
+      nameField.classList.add("text-blue-600", "font-bold");
+    }
+  }
 }
 
 /**
