@@ -173,7 +173,9 @@ function renderAllClientsTable(jobcodes) {
       <div class="job-row flex w-full border-t border-gray-200 hover:bg-gray-50" data-jobcode-id="${
         jobcode.id
       }">
-        <div class="job-name p-2 flex-1 truncate">${jobcode.name}</div>
+        <div class="job-name p-2 flex-1 truncate">${
+          jobcode.parent_path_name + jobcode.name
+        }</div>
         <div class="job-completed p-2 w-28 text-right" data-completed="${
           jobcode.seconds_completed
         }">${completedFormatted}</div>
