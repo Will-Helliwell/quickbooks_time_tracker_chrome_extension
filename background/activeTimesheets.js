@@ -61,12 +61,14 @@ async function pollForActivity() {
       currentUserId,
       jobcodeId
     );
-    const secondsAssigned = jobcodeDetails.seconds_assigned;
+    const secondsAssigned = jobcodeDetails.seconds_assigned ?? null;
     const secondsCompleted = jobcodeDetails.seconds_completed;
-    const remainingSeconds = secondsAssigned - secondsCompleted - shiftSeconds;
+    const remainingSeconds =
+      secondsAssigned == null
+        ? null
+        : secondsAssigned - secondsCompleted - shiftSeconds;
 
     updateBadge(remainingSeconds);
-
     startLiveCountdown(remainingSeconds);
   } else {
     // clear badge entirely (text and colour)
@@ -81,14 +83,16 @@ async function pollForActivity() {
 }
 
 function updateBadge(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const displayText = `${seconds}s`;
-
-  if (seconds > 0) {
-    chrome.action.setBadgeText({ text: displayText });
+  const displaySecondsRemaining = `${seconds}s`;
+  if (seconds == null) {
+    // if the user has not assigned a limit
+    chrome.action.setBadgeText({ text: "∞" }); // display infinity
+    chrome.action.setBadgeBackgroundColor({ color: "#FFA500" }); // orange
+  } else if (seconds > 0) {
+    chrome.action.setBadgeText({ text: displaySecondsRemaining });
     chrome.action.setBadgeBackgroundColor({ color: "#FFA500" }); // orange
   } else {
-    chrome.action.setBadgeText({ text: displayText });
+    chrome.action.setBadgeText({ text: displaySecondsRemaining });
     chrome.action.setBadgeBackgroundColor({ color: "#FF0000" }); // red
   }
 }
@@ -99,9 +103,12 @@ function startLiveCountdown(remainingSeconds) {
     clearInterval(countdownInterval); // Avoid multiple intervals
   }
 
+  if (remainingSeconds == null) {
+    return; // Don't start countdown if user has not set a limit
+  }
+
   countdownInterval = setInterval(() => {
     remainingSeconds--;
-
     updateBadge(remainingSeconds);
   }, 1000);
 }
