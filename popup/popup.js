@@ -119,17 +119,20 @@ function updateUserUI(user) {
 function renderAllClientsTable(jobcodes) {
   console.log("jobcodes:", jobcodes);
   console.log("typeof jobcodes:", typeof jobcodes);
-  let allClientsTableHtml = "";
-  allClientsTableHtml += `<table class="w-full bg-white shadow-md rounded-lg">
-    <thead>
-      <tr class="bg-gray-200">
-        <th class="p-2 text-left">Name</th>
-        <th class="p-2 text-left">Completed (s)</th>
-        <th class="p-2 text-left">Assigned (s)</th>
-        <th class="p-2 text-left">Current Session (s)</th>
-      </tr>
-    </thead>
-    <tbody id="all-clients-table-body" class="divide-y">`;
+
+  // Create a container div with fixed height and table structure
+  let allClientsTableHtml = `
+    <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
+      <!-- Fixed header -->
+      <div class="bg-gray-200 flex w-full">
+        <div class="p-2 text-left font-semibold flex-1">Name</div>
+        <div class="p-2 text-left font-semibold w-28">Completed (s)</div>
+        <div class="p-2 text-left font-semibold w-28">Assigned (s)</div>
+        <div class="p-2 text-left font-semibold w-36">Current Session (s)</div>
+      </div>
+      
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto max-h-64">`;
 
   jobcodes.forEach((jobcode) => {
     console.log("jobcode:", jobcode);
@@ -137,16 +140,17 @@ function renderAllClientsTable(jobcodes) {
     console.log("jobcodeName:", jobcodeName);
 
     allClientsTableHtml += `
-      <tr>
-        <td class="p-2">${jobcode.name}</td>
-        <td class="p-2">${jobcode.seconds_completed}</td>
-        <td class="p-2">${jobcode.seconds_assigned}</td>
-        <td class="p-2">-</td>
-      </tr>`;
+      <div class="flex w-full border-t border-gray-200 hover:bg-gray-50">
+        <div class="p-2 flex-1 truncate">${jobcode.name}</div>
+        <div class="p-2 w-28 text-right">${jobcode.seconds_completed}</div>
+        <div class="p-2 w-28 text-right">${jobcode.seconds_assigned}</div>
+        <div class="p-2 w-36 text-right">-</div>
+      </div>`;
   });
 
-  allClientsTableHtml += `</tbody>
-  </table>`;
+  allClientsTableHtml += `
+      </div>
+    </div>`;
 
   const allClientsTable = document.getElementById("all-clients-table");
   allClientsTable.innerHTML = allClientsTableHtml;
