@@ -117,7 +117,9 @@ function updateUserUI(user) {
 }
 
 function renderAllClientsTable(jobcodes) {
-  // Create a container div with fixed height and table structure
+  // filter out any jobcodes with children as these cannot have timesheets assigned
+  jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
+
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
       <!-- Fixed header -->
