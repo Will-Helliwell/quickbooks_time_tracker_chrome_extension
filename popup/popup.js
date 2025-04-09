@@ -125,25 +125,30 @@ function renderAllClientsTable(jobcodes) {
       <!-- Fixed header -->
       <div class="bg-gray-200 flex w-full">
         <div class="p-2 text-left font-semibold flex-1">Name</div>
-        <div class="p-2 text-left font-semibold w-28">Completed (s)</div>
-        <div class="p-2 text-left font-semibold w-28">Assigned (s)</div>
-        <div class="p-2 text-left font-semibold w-36">Current Session (s)</div>
+        <div class="p-2 text-left font-semibold w-28">Completed</div>
+        <div class="p-2 text-left font-semibold w-28">Assigned</div>
+        <div class="p-2 text-left font-semibold w-36">Current Session</div>
       </div>
       
       <!-- Scrollable body -->
       <div class="overflow-y-auto max-h-64">`;
 
   jobcodes.forEach((jobcode) => {
+    // Format time displays
+    const completedFormatted = formatSecondsToTime(jobcode.seconds_completed);
+
     // Display friendly text for null values
     const assignedValue =
-      jobcode.seconds_assigned !== null ? jobcode.seconds_assigned : "No limit";
+      jobcode.seconds_assigned !== null
+        ? formatSecondsToTime(jobcode.seconds_assigned)
+        : "No limit";
     const valueClass =
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
 
     allClientsTableHtml += `
       <div class="flex w-full border-t border-gray-200 hover:bg-gray-50">
         <div class="p-2 flex-1 truncate">${jobcode.name}</div>
-        <div class="p-2 w-28 text-right">${jobcode.seconds_completed}</div>
+        <div class="p-2 w-28 text-right">${completedFormatted}</div>
         <div class="p-2 w-28 text-right relative group">
           <span class="assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
                 data-value="${
@@ -158,7 +163,7 @@ function renderAllClientsTable(jobcodes) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </button>
-          <div class="edit-form hidden absolute right-0 mt-1 bg-white p-2 shadow-lg rounded-md z-10 border border-gray-200" style="min-width: 180px;">
+          <div class="edit-form hidden absolute right-0 mt-1 bg-white p-2 shadow-lg rounded-md z-10 border border-gray-200" style="min-width: 220px;">
             <div class="mb-2">
               <label class="flex items-center">
                 <input type="checkbox" class="limit-checkbox mr-2" ${
@@ -170,12 +175,42 @@ function renderAllClientsTable(jobcodes) {
             <div class="limit-input-container ${
               jobcode.seconds_assigned === null ? "hidden" : ""
             }">
-              <input type="number" min="0" class="assigned-input w-full p-1 border rounded mb-2" 
-                     value="${
-                       jobcode.seconds_assigned !== null
-                         ? jobcode.seconds_assigned
-                         : ""
-                     }">
+              <div class="flex space-x-2 mb-2">
+                <div class="flex-1">
+                  <label class="text-xs text-gray-600">Hours</label>
+                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm" 
+                         value="${
+                           jobcode.seconds_assigned !== null
+                             ? Math.floor(jobcode.seconds_assigned / 3600)
+                             : "0"
+                         }">
+                </div>
+                <div class="flex-1">
+                  <label class="text-xs text-gray-600">Minutes</label>
+                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm" 
+                         value="${
+                           jobcode.seconds_assigned !== null
+                             ? Math.floor(
+                                 (jobcode.seconds_assigned % 3600) / 60
+                               )
+                             : "0"
+                         }">
+                </div>
+                <div class="flex-1">
+                  <label class="text-xs text-gray-600">Seconds</label>
+                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm" 
+                         value="${
+                           jobcode.seconds_assigned !== null
+                             ? jobcode.seconds_assigned % 60
+                             : "0"
+                         }">
+                </div>
+              </div>
+              <input type="hidden" class="assigned-input" value="${
+                jobcode.seconds_assigned !== null
+                  ? jobcode.seconds_assigned
+                  : "0"
+              }">
             </div>
             <div class="flex justify-between">
               <button class="save-assigned-btn px-2 py-1 bg-blue-600 text-white text-xs rounded" data-jobcode-id="${
@@ -221,7 +256,7 @@ function setupAssignedValueEditing() {
 
       // Focus on checkbox or input based on current state
       if (editForm.querySelector(".limit-checkbox").checked) {
-        const input = editForm.querySelector(".assigned-input");
+        const input = editForm.querySelector(".hours-input");
         input.focus();
         input.select();
       }
@@ -239,12 +274,40 @@ function setupAssignedValueEditing() {
       if (e.target.checked) {
         const input = e.target
           .closest(".edit-form")
-          .querySelector(".assigned-input");
+          .querySelector(".hours-input");
         input.focus();
         input.select();
       }
     });
   });
+
+  // Update hidden input when time inputs change
+  document
+    .querySelectorAll(".hours-input, .minutes-input, .seconds-input")
+    .forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const editForm = e.target.closest(".edit-form");
+        const hoursInput = editForm.querySelector(".hours-input");
+        const minutesInput = editForm.querySelector(".minutes-input");
+        const secondsInput = editForm.querySelector(".seconds-input");
+        const assignedInput = editForm.querySelector(".assigned-input");
+
+        // Ensure valid ranges
+        if (parseInt(minutesInput.value) > 59) minutesInput.value = 59;
+        if (parseInt(minutesInput.value) < 0) minutesInput.value = 0;
+        if (parseInt(secondsInput.value) > 59) secondsInput.value = 59;
+        if (parseInt(secondsInput.value) < 0) secondsInput.value = 0;
+        if (parseInt(hoursInput.value) < 0) hoursInput.value = 0;
+
+        // Calculate total seconds
+        const hours = parseInt(hoursInput.value) || 0;
+        const minutes = parseInt(minutesInput.value) || 0;
+        const seconds = parseInt(secondsInput.value) || 0;
+
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        assignedInput.value = totalSeconds;
+      });
+    });
 
   // Save button click
   document.querySelectorAll(".save-assigned-btn").forEach((button) => {
@@ -268,7 +331,7 @@ function setupAssignedValueEditing() {
           .closest(".relative")
           .querySelector(".assigned-value");
         if (newValue !== null) {
-          displaySpan.textContent = newValue;
+          displaySpan.textContent = formatSecondsToTime(newValue);
           displaySpan.classList.remove("text-gray-500", "italic");
           displaySpan.setAttribute("data-value", newValue);
         } else {
@@ -308,13 +371,29 @@ function setupAssignedValueEditing() {
   });
 }
 
+// Function to format seconds into HH:MM:SS format
+function formatSecondsToTime(seconds) {
+  if (seconds === 0) return "0h 0m";
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  let result = "";
+  if (hours > 0) result += `${hours}h `;
+  if (minutes > 0 || hours > 0) result += `${minutes}m`;
+  if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
+
+  return result.trim();
+}
+
 // Function to update the assigned value in the backend
 async function updateAssignedValue(jobcodeId, newValue) {
   // Implementation for API call to update the assigned value
   console.log(
     `Updating jobcode ${jobcodeId} with value: ${
       newValue === null ? "null (no limit)" : newValue
-    }`
+    } seconds`
   );
 
   // For now, just return a promise that resolves immediately
