@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function handlePopupOpen() {
+  let userProfile = {};
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
   const clientSecretInput = document.getElementById("client-secret");
@@ -23,7 +24,7 @@ async function handlePopupOpen() {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
 
-  // If the user is already logged in, load their profile
+  // If the user is already logged in, hide the login section and load their profile
   const loginDetails = await getLoginDetailsFromLocalStorage();
   if (
     loginDetails.authToken &&
@@ -33,16 +34,11 @@ async function handlePopupOpen() {
   ) {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
-
-    const userProfile = await loadUserFromLocalStorage(
-      loginDetails.currentUserId
-    );
-    updateUserUI(userProfile);
-    const allJobcodesArray = Object.values(userProfile.jobcodes);
-    renderAllClientsTable(allJobcodesArray);
+    userProfile = await loadUserFromLocalStorage(loginDetails.currentUserId);
+    updateUIWithUserProfile(userProfile);
   }
 
-  // Handle login
+  // Handle login button click
   loginButton.addEventListener("click", async () => {
     loginButton.classList.add("hidden");
     clientSecretInput.classList.add("hidden");
@@ -54,8 +50,8 @@ async function handlePopupOpen() {
     if (isAuthenticated) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
-      loadUserFromAPI();
-      // TODO - re-render frontend
+      userProfile = await updateUserProfileFromAPI();
+      updateUIWithUserProfile(userProfile);
     }
   });
 
@@ -96,11 +92,6 @@ async function handlePopupOpen() {
     });
 }
 
-async function loadUserFromAPI() {
-  const userProfile = await updateUserProfileFromAPI();
-  updateUserUI(userProfile);
-}
-
 /**
  * Loads a user profile from local storage. If the user profile is not found,
  * it fetches the user profile from an API and updates the local storage.
@@ -115,6 +106,26 @@ async function loadUserFromLocalStorage(userProfileId) {
   }
 
   return userProfile;
+}
+
+/**
+ * Updates the UI all information from the userProfile object
+ *
+ * This function updates the user interface by rendering the user's profile data,
+ * including job codes and client information. It also includes a placeholder
+ * for re-rendering the frontend based on the currently active recording.
+ *
+ * @async
+ * @function
+ * @param {Object} userProfile - The user's profile data.
+ * @param {Object} userProfile.jobcodes - An object containing job codes associated with the user.
+ * @returns {Promise<void>} Resolves when the UI update is complete.
+ */
+async function updateUIWithUserProfile(userProfile) {
+  updateUserUI(userProfile);
+  const allJobcodesArray = Object.values(userProfile.jobcodes);
+  renderAllClientsTable(allJobcodesArray);
+  // TODO - re-render frontend from currently active recording
 }
 
 /**
