@@ -34,7 +34,12 @@ async function handlePopupOpen() {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
 
-    loadUserFromLocalStorage(loginDetails.currentUserId);
+    const userProfile = await loadUserFromLocalStorage(
+      loginDetails.currentUserId
+    );
+    updateUserUI(userProfile);
+    const allJobcodesArray = Object.values(userProfile.jobcodes);
+    renderAllClientsTable(allJobcodesArray);
   }
 
   // Handle login
@@ -96,14 +101,20 @@ async function loadUserFromAPI() {
   updateUserUI(userProfile);
 }
 
+/**
+ * Loads a user profile from local storage. If the user profile is not found,
+ * it fetches the user profile from an API and updates the local storage.
+ *
+ * @param {string} userProfileId - The unique identifier of the user profile to load.
+ * @returns {Promise<Object>} A promise that resolves to the user profile object.
+ */
 async function loadUserFromLocalStorage(userProfileId) {
   let userProfile = await getUserProfileFromStorage(userProfileId);
   if (userProfile === null) {
     userProfile = await updateUserProfileFromAPI();
   }
-  updateUserUI(userProfile);
-  const allJobcodesArray = Object.values(userProfile.jobcodes);
-  renderAllClientsTable(allJobcodesArray);
+
+  return userProfile;
 }
 
 /**
