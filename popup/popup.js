@@ -127,7 +127,7 @@ function renderAllClientsTable(jobcodes) {
         <div class="p-2 text-left font-semibold flex-1">Name</div>
         <div class="p-2 text-left font-semibold w-28">Completed</div>
         <div class="p-2 text-left font-semibold w-28">Assigned</div>
-        <div class="p-2 text-left font-semibold w-36">Current Session</div>
+        <div class="p-2 text-left font-semibold w-28">Remaining</div>
       </div>
       
       <!-- Scrollable body -->
@@ -145,10 +145,38 @@ function renderAllClientsTable(jobcodes) {
     const valueClass =
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
 
+    // Calculate remaining time (only if there's an assigned limit)
+    let remainingFormatted, remainingClass;
+    if (jobcode.seconds_assigned !== null) {
+      const remainingSeconds = Math.max(
+        0,
+        jobcode.seconds_assigned - jobcode.seconds_completed
+      );
+      remainingFormatted = formatSecondsToTime(remainingSeconds);
+
+      // Add warning classes if getting low on time
+      if (remainingSeconds === 0) {
+        remainingClass = "text-red-600 font-bold";
+      } else if (remainingSeconds < jobcode.seconds_assigned * 0.1) {
+        // Less than 10% remaining
+        remainingClass = "text-red-600";
+      } else if (remainingSeconds < jobcode.seconds_assigned * 0.25) {
+        // Less than 25% remaining
+        remainingClass = "text-orange-500";
+      } else {
+        remainingClass = "text-green-600";
+      }
+    } else {
+      remainingFormatted = "∞"; // Infinity symbol for unlimited
+      remainingClass = "text-gray-500 italic";
+    }
+
     allClientsTableHtml += `
       <div class="flex w-full border-t border-gray-200 hover:bg-gray-50">
         <div class="p-2 flex-1 truncate">${jobcode.name}</div>
-        <div class="p-2 w-28 text-right">${completedFormatted}</div>
+        <div class="p-2 w-28 text-right" data-completed="${
+          jobcode.seconds_completed
+        }">${completedFormatted}</div>
         <div class="p-2 w-28 text-right relative group">
           <span class="assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
                 data-value="${
@@ -220,7 +248,7 @@ function renderAllClientsTable(jobcodes) {
             </div>
           </div>
         </div>
-        <div class="p-2 w-36 text-right">-</div>
+        <div class="p-2 w-28 text-right remaining-value ${remainingClass}">${remainingFormatted}</div>
       </div>`;
   });
 
@@ -326,18 +354,47 @@ function setupAssignedValueEditing() {
         // Call function to update the value
         await updateAssignedValue(jobcodeId, newValue);
 
-        // Update the display value
-        const displaySpan = editForm
-          .closest(".relative")
-          .querySelector(".assigned-value");
+        // Find the row container
+        const row = editForm.closest(".flex");
+
+        // Update the assigned value display
+        const assignedSpan = row.querySelector(".assigned-value");
         if (newValue !== null) {
-          displaySpan.textContent = formatSecondsToTime(newValue);
-          displaySpan.classList.remove("text-gray-500", "italic");
-          displaySpan.setAttribute("data-value", newValue);
+          assignedSpan.textContent = formatSecondsToTime(newValue);
+          assignedSpan.classList.remove("text-gray-500", "italic");
+          assignedSpan.setAttribute("data-value", newValue);
         } else {
-          displaySpan.textContent = "No limit";
-          displaySpan.classList.add("text-gray-500", "italic");
-          displaySpan.setAttribute("data-value", "");
+          assignedSpan.textContent = "No limit";
+          assignedSpan.classList.add("text-gray-500", "italic");
+          assignedSpan.setAttribute("data-value", "");
+        }
+
+        // Update the remaining value - FIXED DOM TARGETING
+        const remainingElement = row.querySelector(".remaining-value");
+        const completedElement = row.querySelector("[data-completed]");
+        const completedSeconds = parseInt(
+          completedElement.getAttribute("data-completed")
+        );
+
+        if (newValue !== null) {
+          const remainingSeconds = Math.max(0, newValue - completedSeconds);
+          remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+
+          // Update styling based on remaining time
+          remainingElement.className = "p-2 w-28 text-right remaining-value";
+          if (remainingSeconds === 0) {
+            remainingElement.classList.add("text-red-600", "font-bold");
+          } else if (remainingSeconds < newValue * 0.1) {
+            remainingElement.classList.add("text-red-600");
+          } else if (remainingSeconds < newValue * 0.25) {
+            remainingElement.classList.add("text-orange-500");
+          } else {
+            remainingElement.classList.add("text-green-600");
+          }
+        } else {
+          remainingElement.textContent = "∞";
+          remainingElement.className =
+            "p-2 w-28 text-right remaining-value text-gray-500 italic";
         }
 
         // Hide the edit form
