@@ -83,18 +83,37 @@ async function pollForActivity() {
 }
 
 function updateBadge(seconds) {
-  const displaySecondsRemaining = `${seconds}s`;
   if (seconds == null) {
-    // if the user has not assigned a limit
     chrome.action.setBadgeText({ text: "∞" }); // display infinity
     chrome.action.setBadgeBackgroundColor({ color: "#FFA500" }); // orange
-  } else if (seconds > 0) {
-    chrome.action.setBadgeText({ text: displaySecondsRemaining });
-    chrome.action.setBadgeBackgroundColor({ color: "#FFA500" }); // orange
-  } else {
-    chrome.action.setBadgeText({ text: displaySecondsRemaining });
-    chrome.action.setBadgeBackgroundColor({ color: "#FF0000" }); // red
+    return;
   }
+
+  let displayText;
+  const absSeconds = Math.abs(seconds);
+
+  if (absSeconds >= 3600) {
+    const hours = Math.round(seconds / 3600);
+    displayText = `${hours}h`;
+  } else if (absSeconds >= 60) {
+    const minutes = Math.round(seconds / 60);
+    displayText = `${minutes}m`;
+  } else {
+    displayText = `${seconds}s`;
+  }
+
+  chrome.action.setBadgeText({ text: displayText });
+
+  let color;
+  if (seconds <= 0) {
+    color = "#FF0000"; // red
+  } else if (seconds <= 3600) {
+    color = "#FFA500"; // orange
+  } else {
+    color = "#00AA00"; // green
+  }
+
+  chrome.action.setBadgeBackgroundColor({ color });
 }
 
 // Keep the countdown running every second and update the badge
