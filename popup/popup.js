@@ -1,4 +1,5 @@
 import { authenticateUser } from "/popup/auth.js";
+import { getLoginDetailsFromLocalStorage } from "/popup/loginDetails.js";
 import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
@@ -9,7 +10,11 @@ import {
 } from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  handlePopupOpen();
+});
+
+async function handlePopupOpen() {
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
   const clientSecretInput = document.getElementById("client-secret");
@@ -18,21 +23,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
 
-  // Check if user is already authenticated
-  chrome.storage.local.get("loginDetails", (result) => {
-    const loginDetails = result.loginDetails;
-    if (
-      loginDetails.authToken &&
-      loginDetails.currentUserId &&
-      loginDetails.authTokenExpiryTimestamp &&
-      new Date(loginDetails.authTokenExpiryTimestamp) > new Date()
-    ) {
-      loginScreen.classList.add("hidden");
-      mainContent.classList.remove("hidden");
+  // If the user is already logged in, load their profile
+  const loginDetails = await getLoginDetailsFromLocalStorage();
+  if (
+    loginDetails.authToken &&
+    loginDetails.currentUserId &&
+    loginDetails.authTokenExpiryTimestamp &&
+    new Date(loginDetails.authTokenExpiryTimestamp) > new Date()
+  ) {
+    loginScreen.classList.add("hidden");
+    mainContent.classList.remove("hidden");
 
-      loadUserFromLocalStorage(loginDetails.currentUserId);
-    }
-  });
+    loadUserFromLocalStorage(loginDetails.currentUserId);
+  }
 
   // Handle login
   loginButton.addEventListener("click", async () => {
@@ -86,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       await chrome.storage.local.set({ colorTheme: color });
       alert("Settings saved!");
     });
-});
+}
 
 async function loadUserFromAPI() {
   const userProfile = await updateUserProfileFromAPI();
