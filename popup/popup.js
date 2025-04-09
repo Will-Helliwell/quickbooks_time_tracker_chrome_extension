@@ -3,7 +3,10 @@ import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
 } from "/popup/user.js";
-import { updateJobcodesAndTimesheetsFromAPI } from "/popup/jobcodes.js";
+import {
+  updateJobcodesAndTimesheetsFromAPI,
+  updateSecondsAssigned,
+} from "/popup/jobcodes.js";
 import { logout } from "/popup/auth.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -97,9 +100,6 @@ async function loadUserFromLocalStorage(userProfileId) {
   }
   updateUserUI(userProfile);
   const allJobcodesArray = Object.values(userProfile.jobcodes);
-  console.log("allJobcodesArray:", allJobcodesArray);
-  console.log("typeof allJobcodesArray:", typeof allJobcodesArray);
-  console.log(Array.isArray(allJobcodesArray)); // Should be true
   renderAllClientsTable(allJobcodesArray);
 }
 
@@ -117,8 +117,6 @@ function updateUserUI(user) {
 }
 
 function renderAllClientsTable(jobcodes) {
-  console.log("jobcodes:", jobcodes);
-
   // Create a container div with fixed height and table structure
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
@@ -361,7 +359,8 @@ function setupAssignedValueEditing() {
 
       try {
         // Call function to update the value
-        await updateAssignedValue(jobcodeId, newValue);
+        // await updateAssignedValue(jobcodeId, newValue);
+        await updateSecondsAssigned(jobcodeId, newValue);
 
         // Find the job row container using the jobcode ID
         const jobRow = document.querySelector(
@@ -453,19 +452,6 @@ function formatSecondsToTime(seconds) {
   if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
 
   return result.trim();
-}
-
-// Function to update the assigned value in the backend
-async function updateAssignedValue(jobcodeId, newValue) {
-  // Implementation for API call to update the assigned value
-  console.log(
-    `Updating jobcode ${jobcodeId} with value: ${
-      newValue === null ? "null (no limit)" : newValue
-    } seconds`
-  );
-
-  // For now, just return a promise that resolves immediately
-  return Promise.resolve({ success: true });
 }
 
 async function handleJobcodesButton() {
