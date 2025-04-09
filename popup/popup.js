@@ -124,10 +124,10 @@ function renderAllClientsTable(jobcodes) {
     <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
       <!-- Fixed header -->
       <div class="bg-gray-200 flex w-full">
-        <div class="p-2 text-left font-semibold flex-1">Name</div>
-        <div class="p-2 text-left font-semibold w-28">Completed</div>
-        <div class="p-2 text-left font-semibold w-28">Assigned</div>
-        <div class="p-2 text-left font-semibold w-28">Remaining</div>
+        <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-completed">Completed</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-assigned">Assigned</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-remaining">Remaining</div>
       </div>
       
       <!-- Scrollable body -->
@@ -172,18 +172,22 @@ function renderAllClientsTable(jobcodes) {
     }
 
     allClientsTableHtml += `
-      <div class="flex w-full border-t border-gray-200 hover:bg-gray-50">
-        <div class="p-2 flex-1 truncate">${jobcode.name}</div>
-        <div class="p-2 w-28 text-right" data-completed="${
+      <div class="job-row flex w-full border-t border-gray-200 hover:bg-gray-50" data-jobcode-id="${
+        jobcode.id
+      }">
+        <div class="job-name p-2 flex-1 truncate">${jobcode.name}</div>
+        <div class="job-completed p-2 w-28 text-right" data-completed="${
           jobcode.seconds_completed
         }">${completedFormatted}</div>
-        <div class="p-2 w-28 text-right relative group">
-          <span class="assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
+        <div class="job-assigned-container p-2 w-28 text-right relative group">
+          <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
                 data-value="${
                   jobcode.seconds_assigned !== null
                     ? jobcode.seconds_assigned
                     : ""
-                }">${assignedValue}</span>
+                }">
+            ${assignedValue}
+          </span>
           <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 absolute right-1 ml-1 text-blue-600 focus:outline-none" data-jobcode-id="${
             jobcode.id
           }">
@@ -248,7 +252,7 @@ function renderAllClientsTable(jobcodes) {
             </div>
           </div>
         </div>
-        <div class="p-2 w-28 text-right remaining-value ${remainingClass}">${remainingFormatted}</div>
+        <div class="job-remaining p-2 w-28 text-right ${remainingClass}">${remainingFormatted}</div>
       </div>`;
   });
 
@@ -271,7 +275,10 @@ function setupAssignedValueEditing() {
       // Hide any other open edit forms
       document.querySelectorAll(".edit-form").forEach((form) => {
         if (
-          form !== e.target.nextElementSibling &&
+          form !==
+            e.target
+              .closest(".job-assigned-container")
+              .querySelector(".edit-form") &&
           !form.classList.contains("hidden")
         ) {
           form.classList.add("hidden");
@@ -279,7 +286,9 @@ function setupAssignedValueEditing() {
       });
 
       // Show this edit form
-      const editForm = button.nextElementSibling;
+      const editForm = e.target
+        .closest(".job-assigned-container")
+        .querySelector(".edit-form");
       editForm.classList.toggle("hidden");
 
       // Focus on checkbox or input based on current state
@@ -354,11 +363,13 @@ function setupAssignedValueEditing() {
         // Call function to update the value
         await updateAssignedValue(jobcodeId, newValue);
 
-        // Find the row container
-        const row = editForm.closest(".flex");
+        // Find the job row container using the jobcode ID
+        const jobRow = document.querySelector(
+          `.job-row[data-jobcode-id="${jobcodeId}"]`
+        );
 
         // Update the assigned value display
-        const assignedSpan = row.querySelector(".assigned-value");
+        const assignedSpan = jobRow.querySelector(".job-assigned-value");
         if (newValue !== null) {
           assignedSpan.textContent = formatSecondsToTime(newValue);
           assignedSpan.classList.remove("text-gray-500", "italic");
@@ -369,9 +380,9 @@ function setupAssignedValueEditing() {
           assignedSpan.setAttribute("data-value", "");
         }
 
-        // Update the remaining value - FIXED DOM TARGETING
-        const remainingElement = row.querySelector(".remaining-value");
-        const completedElement = row.querySelector("[data-completed]");
+        // Update the remaining value using class selectors
+        const remainingElement = jobRow.querySelector(".job-remaining");
+        const completedElement = jobRow.querySelector(".job-completed");
         const completedSeconds = parseInt(
           completedElement.getAttribute("data-completed")
         );
@@ -381,7 +392,7 @@ function setupAssignedValueEditing() {
           remainingElement.textContent = formatSecondsToTime(remainingSeconds);
 
           // Update styling based on remaining time
-          remainingElement.className = "p-2 w-28 text-right remaining-value";
+          remainingElement.className = "job-remaining p-2 w-28 text-right";
           if (remainingSeconds === 0) {
             remainingElement.classList.add("text-red-600", "font-bold");
           } else if (remainingSeconds < newValue * 0.1) {
@@ -394,7 +405,7 @@ function setupAssignedValueEditing() {
         } else {
           remainingElement.textContent = "∞";
           remainingElement.className =
-            "p-2 w-28 text-right remaining-value text-gray-500 italic";
+            "job-remaining p-2 w-28 text-right text-gray-500 italic";
         }
 
         // Hide the edit form
