@@ -1,5 +1,5 @@
 const pollFrequencyMinutes = 0.15; // 0.25 = 15 seconds
-const inTestMode = true; // TODO - get rid of this when finished testing
+const inTestMode = false; // TODO - get rid of this when finished testing
 
 if (inTestMode) {
   console.log("Running in test mode");

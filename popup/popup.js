@@ -126,13 +126,49 @@ async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
   const allJobcodesArray = Object.values(userProfile.jobcodes);
   renderAllClientsTable(allJobcodesArray);
-  updateUIWithActiveRecording();
+  updateUIWithActiveRecording(userProfile);
 }
 
-async function updateUIWithActiveRecording() {
+/**
+ * Updates the styling of a remaining time element based on the remaining seconds.
+ * This function applies different color classes to indicate the urgency of the remaining time:
+ * - Red and bold when time is completely depleted (0 seconds)
+ * - Red when less than 10% of total time remains
+ * - Orange when less than 25% of total time remains
+ * - Green when more than 25% of total time remains
+ *
+ * @param {HTMLElement} element - The HTML element to style, typically a div with class 'job-remaining'
+ * @param {number} remainingSeconds - The number of seconds remaining for the task
+ * @param {number} totalSeconds - The total number of seconds allocated for the task, used to calculate percentage thresholds
+ * @returns {void}
+ *
+ */
+function updateRemainingTimeStyle(element, remainingSeconds, totalSeconds) {
+  element.className = "job-remaining p-2 w-28 text-right";
+  if (remainingSeconds === 0) {
+    element.classList.add("text-red-600", "font-bold");
+  } else if (remainingSeconds < totalSeconds * 0.1) {
+    element.classList.add("text-red-600");
+  } else if (remainingSeconds < totalSeconds * 0.25) {
+    element.classList.add("text-orange-500");
+  } else {
+    element.classList.add("text-green-600");
+  }
+}
+
+async function updateUIWithActiveRecording(userProfile) {
   const activeRecording = await getActiveRecordingFromLocalStorage();
   const activeRecordingOnTheClock = activeRecording.on_the_clock;
   const activeRecordingJobcodeId = activeRecording.jobcode_id;
+  const activeRecordingShiftSeconds = activeRecording.shift_seconds;
+  const activeRecordingApiCallTimestamp = activeRecording.api_call_timestamp;
+
+  // get details for currently active jobcode
+  const activeJobcode = userProfile.jobcodes[activeRecordingJobcodeId];
+  const activeJobcodeSecondsAssigned = activeJobcode.seconds_assigned;
+  const activeJobcodeSecondsCompleted = activeJobcode.seconds_completed;
+  const activeJobcodeSecondsRemaining =
+    activeJobcodeSecondsAssigned - activeJobcodeSecondsCompleted;
 
   // return all rows to default
   const allJobRows = document.querySelectorAll(".job-row");
@@ -149,10 +185,35 @@ async function updateUIWithActiveRecording() {
       `.job-row[data-jobcode-id="${activeRecordingJobcodeId}"]`
     );
     if (jobRow) {
+      const remainingElement = jobRow.querySelector(".job-remaining");
+
       // highlight the row
       jobRow.classList.add("bg-blue-100");
       const nameField = jobRow.querySelector(".job-name");
       nameField.classList.add("text-blue-600", "font-bold");
+
+      // Calculate total time spent on the clock for the current session
+      const now = new Date();
+      const apiCallTime = new Date(activeRecordingApiCallTimestamp);
+      const elapsedSeconds = Math.floor((now - apiCallTime) / 1000);
+      const totalCurrentSessionSeconds =
+        activeRecordingShiftSeconds + elapsedSeconds;
+
+      // Calculate new remaining time by subtracting current session time
+      const newRemainingSeconds = Math.max(
+        0,
+        activeJobcodeSecondsRemaining - totalCurrentSessionSeconds
+      );
+
+      // Update the display
+      remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
+
+      // Update styling
+      updateRemainingTimeStyle(
+        remainingElement,
+        newRemainingSeconds,
+        activeJobcodeSecondsAssigned
+      );
     }
   }
 }
@@ -200,9 +261,9 @@ function renderAllClientsTable(jobcodes) {
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
 
     // Calculate remaining time (only if there's an assigned limit)
-    let remainingFormatted, remainingClass;
+    let remainingFormatted, remainingClass, remainingSeconds;
     if (jobcode.seconds_assigned !== null) {
-      const remainingSeconds = Math.max(
+      remainingSeconds = Math.max(
         0,
         jobcode.seconds_assigned - jobcode.seconds_completed
       );
@@ -221,6 +282,7 @@ function renderAllClientsTable(jobcodes) {
         remainingClass = "text-green-600";
       }
     } else {
+      remainingSeconds = null;
       remainingFormatted = "∞"; // Infinity symbol for unlimited
       remainingClass = "text-gray-500 italic";
     }
@@ -308,7 +370,7 @@ function renderAllClientsTable(jobcodes) {
             </div>
           </div>
         </div>
-        <div class="job-remaining p-2 w-28 text-right ${remainingClass}">${remainingFormatted}</div>
+        <div class="job-remaining p-2 w-28 text-right ${remainingClass}" data-remaining="${remainingSeconds}">${remainingFormatted}</div>
       </div>`;
   });
 
@@ -449,16 +511,11 @@ function setupAssignedValueEditing() {
           remainingElement.textContent = formatSecondsToTime(remainingSeconds);
 
           // Update styling based on remaining time
-          remainingElement.className = "job-remaining p-2 w-28 text-right";
-          if (remainingSeconds === 0) {
-            remainingElement.classList.add("text-red-600", "font-bold");
-          } else if (remainingSeconds < newValue * 0.1) {
-            remainingElement.classList.add("text-red-600");
-          } else if (remainingSeconds < newValue * 0.25) {
-            remainingElement.classList.add("text-orange-500");
-          } else {
-            remainingElement.classList.add("text-green-600");
-          }
+          updateRemainingTimeStyle(
+            remainingElement,
+            remainingSeconds,
+            completedSeconds
+          );
         } else {
           remainingElement.textContent = "∞";
           remainingElement.className =
@@ -519,10 +576,10 @@ async function handleJobcodesButton() {
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startTimer") {
-    // We'll handle this in the future
+    // updateUIWithActiveRecording();
     sendResponse({ success: true });
   } else if (message.action === "stopTimer") {
-    // We'll handle this in the future
+    // updateUIWithActiveRecording();
     sendResponse({ success: true });
   } else if (message.action === "timerUpdate") {
     // We'll handle this in the future
