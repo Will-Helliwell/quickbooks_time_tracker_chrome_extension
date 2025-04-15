@@ -67,16 +67,17 @@ function updateBadge(seconds) {
   }
 
   let displayText;
-  const absSeconds = Math.abs(seconds);
 
-  if (absSeconds >= 3600) {
+  if (seconds >= 3600) {
     const hours = Math.round(seconds / 3600);
     displayText = `${hours}h`;
-  } else if (absSeconds >= 60) {
+  } else if (seconds >= 60) {
     const minutes = Math.ceil(seconds / 60);
     displayText = `${minutes}m`;
-  } else {
+  } else if (seconds > 0) {
     displayText = `${seconds}s`;
+  } else {
+    displayText = "over";
   }
 
   chrome.action.setBadgeText({ text: displayText });
@@ -157,7 +158,14 @@ async function pollForActivity() {
 
   // only update jobcodes if the active recording has changed
   if (storedActiveRecordingTimesheetId !== APITimesheetId) {
-    chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
+    try {
+      await chrome.runtime.sendMessage({
+        action: "updateJobcodesAndTimesheets",
+      });
+    } catch (error) {
+      // Ignore errors when popup is not open
+      console.log("Popup not open, skipping jobcodes update");
+    }
   }
 
   // Update local storage with the latest active timesheet
@@ -179,17 +187,27 @@ async function pollForActivity() {
         ? null
         : secondsAssigned - secondsCompleted - shiftSeconds;
 
-    // Start or update the badge countdown
-    startBadgeCountdown(remainingSeconds);
+    // Update badge
+    updateBadge(remainingSeconds);
 
     // Notify the popup about the timer state
-    chrome.runtime.sendMessage({
-      action: "onTheClock",
-      remainingSeconds,
-    });
+    try {
+      await chrome.runtime.sendMessage({
+        action: "onTheClock",
+        remainingSeconds,
+      });
+    } catch (error) {
+      // Ignore errors when popup is not open
+      console.log("Popup not open, skipping timer update");
+    }
   } else {
     clearBadge();
     // Notify the popup to stop the timer
-    chrome.runtime.sendMessage({ action: "offTheClock" });
+    try {
+      await chrome.runtime.sendMessage({ action: "offTheClock" });
+    } catch (error) {
+      // Ignore errors when popup is not open
+      console.log("Popup not open, skipping timer stop");
+    }
   }
 }
