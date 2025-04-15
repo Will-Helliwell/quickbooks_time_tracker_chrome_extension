@@ -1,4 +1,3 @@
-let countdownInterval = null;
 const pollFrequencyMinutes = 0.15; // 0.25 = 15 seconds
 const inTestMode = true; // TODO - get rid of this when finished testing
 
@@ -53,8 +52,9 @@ async function pollForActivity() {
   // Update local storage with the latest active timesheet
   overwriteActiveRecordingInStorage(currentTotalsResponse);
 
-  // if currently on the clock, then update the badge with time remaining
+  // if currently on the clock, then update the badge and notify the popup
   if (onTheClock) {
+    // calculate the remaining seconds
     const shiftSeconds = currentTotalsResponse.shift_seconds;
     const jobcodeId = currentTotalsResponse.jobcode_id;
     const jobcodeDetails = await getJobcodeFromStorage(
@@ -68,18 +68,24 @@ async function pollForActivity() {
         ? null
         : secondsAssigned - secondsCompleted - shiftSeconds;
 
+    // Update badge immediately
     updateBadge(remainingSeconds);
-    startLiveCountdown(remainingSeconds);
+
+    // Notify the popup about the timer state
+    chrome.runtime.sendMessage({
+      action: "startTimer",
+      remainingSeconds,
+    });
   } else {
-    // clear badge entirely (text and colour)
-    chrome.action.setBadgeText({ text: "" });
-    chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
-    // clear countdown in memory
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-    }
+    clearBadge();
+    // Notify the popup to stop the timer
+    chrome.runtime.sendMessage({ action: "stopTimer" });
   }
+}
+
+function clearBadge() {
+  chrome.action.setBadgeText({ text: "" });
+  chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
 }
 
 function updateBadge(seconds) {
@@ -114,22 +120,6 @@ function updateBadge(seconds) {
   }
 
   chrome.action.setBadgeBackgroundColor({ color });
-}
-
-// Keep the countdown running every second and update the badge
-function startLiveCountdown(remainingSeconds) {
-  if (countdownInterval) {
-    clearInterval(countdownInterval); // Avoid multiple intervals
-  }
-
-  if (remainingSeconds == null) {
-    return; // Don't start countdown if user has not set a limit
-  }
-
-  countdownInterval = setInterval(() => {
-    remainingSeconds--;
-    updateBadge(remainingSeconds);
-  }, 1000);
 }
 
 // gets the currentRecording from local storage

@@ -515,3 +515,18 @@ function formatSecondsToTime(seconds) {
 async function handleJobcodesButton() {
   const jobcodes = await updateJobcodesAndTimesheetsFromAPI();
 }
+
+// Add message listener for timer updates
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "startTimer") {
+    // We'll handle this in the future
+    sendResponse({ success: true });
+  } else if (message.action === "stopTimer") {
+    // We'll handle this in the future
+    sendResponse({ success: true });
+  } else if (message.action === "timerUpdate") {
+    // We'll handle this in the future
+    sendResponse({ success: true });
+  }
+  return false; // Don't keep the message channel open
+});
