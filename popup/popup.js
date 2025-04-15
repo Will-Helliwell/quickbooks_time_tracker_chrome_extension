@@ -168,13 +168,6 @@ async function updateUIWithActiveRecording(userProfile) {
   const activeRecordingShiftSeconds = activeRecording.shift_seconds;
   const activeRecordingApiCallTimestamp = activeRecording.api_call_timestamp;
 
-  // get details for currently active jobcode
-  const activeJobcode = userProfile.jobcodes[activeRecordingJobcodeId];
-  const activeJobcodeSecondsAssigned = activeJobcode.seconds_assigned;
-  const activeJobcodeSecondsCompleted = activeJobcode.seconds_completed;
-  const activeJobcodeSecondsRemaining =
-    activeJobcodeSecondsAssigned - activeJobcodeSecondsCompleted;
-
   // return all rows to default
   const allJobRows = document.querySelectorAll(".job-row");
   allJobRows.forEach((row) => {
@@ -190,6 +183,13 @@ async function updateUIWithActiveRecording(userProfile) {
       `.job-row[data-jobcode-id="${activeRecordingJobcodeId}"]`
     );
     if (jobRow) {
+      // get details for currently active jobcode
+      const activeJobcode = userProfile.jobcodes[activeRecordingJobcodeId];
+      const activeJobcodeSecondsAssigned = activeJobcode.seconds_assigned;
+      const activeJobcodeSecondsCompleted = activeJobcode.seconds_completed;
+      const activeJobcodeSecondsRemaining =
+        activeJobcodeSecondsAssigned - activeJobcodeSecondsCompleted;
+
       const remainingElement = jobRow.querySelector(".job-remaining");
       const completedElement = jobRow.querySelector(".job-completed");
 
