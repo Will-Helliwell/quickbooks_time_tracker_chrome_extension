@@ -73,13 +73,13 @@ async function pollForActivity() {
 
     // Notify the popup about the timer state
     chrome.runtime.sendMessage({
-      action: "startTimer",
+      action: "onTheClock",
       remainingSeconds,
     });
   } else {
     clearBadge();
     // Notify the popup to stop the timer
-    chrome.runtime.sendMessage({ action: "stopTimer" });
+    chrome.runtime.sendMessage({ action: "offTheClock" });
   }
 }
 

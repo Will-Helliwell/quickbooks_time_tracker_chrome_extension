@@ -10,6 +10,7 @@ import {
 } from "/popup/jobcodes.js";
 import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
 import { logout } from "/popup/auth.js";
+import { startLiveCountdown, stopCountdown } from "/popup/timer.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -208,6 +209,16 @@ async function updateUIWithActiveRecording(userProfile) {
       // Update the display
       remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
 
+      // start counting down the remaining time
+      startLiveCountdown(newRemainingSeconds, (remainingSeconds) => {
+        remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+        updateRemainingTimeStyle(
+          remainingElement,
+          remainingSeconds,
+          activeJobcodeSecondsAssigned
+        );
+      });
+
       // Update styling
       updateRemainingTimeStyle(
         remainingElement,
@@ -215,6 +226,9 @@ async function updateUIWithActiveRecording(userProfile) {
         activeJobcodeSecondsAssigned
       );
     }
+  } else {
+    // If there's no active recording, stop any existing countdown
+    stopCountdown();
   }
 }
 
@@ -575,10 +589,10 @@ async function handleJobcodesButton() {
 
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "startTimer") {
+  if (message.action === "onTheClock") {
     updateUIWithLatestUserProfile();
     sendResponse({ success: true });
-  } else if (message.action === "stopTimer") {
+  } else if (message.action === "offTheClock") {
     updateUIWithLatestUserProfile();
     sendResponse({ success: true });
   } else if (message.action === "timerUpdate") {
