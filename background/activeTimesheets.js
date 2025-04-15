@@ -25,6 +25,7 @@ if (inTestMode) {
 }
 
 let badgeCountdownInterval = null;
+let currentRemainingSeconds = null;
 
 function startBadgeCountdown(initialSeconds) {
   // Clear any existing interval
@@ -32,17 +33,18 @@ function startBadgeCountdown(initialSeconds) {
     clearInterval(badgeCountdownInterval);
   }
 
+  currentRemainingSeconds = initialSeconds;
   // Update badge immediately with initial value
-  updateBadge(initialSeconds);
+  updateBadge(currentRemainingSeconds);
 
   // Start countdown if we're in the seconds range
   if (Math.abs(initialSeconds) < 60) {
     badgeCountdownInterval = setInterval(() => {
-      initialSeconds--;
-      updateBadge(initialSeconds);
+      currentRemainingSeconds--;
+      updateBadge(currentRemainingSeconds);
 
       // Stop the countdown if we've reached 0 or gone negative
-      if (initialSeconds <= 0) {
+      if (currentRemainingSeconds <= 0) {
         clearInterval(badgeCountdownInterval);
         badgeCountdownInterval = null;
       }
@@ -55,6 +57,7 @@ function clearBadge() {
     clearInterval(badgeCountdownInterval);
     badgeCountdownInterval = null;
   }
+  currentRemainingSeconds = null;
   chrome.action.setBadgeText({ text: "" });
   chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
 }
@@ -157,7 +160,14 @@ async function pollForActivity() {
     storedActiveRecording.timesheet_id || null;
 
   // only update jobcodes if the active recording has changed
+  console.log(
+    "storedActiveRecordingTimesheetId",
+    storedActiveRecordingTimesheetId
+  );
+  console.log("APITimesheetId", APITimesheetId);
+
   if (storedActiveRecordingTimesheetId !== APITimesheetId) {
+    console.log("active recording has changed, updating jobcodes");
     try {
       await chrome.runtime.sendMessage({
         action: "updateJobcodesAndTimesheets",
@@ -187,8 +197,8 @@ async function pollForActivity() {
         ? null
         : secondsAssigned - secondsCompleted - shiftSeconds;
 
-    // Update badge
-    updateBadge(remainingSeconds);
+    // Start or update the badge countdown
+    startBadgeCountdown(remainingSeconds);
 
     // Notify the popup about the timer state
     try {
