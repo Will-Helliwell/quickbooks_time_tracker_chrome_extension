@@ -576,10 +576,10 @@ async function handleJobcodesButton() {
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startTimer") {
-    // updateUIWithActiveRecording();
+    updateUIWithActiveRecording();
     sendResponse({ success: true });
   } else if (message.action === "stopTimer") {
-    // updateUIWithActiveRecording();
+    updateUIWithActiveRecording();
     sendResponse({ success: true });
   } else if (message.action === "timerUpdate") {
     // We'll handle this in the future
