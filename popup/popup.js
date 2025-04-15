@@ -605,10 +605,10 @@ async function handleJobcodesButton() {
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "onTheClock") {
-    updateUIWithLatestUserProfile();
+    updateActiveRecordingUIWithLatestUserProfile();
     sendResponse({ success: true });
   } else if (message.action === "offTheClock") {
-    updateUIWithLatestUserProfile();
+    updateActiveRecordingUIWithLatestUserProfile();
     sendResponse({ success: true });
   } else if (message.action === "timerUpdate") {
     // We'll handle this in the future
@@ -621,7 +621,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * Fetches the latest user profile from local storage and updates the UI with the active recording
  * @returns {Promise<void>}
  */
-async function updateUIWithLatestUserProfile() {
+async function updateActiveRecordingUIWithLatestUserProfile() {
   const loginDetails = await getLoginDetailsFromLocalStorage();
   if (loginDetails.currentUserId) {
     const userProfile = await getUserProfileFromStorage(
