@@ -102,7 +102,7 @@ function updateBadge(seconds) {
     const hours = Math.round(seconds / 3600);
     displayText = `${hours}h`;
   } else if (absSeconds >= 60) {
-    const minutes = Math.round(seconds / 60);
+    const minutes = Math.ceil(seconds / 60);
     displayText = `${minutes}m`;
   } else {
     displayText = `${seconds}s`;
