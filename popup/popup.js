@@ -142,14 +142,14 @@ async function updateUIWithActiveRecording() {
     nameField.classList.remove("text-blue-600", "font-bold");
   });
 
-  // if there is an active recording, then highlight the row
+  // if there is an active recording
   if (activeRecordingOnTheClock) {
     // Find the job row container using the jobcode ID
     const jobRow = document.querySelector(
       `.job-row[data-jobcode-id="${activeRecordingJobcodeId}"]`
     );
     if (jobRow) {
-      // Update the job row UI to indicate that it is active
+      // highlight the row
       jobRow.classList.add("bg-blue-100");
       const nameField = jobRow.querySelector(".job-name");
       nameField.classList.add("text-blue-600", "font-bold");
