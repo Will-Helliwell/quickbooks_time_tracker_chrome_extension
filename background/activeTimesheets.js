@@ -24,66 +24,37 @@ if (inTestMode) {
   });
 }
 
-async function pollForActivity() {
-  console.log("Polling for activity...");
+let badgeCountdownInterval = null;
 
-  const currentUserId = await getCurrentUserId();
-  const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
-  currentTotalsResponse.api_call_timestamp = new Date().toISOString();
-
-  if (!currentTotalsResponse) {
-    return;
+function startBadgeCountdown(initialSeconds) {
+  // Clear any existing interval
+  if (badgeCountdownInterval) {
+    clearInterval(badgeCountdownInterval);
   }
 
-  // extract variables from API response
-  const onTheClock = currentTotalsResponse.on_the_clock;
-  const APITimesheetId = currentTotalsResponse.timesheet_id;
+  // Update badge immediately with initial value
+  updateBadge(initialSeconds);
 
-  // get the active recording from local storage
-  const storedActiveRecording = await getActiveRecordingFromLocalStorage();
-  const storedActiveRecordingTimesheetId =
-    storedActiveRecording.timesheet_id || null;
+  // Start countdown if we're in the seconds range
+  if (Math.abs(initialSeconds) < 60) {
+    badgeCountdownInterval = setInterval(() => {
+      initialSeconds--;
+      updateBadge(initialSeconds);
 
-  // only update jobcodes if the active recording has changed
-  if (storedActiveRecordingTimesheetId !== APITimesheetId) {
-    chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
-  }
-
-  // Update local storage with the latest active timesheet
-  overwriteActiveRecordingInStorage(currentTotalsResponse);
-
-  // if currently on the clock, then update the badge and notify the popup
-  if (onTheClock) {
-    // calculate the remaining seconds
-    const shiftSeconds = currentTotalsResponse.shift_seconds;
-    const jobcodeId = currentTotalsResponse.jobcode_id;
-    const jobcodeDetails = await getJobcodeFromStorage(
-      currentUserId,
-      jobcodeId
-    );
-    const secondsAssigned = jobcodeDetails.seconds_assigned ?? null;
-    const secondsCompleted = jobcodeDetails.seconds_completed;
-    const remainingSeconds =
-      secondsAssigned == null
-        ? null
-        : secondsAssigned - secondsCompleted - shiftSeconds;
-
-    // Update badge immediately
-    updateBadge(remainingSeconds);
-
-    // Notify the popup about the timer state
-    chrome.runtime.sendMessage({
-      action: "onTheClock",
-      remainingSeconds,
-    });
-  } else {
-    clearBadge();
-    // Notify the popup to stop the timer
-    chrome.runtime.sendMessage({ action: "offTheClock" });
+      // Stop the countdown if we've reached 0 or gone negative
+      if (initialSeconds <= 0) {
+        clearInterval(badgeCountdownInterval);
+        badgeCountdownInterval = null;
+      }
+    }, 1000);
   }
 }
 
 function clearBadge() {
+  if (badgeCountdownInterval) {
+    clearInterval(badgeCountdownInterval);
+    badgeCountdownInterval = null;
+  }
   chrome.action.setBadgeText({ text: "" });
   chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
 }
@@ -162,4 +133,63 @@ async function getActiveRecordingFromLocalStorage() {
       resolve(data.activeRecording || {});
     });
   });
+}
+
+async function pollForActivity() {
+  console.log("Polling for activity...");
+
+  const currentUserId = await getCurrentUserId();
+  const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
+  currentTotalsResponse.api_call_timestamp = new Date().toISOString();
+
+  if (!currentTotalsResponse) {
+    return;
+  }
+
+  // extract variables from API response
+  const onTheClock = currentTotalsResponse.on_the_clock;
+  const APITimesheetId = currentTotalsResponse.timesheet_id;
+
+  // get the active recording from local storage
+  const storedActiveRecording = await getActiveRecordingFromLocalStorage();
+  const storedActiveRecordingTimesheetId =
+    storedActiveRecording.timesheet_id || null;
+
+  // only update jobcodes if the active recording has changed
+  if (storedActiveRecordingTimesheetId !== APITimesheetId) {
+    chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
+  }
+
+  // Update local storage with the latest active timesheet
+  overwriteActiveRecordingInStorage(currentTotalsResponse);
+
+  // if currently on the clock, then update the badge and notify the popup
+  if (onTheClock) {
+    // calculate the remaining seconds
+    const shiftSeconds = currentTotalsResponse.shift_seconds;
+    const jobcodeId = currentTotalsResponse.jobcode_id;
+    const jobcodeDetails = await getJobcodeFromStorage(
+      currentUserId,
+      jobcodeId
+    );
+    const secondsAssigned = jobcodeDetails.seconds_assigned ?? null;
+    const secondsCompleted = jobcodeDetails.seconds_completed;
+    const remainingSeconds =
+      secondsAssigned == null
+        ? null
+        : secondsAssigned - secondsCompleted - shiftSeconds;
+
+    // Start or update the badge countdown
+    startBadgeCountdown(remainingSeconds);
+
+    // Notify the popup about the timer state
+    chrome.runtime.sendMessage({
+      action: "onTheClock",
+      remainingSeconds,
+    });
+  } else {
+    clearBadge();
+    // Notify the popup to stop the timer
+    chrome.runtime.sendMessage({ action: "offTheClock" });
+  }
 }
