@@ -10,7 +10,11 @@ import {
 } from "/popup/jobcodes.js";
 import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
 import { logout } from "/popup/auth.js";
-import { startLiveCountdown, stopCountdown } from "/popup/timer.js";
+import {
+  startLiveCountdown,
+  startLiveCountup,
+  stopAllTimers,
+} from "/popup/timer.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -187,6 +191,7 @@ async function updateUIWithActiveRecording(userProfile) {
     );
     if (jobRow) {
       const remainingElement = jobRow.querySelector(".job-remaining");
+      const completedElement = jobRow.querySelector(".job-completed");
 
       // highlight the row
       jobRow.classList.add("bg-blue-100");
@@ -206,8 +211,13 @@ async function updateUIWithActiveRecording(userProfile) {
         activeJobcodeSecondsRemaining - totalCurrentSessionSeconds
       );
 
-      // Update the display
+      // Calculate new completed time by adding current session time
+      const newCompletedSeconds =
+        activeJobcodeSecondsCompleted + totalCurrentSessionSeconds;
+
+      // Update the displays
       remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
+      completedElement.textContent = formatSecondsToTime(newCompletedSeconds);
 
       // start counting down the remaining time
       startLiveCountdown(newRemainingSeconds, (remainingSeconds) => {
@@ -219,6 +229,11 @@ async function updateUIWithActiveRecording(userProfile) {
         );
       });
 
+      // start counting up the completed time
+      startLiveCountup(newCompletedSeconds, (completedSeconds) => {
+        completedElement.textContent = formatSecondsToTime(completedSeconds);
+      });
+
       // Update styling
       updateRemainingTimeStyle(
         remainingElement,
@@ -227,8 +242,8 @@ async function updateUIWithActiveRecording(userProfile) {
       );
     }
   } else {
-    // If there's no active recording, stop any existing countdown
-    stopCountdown();
+    // If there's no active recording, stop all timers
+    stopAllTimers();
   }
 }
 
