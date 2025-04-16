@@ -199,3 +199,62 @@ async function getJobcodesFromAPI() {
     return false;
   }
 }
+
+async function getTimesheetsFromAPI() {
+  const ACCESS_TOKEN = await getAuthToken();
+  if (!ACCESS_TOKEN) {
+    console.error("No access token found in getTimesheetsFromAPI");
+    return false;
+  }
+
+  // Get the user profile to determine the fetch date range
+  const userProfile = await getUserProfileFromStorage();
+  if (!userProfile) {
+    console.error("No user profile found");
+    return false;
+  }
+
+  const userId = userProfile.id;
+
+  // Calculate the fetch date range
+  const userCreatedTimestamp = userProfile.created;
+  const userCreatedDate = new Date(userCreatedTimestamp);
+  const userCreatedDateString = `${userCreatedDate.getFullYear()}-${userCreatedDate.getMonth()}-${userCreatedDate.getDate()}`; // format YYYY-MM-DD
+
+  const dayBeforeLastFetchedDate = new Date(
+    new Date(userProfile.last_fetched_timesheets).getTime() - 86400000
+  ); // 86400000 ms in a day
+
+  const fetch_timesheets_from_date = userProfile.last_fetched_timesheets
+    ? `${dayBeforeLastFetchedDate.getFullYear()}-${dayBeforeLastFetchedDate.getMonth()}-${dayBeforeLastFetchedDate.getDate()}`
+    : userCreatedDateString;
+
+  try {
+    const response = await fetch(
+      `https://rest.tsheets.com/api/v1/timesheets?start_date=${fetch_timesheets_from_date}&user_ids=${userId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Request failed with status:", response.status);
+      return false;
+    }
+
+    const data = await response.json();
+    if (data.results) {
+      return { success: true, timesheetsResponse: data };
+    } else {
+      console.error("No results found in response:", data);
+      return false;
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return false;
+  }
+}
