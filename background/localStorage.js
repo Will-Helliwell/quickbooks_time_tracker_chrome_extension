@@ -1,3 +1,7 @@
+/**
+ * This script handles all local storage operations for the extension backend.
+ */
+
 // LOGIN DETAILS
 
 async function getLoginDetails() {

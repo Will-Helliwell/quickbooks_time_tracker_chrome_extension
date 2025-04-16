@@ -1,4 +1,8 @@
 /**
+ * This script handles all API calls to the TSheets API (excluding authentication).
+ */
+
+/**
  * Listens for messages from other parts of the extension and processes requests.
  * Handles requests to the TSheets API (excluding authentication).
  *
