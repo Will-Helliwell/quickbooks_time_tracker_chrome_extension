@@ -1,4 +1,36 @@
 /**
+ * Loads a user profile from local storage. If the user profile is not found,
+ * it fetches the user profile from an API and updates the local storage.
+ *
+ * @param {string} userProfileId - The unique identifier of the user profile to load.
+ * @returns {Promise<Object>} A promise that resolves to the user profile object.
+ */
+export async function loadOrFetchUserProfile(userProfileId) {
+  let userProfile = await getUserProfileFromStorage(userProfileId);
+  if (userProfile === null) {
+    userProfile = await updateUserProfileFromAPI();
+  }
+
+  return userProfile;
+}
+
+/**
+ * Retrieves the user profile for the given user ID from local storage.
+ *
+ * @param {string} userProfileId - The ID of the user profile to retrieve.
+ * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
+ */
+export async function getUserProfileFromStorage(userProfileId) {
+  const userProfiles = await new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      resolve(data.userProfiles || {}); // Ensure we always return an object
+    });
+  });
+
+  return userProfiles[userProfileId] || null;
+}
+
+/**
  * Fetches the user profile by first checking local storage.
  * If no stored profile is available, it fetches the latest user data from QuickBooks Time and stores the data for future use.
  *
@@ -37,22 +69,6 @@ export async function updateUserProfileFromAPI() {
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }
-}
-
-/**
- * Retrieves the user profile for the given user ID from local storage.
- *
- * @param {string} userProfileId - The ID of the user profile to retrieve.
- * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
- */
-export async function getUserProfileFromStorage(userProfileId) {
-  const userProfiles = await new Promise((resolve) => {
-    chrome.storage.local.get("userProfiles", (data) => {
-      resolve(data.userProfiles || {}); // Ensure we always return an object
-    });
-  });
-
-  return userProfiles[userProfileId] || null;
 }
 
 /**

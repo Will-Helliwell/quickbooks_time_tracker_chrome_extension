@@ -3,6 +3,7 @@ import { getLoginDetailsFromLocalStorage } from "/popup/loginDetails.js";
 import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
+  loadOrFetchUserProfile,
 } from "/popup/user.js";
 import { updateSecondsAssigned } from "/popup/jobcodes.js";
 import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
@@ -37,7 +38,7 @@ async function handlePopupOpen() {
   ) {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
-    userProfile = await loadUserFromLocalStorage(loginDetails.currentUserId);
+    userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
     updateUIWithUserProfile(userProfile);
   }
 
@@ -86,22 +87,6 @@ async function handlePopupOpen() {
       await chrome.storage.local.set({ colorTheme: color });
       alert("Settings saved!");
     });
-}
-
-/**
- * Loads a user profile from local storage. If the user profile is not found,
- * it fetches the user profile from an API and updates the local storage.
- *
- * @param {string} userProfileId - The unique identifier of the user profile to load.
- * @returns {Promise<Object>} A promise that resolves to the user profile object.
- */
-async function loadUserFromLocalStorage(userProfileId) {
-  let userProfile = await getUserProfileFromStorage(userProfileId);
-  if (userProfile === null) {
-    userProfile = await updateUserProfileFromAPI();
-  }
-
-  return userProfile;
 }
 
 /**
