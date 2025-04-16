@@ -263,40 +263,6 @@ async function updateJobcodesAndTimesheetsFromAPI() {
   return true;
 }
 
-async function getJobcodesFromAPI() {
-  const ACCESS_TOKEN = await getAuthToken();
-  if (!ACCESS_TOKEN) {
-    console.error("No access token found in getJobcodesFromAPI");
-    return false;
-  }
-
-  try {
-    const response = await fetch("https://rest.tsheets.com/api/v1/jobcodes", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
-    });
-
-    if (!response.ok) {
-      console.error("Request failed with status:", response.status);
-      return false;
-    }
-
-    const data = await response.json();
-    if (data.results) {
-      return { success: true, jobcodesResponse: data };
-    } else {
-      console.error("No results found in response:", data);
-      return false;
-    }
-  } catch (error) {
-    console.error("Fetch error:", error);
-    return false;
-  }
-}
-
 function processJobcodesAPIResponse(response) {
   const jobcodes = response.jobcodesResponse.results.jobcodes;
   addParentPathName(jobcodes);

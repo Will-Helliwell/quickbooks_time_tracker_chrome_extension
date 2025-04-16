@@ -152,3 +152,50 @@ async function fetchCurrentTotals(currentUserId) {
     return null;
   }
 }
+
+/**
+ * Fetches jobcodes from the TSheets API.
+ *
+ * This function makes an authenticated GET request to the TSheets API to retrieve
+ * all jobcodes for the authenticated user. It handles authentication, error cases,
+ * and response validation.
+ *
+ * @async
+ * @function getJobcodesFromAPI
+ * @returns {Promise<Object|boolean>} Returns an object with success status and jobcodes response if successful,
+ *                                   or false if the request fails or encounters an error.
+ * @throws {Error} Will throw an error if the fetch request fails or if the response status is not OK.
+ */
+async function getJobcodesFromAPI() {
+  const ACCESS_TOKEN = await getAuthToken();
+  if (!ACCESS_TOKEN) {
+    console.error("No access token found in getJobcodesFromAPI");
+    return false;
+  }
+
+  try {
+    const response = await fetch("https://rest.tsheets.com/api/v1/jobcodes", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Request failed with status:", response.status);
+      return false;
+    }
+
+    const data = await response.json();
+    if (data.results) {
+      return { success: true, jobcodesResponse: data };
+    } else {
+      console.error("No results found in response:", data);
+      return false;
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return false;
+  }
+}
