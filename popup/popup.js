@@ -385,11 +385,24 @@ function renderAllClientsTable(jobcodes) {
   const allClientsTable = document.getElementById("all-clients-table");
   allClientsTable.innerHTML = allClientsTableHtml;
 
-  // Add event listeners for editing assigned values
-  setupAssignedValueEditing();
+  setupJobcodeTimeAssignmentEditing();
 }
 
-function setupAssignedValueEditing() {
+/**
+ * Sets up all event listeners and functionality for editing jobcode time assignments.
+ * This includes:
+ * - Toggling edit forms visibility
+ * - Managing time limit checkbox state
+ * - Validating and converting time inputs (hours, minutes, seconds)
+ * - Saving updated time assignments to storage
+ *
+ * The function handles:
+ * 1. Edit button clicks to show/hide edit forms
+ * 2. Limit checkbox toggles to enable/disable time input
+ * 3. Time input validation and conversion to seconds
+ * 4. Save button clicks to persist changes
+ */
+function setupJobcodeTimeAssignmentEditing() {
   // Click event for edit buttons
   document.querySelectorAll(".edit-assigned-btn").forEach((button) => {
     button.addEventListener("click", (e) => {
@@ -482,8 +495,6 @@ function setupAssignedValueEditing() {
         : null;
 
       try {
-        // Call function to update the value
-        // await updateAssignedValue(jobcodeId, newValue);
         await updateSecondsAssigned(jobcodeId, newValue);
 
         // Find the job row container using the jobcode ID
