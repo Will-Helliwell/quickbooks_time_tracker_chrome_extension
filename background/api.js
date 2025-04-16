@@ -51,45 +51,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /**
- * Retrieves the authentication token from Chrome's local storage.
- * @returns {Promise<string>} A promise that resolves to the access token.
- */
-async function getAuthToken() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get("loginDetails", (result) => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(result.loginDetails.authToken);
-      }
-    });
-  });
-}
-
-/**
- * Retrieves the user profile for the given user ID from local storage.
- *
- * @param {string} userProfileId - The ID of the user profile to retrieve.
- * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
- */
-async function getUserProfileFromStorage() {
-  const loginDetails = await new Promise((resolve) => {
-    chrome.storage.local.get("loginDetails", (data) => {
-      resolve(data.loginDetails || {}); // Ensure we always return an object
-    });
-  });
-  const userProfileId = loginDetails.currentUserId;
-  const userProfiles = await new Promise((resolve) => {
-    chrome.storage.local.get("userProfiles", (data) => {
-      resolve(data.userProfiles || {}); // Ensure we always return an object
-    });
-  });
-
-  // Return the profile if it exists, otherwise null
-  return userProfiles[userProfileId] || null;
-}
-
-/**
  * Fetches the current totals of logged time for a given user from the Tsheets API.
  *
  * This function sends a POST request to the Tsheets API to retrieve current time tracking data
