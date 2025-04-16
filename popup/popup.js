@@ -4,10 +4,7 @@ import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
 } from "/popup/user.js";
-import {
-  updateJobcodesAndTimesheetsFromAPI,
-  updateSecondsAssigned,
-} from "/popup/jobcodes.js";
+import { updateSecondsAssigned } from "/popup/jobcodes.js";
 import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
 import { logout } from "/popup/auth.js";
 import {
@@ -60,13 +57,6 @@ async function handlePopupOpen() {
       updateUIWithUserProfile(userProfile);
     }
   });
-
-  // Handle get jobcodes
-  document
-    .getElementById("get-jobcodes")
-    .addEventListener("click", async () => {
-      handleJobcodesButton();
-    });
 
   // Handle logout
   document.getElementById("logout-button").addEventListener("click", () => {
@@ -596,10 +586,6 @@ function formatSecondsToTime(seconds) {
   if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
 
   return result.trim();
-}
-
-async function handleJobcodesButton() {
-  const jobcodes = await updateJobcodesAndTimesheetsFromAPI();
 }
 
 // Add message listener for timer updates
