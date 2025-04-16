@@ -28,6 +28,11 @@ async function pollForActivity() {
   console.log("Polling for activity...");
 
   const currentUserId = await getCurrentUserId();
+  if (!currentUserId) {
+    console.log("User not logged in, exiting early");
+    return;
+  }
+
   const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
   currentTotalsResponse.api_call_timestamp = new Date().toISOString();
 
