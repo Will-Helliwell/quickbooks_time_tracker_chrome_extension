@@ -110,6 +110,10 @@ async function handlePopupOpen() {
 async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
   const allJobcodesArray = Object.values(userProfile.jobcodes);
+
+  // Set the favorites toggle to checked by default
+  document.getElementById("favorites-toggle").checked = true;
+
   renderAllClientsTable(allJobcodesArray);
   updateUIWithActiveRecording(userProfile);
 }
@@ -244,10 +248,19 @@ function renderAllClientsTable(jobcodes) {
   // filter out any jobcodes with children as these cannot have timesheets assigned
   jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
 
+  // Get favorites filter state
+  const showFavoritesOnly = document.getElementById("favorites-toggle").checked;
+
+  // Filter jobcodes if showing favorites only
+  if (showFavoritesOnly) {
+    jobcodes = jobcodes.filter((jobcode) => jobcode.is_favourite);
+  }
+
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
       <!-- Fixed header -->
       <div class="bg-gray-200 flex w-full">
+        <div class="p-2 text-left font-semibold w-10"></div>
         <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
         <div class="p-2 text-left font-semibold w-28 table-column-completed">Completed</div>
         <div class="p-2 text-left font-semibold w-28 table-column-assigned">Assigned</div>
@@ -300,6 +313,17 @@ function renderAllClientsTable(jobcodes) {
       <div class="job-row flex w-full border-t border-gray-200 hover:bg-gray-50" data-jobcode-id="${
         jobcode.id
       }">
+        <div class="p-2 w-10">
+          <button class="favorite-btn ${
+            jobcode.is_favourite ? "text-yellow-400" : "text-gray-300"
+          } hover:text-yellow-400 focus:outline-none" data-jobcode-id="${
+      jobcode.id
+    }">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </button>
+        </div>
         <div class="job-name p-2 flex-1 truncate">${
           jobcode.parent_path_name + jobcode.name
         }</div>
@@ -391,6 +415,8 @@ function renderAllClientsTable(jobcodes) {
   allClientsTable.innerHTML = allClientsTableHtml;
 
   setupJobcodeTimeAssignmentEditing();
+  setupFavoriteButtons();
+  setupFavoritesToggle();
 }
 
 /**
@@ -570,6 +596,55 @@ function setupJobcodeTimeAssignmentEditing() {
         form.classList.add("hidden");
       });
     }
+  });
+}
+
+function setupFavoriteButtons() {
+  document.querySelectorAll(".favorite-btn").forEach((button) => {
+    button.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const jobcodeId = button.getAttribute("data-jobcode-id");
+      const currentLoginDetails = await getLoginDetailsFromLocalStorage();
+      const currentUserId = currentLoginDetails.currentUserId;
+
+      chrome.storage.local.get("userProfiles", (data) => {
+        const userProfiles = data.userProfiles || {};
+        const jobcodes = userProfiles[currentUserId]?.jobcodes || {};
+
+        if (jobcodes[jobcodeId]) {
+          jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
+
+          chrome.storage.local.set(
+            {
+              userProfiles: {
+                ...userProfiles,
+                [currentUserId]: {
+                  ...userProfiles[currentUserId],
+                  jobcodes,
+                },
+              },
+            },
+            () => {
+              // Re-render the table to reflect changes
+              renderAllClientsTable(Object.values(jobcodes));
+            }
+          );
+        }
+      });
+    });
+  });
+}
+
+function setupFavoritesToggle() {
+  const toggle = document.getElementById("favorites-toggle");
+  toggle.addEventListener("change", async () => {
+    const currentLoginDetails = await getLoginDetailsFromLocalStorage();
+    const currentUserId = currentLoginDetails.currentUserId;
+
+    chrome.storage.local.get("userProfiles", (data) => {
+      const jobcodes = data.userProfiles[currentUserId]?.jobcodes || {};
+      renderAllClientsTable(Object.values(jobcodes));
+    });
   });
 }
 
