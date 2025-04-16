@@ -411,8 +411,8 @@ function renderAllClientsTable(jobcodes) {
       </div>
     </div>`;
 
-  const allClientsTable = document.getElementById("all-clients-table");
-  allClientsTable.innerHTML = allClientsTableHtml;
+  const myClientsTable = document.getElementById("my-clients-table");
+  myClientsTable.innerHTML = allClientsTableHtml;
 
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
