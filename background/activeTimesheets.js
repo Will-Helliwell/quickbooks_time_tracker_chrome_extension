@@ -176,22 +176,6 @@ async function pollForActivity() {
 
 // ALL JOBCODE LOGIC HERE
 
-/**
- * Retrieves the jobcodes for the current user from Chrome storage.
- *
- * @param {string} currentUserId - The ID of the currently logged-in user.
- * @returns {Promise<object|null>} A promise resolving to the jobcodes object or null if not found.
- */
-function getJobcodesFromStorage(currentUserId) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("userProfiles", (data) => {
-      const userProfiles = data.userProfiles || {};
-      const jobcodes = userProfiles[currentUserId]?.jobcodes || null;
-      resolve(jobcodes);
-    });
-  });
-}
-
 async function updateJobcodesAndTimesheetsFromAPI() {
   // update jobcodes from API
   let jobcodesAPIResponse = await getJobcodesFromAPI();
@@ -313,31 +297,6 @@ function updateMemoryWithJobcodesFromAPI(jobcodesFromAPI, arrayToUpdate) {
   return arrayToUpdate;
 }
 
-/**
- * Updates the jobcodes and last_fetched_timestamps for the current user in Chrome storage by overwriting the existing jobcodes.
- *
- * @param {string} currentUserId - The ID of the currently logged-in user.
- * @param {object} updatedJobcodes - The updated jobcodes object to store.
- */
-async function overwriteJobcodesInStorage(
-  updatedJobcodes,
-  currentUserId,
-  lastFetchedTimesheets
-) {
-  chrome.storage.local.get("userProfiles", (data) => {
-    chrome.storage.local.set({
-      userProfiles: {
-        ...data.userProfiles,
-        [currentUserId]: {
-          ...data.userProfiles?.[currentUserId],
-          jobcodes: updatedJobcodes,
-          last_fetched_timesheets: lastFetchedTimesheets,
-        },
-      },
-    });
-  });
-}
-
 // TIMESHEETS
 
 /**
@@ -411,37 +370,4 @@ function sumSecondsCompleted(timesheets) {
     secondsCompleted += timesheets[timesheetId].duration;
   }
   return secondsCompleted;
-}
-
-// LOGIN DETAILS
-
-async function getLoginDetails() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("loginDetails", (data) => {
-      resolve(data.loginDetails);
-    });
-  });
-}
-
-/**
- * Retrieves the user profile for the given user ID from local storage.
- *
- * @param {string} userProfileId - The ID of the user profile to retrieve.
- * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
- */
-async function getUserProfileFromStorage() {
-  const loginDetails = await new Promise((resolve) => {
-    chrome.storage.local.get("loginDetails", (data) => {
-      resolve(data.loginDetails || {}); // Ensure we always return an object
-    });
-  });
-  const userProfileId = loginDetails.currentUserId;
-  const userProfiles = await new Promise((resolve) => {
-    chrome.storage.local.get("userProfiles", (data) => {
-      resolve(data.userProfiles || {}); // Ensure we always return an object
-    });
-  });
-
-  // Return the profile if it exists, otherwise null
-  return userProfiles[userProfileId] || null;
 }
