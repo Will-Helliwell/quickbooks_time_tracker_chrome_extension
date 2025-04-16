@@ -3,5 +3,6 @@ importScripts(
   "/background/api.js",
   "/background/auth.js",
   "/background/jobcodesAndTimesheets.js",
+  "/background/badge.js",
   "/background/activeTimesheets.js"
 );
