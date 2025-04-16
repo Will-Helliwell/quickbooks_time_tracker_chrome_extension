@@ -5,7 +5,10 @@ import {
   getUserProfileFromStorage,
   loadOrFetchUserProfile,
 } from "/popup/user.js";
-import { updateSecondsAssigned } from "/popup/jobcodes.js";
+import {
+  updateSecondsAssigned,
+  updateJobcodesAndTimesheets,
+} from "/popup/jobcodes.js";
 import { getActiveRecordingFromLocalStorage } from "/popup/activeRecording.js";
 import { logout } from "/popup/auth.js";
 import {
@@ -55,6 +58,8 @@ async function handlePopupOpen() {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
       userProfile = await updateUserProfileFromAPI();
+      await updateJobcodesAndTimesheets();
+      userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
       updateUIWithUserProfile(userProfile);
     }
   });

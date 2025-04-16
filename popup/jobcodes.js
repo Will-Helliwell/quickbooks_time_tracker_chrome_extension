@@ -1,4 +1,21 @@
 /**
+ * Updates jobcodes and timesheets in local storage by sending a message to the background script
+ * to trigger the updateJobcodesAndTimesheetsFromAPI function.
+ *
+ * @async
+ * @returns {Promise<boolean>} Returns true if the update was successful, false otherwise
+ */
+export async function updateJobcodesAndTimesheets() {
+  try {
+    await chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
+    return true;
+  } catch (error) {
+    console.error("Error updating jobcodes and timesheets:", error);
+    return false;
+  }
+}
+
+/**
  * Updates the seconds assigned to a specific job code for the currently logged-in user in local storage.
  *
  * @async

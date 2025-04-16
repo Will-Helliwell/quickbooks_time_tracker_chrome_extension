@@ -2,6 +2,19 @@
  * This script handles all jobcodes and timesheets operations for the extension backend.
  */
 
+// Add message listener for jobcodes and timesheets updates
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "updateJobcodesAndTimesheets") {
+    updateJobcodesAndTimesheetsFromAPI()
+      .then(() => sendResponse({ success: true }))
+      .catch((error) => {
+        console.error("Error updating jobcodes and timesheets:", error);
+        sendResponse({ success: false });
+      });
+    return true; // Keep the message channel open for async response
+  }
+});
+
 async function updateJobcodesAndTimesheetsFromAPI() {
   // update jobcodes from API
   let jobcodesAPIResponse = await getJobcodesFromAPI();
