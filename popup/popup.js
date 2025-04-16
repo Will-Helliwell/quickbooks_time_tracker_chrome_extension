@@ -114,6 +114,15 @@ async function updateUIWithUserProfile(userProfile) {
   // Set the favorites toggle to checked by default
   document.getElementById("favorites-toggle").checked = true;
 
+  // Set the correct tab styling
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    if (button.getAttribute("data-tab") === "clients-screen") {
+      button.classList.add("text-black", "font-bold");
+    } else {
+      button.classList.remove("text-black", "font-bold");
+    }
+  });
+
   renderAllClientsTable(allJobcodesArray);
   updateUIWithActiveRecording(userProfile);
 }
