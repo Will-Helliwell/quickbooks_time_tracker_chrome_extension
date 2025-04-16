@@ -97,48 +97,6 @@ function updateBadge(seconds) {
   chrome.action.setBadgeBackgroundColor({ color });
 }
 
-// gets the currentRecording from local storage
-async function getCurrentRecording() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("currentRecording", (data) => {
-      resolve(data.currentRecording || {});
-    });
-  });
-}
-
-/**
- * Updates the active recording data in Chrome's local storage.
- *
- * @async
- * @function overwriteActiveRecordingInStorage
- * @param {Object} currentTotalsResponse - The data to be stored as the active recording.
- * @returns {Promise<void>} Resolves when the data has been successfully stored.
- */
-async function overwriteActiveRecordingInStorage(currentTotalsResponse) {
-  chrome.storage.local.set({ activeRecording: currentTotalsResponse }, () => {
-    // console.log(
-    //   "Active recording updated in local storage:",
-    //   currentTotalsResponse
-    // );
-  });
-}
-
-/**
- * Retrieves the active recording data from Chrome's local storage.
- *
- * @async
- * @function
- * @returns {Promise<Object>} A promise that resolves to the active recording object
- *                            stored in local storage, or an empty object if none exists.
- */
-async function getActiveRecordingFromLocalStorage() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("activeRecording", (data) => {
-      resolve(data.activeRecording || {});
-    });
-  });
-}
-
 async function pollForActivity() {
   console.log("Polling for activity...");
 
