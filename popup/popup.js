@@ -657,6 +657,7 @@ function setupFavoritesToggle() {
     chrome.storage.local.get("userProfiles", (data) => {
       const jobcodes = data.userProfiles[currentUserId]?.jobcodes || {};
       renderAllClientsTable(Object.values(jobcodes));
+      initializeColourTheme();
     });
   });
 }
