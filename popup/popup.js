@@ -726,7 +726,6 @@ async function initializeColourThemeToggling() {
     applyTheme(themeChoice);
   });
 }
-
 function applyTheme(themeName) {
   const body = document.body;
   const mainContent = document.getElementById("main-content");
@@ -734,37 +733,86 @@ function applyTheme(themeName) {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
 
+  // define theme colors
+  const themeColors = {
+    dark: {
+      background: "bg-gray-900",
+      text: {
+        primary: "text-white",
+        secondary: "text-gray-300",
+        hover: "hover:text-white",
+      },
+      border: "border-gray-700",
+      userInfo: {
+        background: "bg-gray-800",
+      },
+    },
+    light: {
+      background: "bg-gray-100",
+      text: {
+        primary: "text-gray-800",
+        secondary: "text-gray-600",
+        hover: "hover:text-black",
+      },
+      border: "border-gray-200",
+      userInfo: {
+        background: "bg-white",
+      },
+    },
+  };
+
+  // Apply theme colours
   switch (themeName) {
     case "light":
-      body.classList.remove("bg-gray-900");
-      body.classList.add("bg-gray-100");
-      mainContent.classList.remove("text-white");
-      userInfo.classList.remove("bg-gray-800", "border-gray-700");
-      userInfo.classList.add("bg-white");
+      body.classList.remove(themeColors.dark.background);
+      body.classList.add(themeColors.light.background);
+
+      mainContent.classList.remove(themeColors.dark.text.primary);
+      userInfo.classList.remove(
+        themeColors.dark.userInfo.background,
+        themeColors.dark.border
+      );
+      userInfo.classList.add(themeColors.light.userInfo.background);
 
       tabButtons.forEach((button) => {
-        button.classList.remove("text-gray-300", "hover:text-white");
-        button.classList.add("text-gray-600", "hover:text-black");
+        button.classList.remove(
+          themeColors.dark.text.secondary,
+          themeColors.dark.text.hover
+        );
+        button.classList.add(
+          themeColors.light.text.secondary,
+          themeColors.light.text.hover
+        );
       });
 
       tabContents.forEach((content) => {
-        content.classList.remove("text-gray-300");
+        content.classList.remove(themeColors.dark.text.secondary);
       });
       break;
     case "dark":
-      body.classList.add("bg-gray-900");
-      body.classList.remove("bg-gray-100");
-      mainContent.classList.add("text-white");
-      userInfo.classList.add("bg-gray-800", "border-gray-700");
-      userInfo.classList.remove("bg-white");
+      body.classList.remove(themeColors.light.background);
+      body.classList.add(themeColors.dark.background);
+
+      mainContent.classList.add(themeColors.dark.text.primary);
+      userInfo.classList.add(
+        themeColors.dark.userInfo.background,
+        themeColors.dark.border
+      );
+      userInfo.classList.remove(themeColors.light.userInfo.background);
 
       tabButtons.forEach((button) => {
-        button.classList.add("text-gray-300", "hover:text-white");
-        button.classList.remove("text-gray-600", "hover:text-black");
+        button.classList.add(
+          themeColors.dark.text.secondary,
+          themeColors.dark.text.hover
+        );
+        button.classList.remove(
+          themeColors.light.text.secondary,
+          themeColors.light.text.hover
+        );
       });
 
       tabContents.forEach((content) => {
-        content.classList.add("text-gray-300");
+        content.classList.add(themeColors.dark.text.secondary);
       });
       break;
 
