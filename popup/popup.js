@@ -759,6 +759,8 @@ function applyTheme(themeName) {
   const allClientsTableHeader = document.getElementById(
     "all-clients-table-header"
   );
+  const userFullName = document.getElementById("user-full-name");
+  const userCompany = document.getElementById("user-company");
 
   // define theme colors
   const themeColors = {
@@ -809,6 +811,11 @@ function applyTheme(themeName) {
       );
       userInfo.classList.add(themeColors.light.userInfo.background);
 
+      userFullName.classList.remove(themeColors.dark.text.primary);
+      userFullName.classList.add(themeColors.light.text.primary);
+      userCompany.classList.remove(themeColors.dark.text.secondary);
+      userCompany.classList.add(themeColors.light.text.secondary);
+
       tabButtons.forEach((button) => {
         button.classList.remove(
           themeColors.dark.text.secondary,
@@ -847,6 +854,11 @@ function applyTheme(themeName) {
         themeColors.dark.border
       );
       userInfo.classList.remove(themeColors.light.userInfo.background);
+
+      userFullName.classList.add(themeColors.dark.text.primary);
+      userFullName.classList.remove(themeColors.light.text.primary);
+      userCompany.classList.add(themeColors.dark.text.secondary);
+      userCompany.classList.remove(themeColors.light.text.secondary);
 
       tabButtons.forEach((button) => {
         button.classList.add(
