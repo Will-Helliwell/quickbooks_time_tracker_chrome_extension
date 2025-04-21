@@ -56,5 +56,6 @@ export function authenticateUser() {
 
 export function logout() {
   chrome.storage.local.remove("loginDetails");
+  chrome.storage.local.remove("activeRecording");
   window.location.reload();
 }
