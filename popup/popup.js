@@ -17,6 +17,7 @@ import {
   startLiveCountup,
   stopAllTimers,
 } from "/popup/timer.js";
+import { addNewAlert } from "/popup/alerts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -85,14 +86,11 @@ async function handlePopupOpen() {
     });
   });
 
-  // Save settings
-  document
-    .getElementById("save-settings")
-    .addEventListener("click", async () => {
-      const color = document.getElementById("color-theme").value;
-      await chrome.storage.local.set({ colorTheme: color });
-      alert("Settings saved!");
-    });
+  // Handle add alert button click
+  const addAlertButton = document.getElementById("add-alert");
+  if (addAlertButton) {
+    addAlertButton.addEventListener("click", addNewAlert);
+  }
 }
 
 /**

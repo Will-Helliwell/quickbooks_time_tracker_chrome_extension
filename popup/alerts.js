@@ -1,3 +1,40 @@
+// Function to add a new alert
+export async function addNewAlert() {
+  const hours = parseInt(document.getElementById("alert-hours").value) || 0;
+  const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
+  const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
+  const color = document.getElementById("alert-color").value;
+
+  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
+
+  if (timeInSeconds === 0) {
+    alert("Please enter a valid time");
+    return;
+  }
+
+  const alert = {
+    timeInSeconds,
+    color,
+  };
+
+  // Add to DOM
+  const activeAlerts = document.getElementById("active-alerts");
+  activeAlerts.appendChild(createAlertElement(alert));
+
+  // TODO: Save to storage
+  // const userProfile = await loadOrFetchUserProfile();
+  // if (!userProfile.alerts) {
+  //     userProfile.alerts = [];
+  // }
+  // userProfile.alerts.push(alert);
+  // await overwriteUserProfileInStorage(userProfile);
+
+  // Clear inputs
+  document.getElementById("alert-hours").value = "";
+  document.getElementById("alert-minutes").value = "";
+  document.getElementById("alert-seconds").value = "";
+}
+
 // Function to convert hours, minutes, and seconds to total seconds
 function convertToSeconds(hours, minutes, seconds) {
   return hours * 3600 + minutes * 60 + seconds;
@@ -43,56 +80,18 @@ function createAlertElement(alert) {
   return alertElement;
 }
 
-// Function to add a new alert
-async function addNewAlert() {
-  const hours = parseInt(document.getElementById("alert-hours").value) || 0;
-  const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
-  const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
-  const color = document.getElementById("alert-color").value;
-
-  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
-
-  if (timeInSeconds === 0) {
-    alert("Please enter a valid time");
-    return;
-  }
-
-  const alert = {
-    timeInSeconds,
-    color,
-  };
-
-  // Add to DOM
-  const activeAlerts = document.getElementById("active-alerts");
-  activeAlerts.appendChild(createAlertElement(alert));
-
-  // TODO: Save to storage
-  // const userProfile = await loadOrFetchUserProfile();
-  // if (!userProfile.alerts) {
-  //     userProfile.alerts = [];
-  // }
-  // userProfile.alerts.push(alert);
-  // await overwriteUserProfileInStorage(userProfile);
-
-  // Clear inputs
-  document.getElementById("alert-hours").value = "";
-  document.getElementById("alert-minutes").value = "";
-  document.getElementById("alert-seconds").value = "";
-}
-
 // Initialize alerts functionality
-document.addEventListener("DOMContentLoaded", () => {
-  const addAlertButton = document.getElementById("add-alert");
-  if (addAlertButton) {
-    addAlertButton.addEventListener("click", addNewAlert);
-  }
-
-  // TODO: Load existing alerts from storage
-  // const userProfile = await loadOrFetchUserProfile();
-  // if (userProfile.alerts) {
-  //     userProfile.alerts.forEach(alert => {
-  //         const activeAlerts = document.getElementById('active-alerts');
-  //         activeAlerts.appendChild(createAlertElement(alert));
-  //     });
-  // }
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//   const addAlertButton = document.getElementById("add-alert");
+//   if (addAlertButton) {
+//     addAlertButton.addEventListener("click", addNewAlert);
+//   }
+// TODO: Load existing alerts from storage
+// const userProfile = await loadOrFetchUserProfile();
+// if (userProfile.alerts) {
+//     userProfile.alerts.forEach(alert => {
+//         const activeAlerts = document.getElementById('active-alerts');
+//         activeAlerts.appendChild(createAlertElement(alert));
+//     });
+// }
+// });
