@@ -43,7 +43,6 @@ async function handlePopupOpen() {
     mainContent.classList.remove("hidden");
     userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
     await updateUIWithUserProfile(userProfile);
-    initializeColourTheme();
   }
 
   // Handle login button click
@@ -62,7 +61,6 @@ async function handlePopupOpen() {
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
       await updateUIWithUserProfile(userProfile);
-      initializeColourTheme();
     }
   });
 
@@ -126,7 +124,6 @@ async function updateUIWithUserProfile(userProfile) {
   });
 
   renderAllClientsTable(allJobcodesArray);
-  updateUIWithActiveRecording(userProfile);
 }
 
 /**
@@ -430,6 +427,9 @@ function renderAllClientsTable(jobcodes) {
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
   setupFavoritesToggle();
+
+  updateActiveRecordingUIWithLatestUserProfile();
+  initializeColourTheme();
 }
 
 /**
@@ -640,8 +640,6 @@ function setupFavoriteButtons() {
             () => {
               // Re-render the table to reflect changes
               renderAllClientsTable(Object.values(jobcodes));
-              updateActiveRecordingUIWithLatestUserProfile();
-              initializeColourTheme();
             }
           );
         }
@@ -659,8 +657,6 @@ function setupFavoritesToggle() {
     chrome.storage.local.get("userProfiles", (data) => {
       const jobcodes = data.userProfiles[currentUserId]?.jobcodes || {};
       renderAllClientsTable(Object.values(jobcodes));
-      updateActiveRecordingUIWithLatestUserProfile();
-      initializeColourTheme();
     });
   });
 }
