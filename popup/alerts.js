@@ -14,13 +14,28 @@ export async function addNewAlert(userProfile) {
     return;
   }
 
+  // Check for existing alert with same time
+  if (userProfile.preferences.alerts) {
+    const existingAlert = userProfile.preferences.alerts.find(
+      (alert) =>
+        alert.type === "badge_colour" && alert.time_in_seconds === timeInSeconds
+    );
+
+    if (existingAlert) {
+      alert(
+        `An alert already exists for ${formatTime(
+          timeInSeconds
+        )}. Please choose a different time.`
+      );
+      return;
+    }
+  }
+
   const newAlert = {
     type: "badge_colour",
     time_in_seconds: timeInSeconds,
     alert_string: color,
   };
-  console.log("alert to add = ");
-  console.log(newAlert);
 
   // Add to DOM
   const activeAlerts = document.getElementById("active-alerts");
@@ -38,7 +53,6 @@ export async function addNewAlert(userProfile) {
   }
 
   userProfile.preferences.alerts.push(newAlert);
-
   await overwriteUserProfileInStorage(userProfile);
 
   // Clear inputs
