@@ -95,7 +95,7 @@ function formatTime(seconds) {
 function createAlertElement(alert, userProfile) {
   const alertElement = document.createElement("div");
   alertElement.className =
-    "flex items-center justify-between rounded-md overflow-hidden";
+    "flex items-center justify-between rounded-md overflow-hidden border border-black/10";
   alertElement.style.backgroundColor = alert.alert_string;
 
   // Time section with white background
