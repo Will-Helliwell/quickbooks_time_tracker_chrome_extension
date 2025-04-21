@@ -4,6 +4,7 @@ import {
   updateUserProfileFromAPI,
   getUserProfileFromStorage,
   loadOrFetchUserProfile,
+  overwriteUserProfileInStorage,
 } from "/popup/user.js";
 import {
   updateSecondsAssigned,
@@ -257,7 +258,6 @@ function updateUserUI(user) {
  * @returns {void}
  */
 function renderAllClientsTable(userProfile) {
-  const userProfileId = userProfile.id;
   let jobcodes = Object.values(userProfile.jobcodes) || [];
 
   // filter out any jobcodes with children as these cannot have timesheets assigned
@@ -436,7 +436,7 @@ function renderAllClientsTable(userProfile) {
   setupFavoritesToggle();
 
   updateActiveRecordingUIWithLatestUserProfile();
-  initializeColourTheme(userProfileId);
+  initializeColourTheme(userProfile);
 }
 
 /**
@@ -723,12 +723,13 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
  * @function
  * @returns {Promise<void>}
  */
-async function initializeColourTheme(userProfileId) {
+async function initializeColourTheme(userProfile) {
   const darkModeToggle = document.getElementById("dark-mode-toggle");
-  const { themeChoice } = await chrome.storage.local.get("themeChoice");
+  const userPreferences = userProfile.preferences;
+  const userThemeChoice = userPreferences.theme_choice;
 
   // Set initial theme according to local storage
-  if (themeChoice === "dark") {
+  if (userThemeChoice === "dark") {
     darkModeToggle.checked = true;
     applyTheme("dark");
   } else {
@@ -738,9 +739,16 @@ async function initializeColourTheme(userProfileId) {
 
   // Add event listener for toggle
   darkModeToggle.addEventListener("change", async () => {
-    const themeChoice = darkModeToggle.checked ? "dark" : "light";
-    await chrome.storage.local.set({ themeChoice: themeChoice });
-    applyTheme(themeChoice);
+    const newThemeChoice = darkModeToggle.checked ? "dark" : "light";
+    const updatedUserProfile = {
+      ...userProfile,
+      preferences: {
+        ...userPreferences,
+        theme_choice: newThemeChoice,
+      },
+    };
+    overwriteUserProfileInStorage(updatedUserProfile);
+    applyTheme(newThemeChoice);
   });
 }
 
