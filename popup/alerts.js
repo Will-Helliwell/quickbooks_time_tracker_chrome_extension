@@ -15,26 +15,29 @@ function formatTime(seconds) {
 function createAlertElement(alert) {
   const alertElement = document.createElement("div");
   alertElement.className =
-    "flex items-center justify-between p-2 bg-white border rounded-md";
-  alertElement.style.borderLeft = `4px solid ${alert.color}`;
+    "flex items-center justify-between rounded-md overflow-hidden";
+  alertElement.style.backgroundColor = alert.color;
+
+  // Time section with white background
+  const timeSection = document.createElement("div");
+  timeSection.className = "bg-white px-3 py-2 flex items-center";
 
   const timeText = document.createElement("span");
+  timeText.className = "text-sm font-medium";
   timeText.textContent = formatTime(alert.timeInSeconds);
 
-  const colorPreview = document.createElement("div");
-  colorPreview.className = "w-4 h-4 rounded-full";
-  colorPreview.style.backgroundColor = alert.color;
+  timeSection.appendChild(timeText);
 
+  // Delete button
   const deleteButton = document.createElement("button");
-  deleteButton.className = "text-red-500 hover:text-red-700";
+  deleteButton.className = "text-white hover:text-gray-200 px-3 py-2";
   deleteButton.innerHTML = "&times;";
   deleteButton.onclick = () => {
     alertElement.remove();
     // TODO: Remove from storage
   };
 
-  alertElement.appendChild(timeText);
-  alertElement.appendChild(colorPreview);
+  alertElement.appendChild(timeSection);
   alertElement.appendChild(deleteButton);
 
   return alertElement;
