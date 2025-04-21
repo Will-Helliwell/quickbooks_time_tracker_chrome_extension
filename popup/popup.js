@@ -640,6 +640,7 @@ function setupFavoriteButtons() {
             () => {
               // Re-render the table to reflect changes
               renderAllClientsTable(Object.values(jobcodes));
+              updateActiveRecordingUIWithLatestUserProfile();
               initializeColourTheme();
             }
           );
@@ -658,6 +659,7 @@ function setupFavoritesToggle() {
     chrome.storage.local.get("userProfiles", (data) => {
       const jobcodes = data.userProfiles[currentUserId]?.jobcodes || {};
       renderAllClientsTable(Object.values(jobcodes));
+      updateActiveRecordingUIWithLatestUserProfile();
       initializeColourTheme();
     });
   });
