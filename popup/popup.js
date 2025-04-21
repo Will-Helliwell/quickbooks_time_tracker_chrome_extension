@@ -19,7 +19,6 @@ import {
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
-  initializeColourThemeToggling();
 });
 
 async function handlePopupOpen() {
@@ -43,7 +42,8 @@ async function handlePopupOpen() {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
     userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
-    updateUIWithUserProfile(userProfile);
+    await updateUIWithUserProfile(userProfile);
+    initializeColourTheme();
   }
 
   // Handle login button click
@@ -61,7 +61,8 @@ async function handlePopupOpen() {
       userProfile = await updateUserProfileFromAPI();
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
-      updateUIWithUserProfile(userProfile);
+      await updateUIWithUserProfile(userProfile);
+      initializeColourTheme();
     }
   });
 
@@ -705,8 +706,17 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
   }
 }
 
-// Dark mode functionality
-async function initializeColourThemeToggling() {
+/**
+ * Initializes the color theme and adds event listeners for the dark mode toggle
+ *
+ * This function sets up the dark mode toggle and applies the appropriate theme based on
+ * the user's stored preference. It also handles theme changes when the toggle is switched.
+ *
+ * @async
+ * @function
+ * @returns {Promise<void>}
+ */
+async function initializeColourTheme() {
   const darkModeToggle = document.getElementById("dark-mode-toggle");
   const { themeChoice } = await chrome.storage.local.get("themeChoice");
 
@@ -726,6 +736,18 @@ async function initializeColourThemeToggling() {
     applyTheme(themeChoice);
   });
 }
+
+/**
+ * Applies the specified theme to the popup interface
+ *
+ * This function handles the visual application of theme colors to various UI elements
+ * including the body, main content area, user info section, and tab elements.
+ * It uses Tailwind CSS classes to implement the theme changes.
+ *
+ * @function
+ * @param {string} themeName - The name of the theme to apply ('light' or 'dark')
+ * @returns {void}
+ */
 function applyTheme(themeName) {
   const body = document.body;
   const mainContent = document.getElementById("main-content");
