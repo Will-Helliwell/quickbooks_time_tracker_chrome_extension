@@ -24,7 +24,7 @@ export async function addNewAlert(userProfile) {
 
   // Add to DOM
   const activeAlerts = document.getElementById("active-alerts");
-  activeAlerts.appendChild(createAlertElement(newAlert));
+  activeAlerts.appendChild(createAlertElement(newAlert, userProfile));
 
   // Save new alert to local storage
   if (
@@ -55,7 +55,7 @@ export function populateAlerts(userProfile) {
   activeAlerts.innerHTML = "";
   // Populate active alerts
   alerts.forEach((alert) => {
-    const alertElement = createAlertElement(alert);
+    const alertElement = createAlertElement(alert, userProfile);
     activeAlerts.appendChild(alertElement);
   });
 }
@@ -74,7 +74,7 @@ function formatTime(seconds) {
 }
 
 // Function to create an alert element
-function createAlertElement(alert) {
+function createAlertElement(alert, userProfile) {
   const alertElement = document.createElement("div");
   alertElement.className =
     "flex items-center justify-between rounded-md overflow-hidden";
@@ -94,9 +94,25 @@ function createAlertElement(alert) {
   const deleteButton = document.createElement("button");
   deleteButton.className = "text-white hover:text-gray-200 px-3 py-2";
   deleteButton.innerHTML = "&times;";
-  deleteButton.onclick = () => {
+  deleteButton.onclick = async () => {
+    // Remove from DOM
     alertElement.remove();
-    // TODO: Remove from storage
+
+    // Remove from storage
+    if (
+      userProfile &&
+      userProfile.preferences &&
+      userProfile.preferences.alerts
+    ) {
+      // Find and remove the alert by matching its properties
+      userProfile.preferences.alerts = userProfile.preferences.alerts.filter(
+        (existingAlert) =>
+          existingAlert.type !== alert.type ||
+          existingAlert.time_in_seconds !== alert.time_in_seconds ||
+          existingAlert.alert_string !== alert.alert_string
+      );
+      await overwriteUserProfileInStorage(userProfile);
+    }
   };
 
   alertElement.appendChild(timeSection);
