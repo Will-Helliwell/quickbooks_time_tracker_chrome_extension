@@ -80,7 +80,7 @@ function createAlertElement(alert) {
 
   // Time section with white background
   const timeSection = document.createElement("div");
-  timeSection.className = "bg-white px-3 py-2 flex items-center";
+  timeSection.className = "bg-white px-3 py-2 flex items-center w-[17%]";
 
   const timeText = document.createElement("span");
   timeText.className = "text-sm font-medium";
