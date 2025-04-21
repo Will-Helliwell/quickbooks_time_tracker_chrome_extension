@@ -270,7 +270,7 @@ function renderAllClientsTable(jobcodes) {
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
       <!-- Fixed header -->
-      <div class="bg-gray-200 flex w-full">
+      <div id="all-clients-table-header" class="bg-gray-200 flex w-full">
         <div class="p-2 text-left font-semibold w-10"></div>
         <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
         <div class="p-2 text-left font-semibold w-28 table-column-completed">Completed</div>
@@ -279,7 +279,7 @@ function renderAllClientsTable(jobcodes) {
       </div>
       
       <!-- Scrollable body -->
-      <div class="overflow-y-auto max-h-64">`;
+      <div id="all-clients-table-body" class="overflow-y-auto max-h-64">`;
 
   jobcodes.forEach((jobcode) => {
     // Format time displays
@@ -754,11 +754,15 @@ function applyTheme(themeName) {
   const userInfo = document.getElementById("user-info");
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
+  const allClientsTableBody = document.getElementById("all-clients-table-body");
+  const allClientsTableHeader = document.getElementById(
+    "all-clients-table-header"
+  );
 
   // define theme colors
   const themeColors = {
     dark: {
-      background: "bg-gray-900",
+      background: "bg-gray-800",
       text: {
         primary: "text-white",
         secondary: "text-gray-300",
@@ -767,6 +771,10 @@ function applyTheme(themeName) {
       border: "border-gray-700",
       userInfo: {
         background: "bg-gray-800",
+      },
+      allClientsTable: {
+        headerBackground: "bg-gray-700",
+        bodyBackground: "bg-gray-600",
       },
     },
     light: {
@@ -779,6 +787,10 @@ function applyTheme(themeName) {
       border: "border-gray-200",
       userInfo: {
         background: "bg-white",
+      },
+      allClientsTable: {
+        headerBackground: "bg-gray-200",
+        bodyBackground: "bg-white",
       },
     },
   };
@@ -810,6 +822,19 @@ function applyTheme(themeName) {
       tabContents.forEach((content) => {
         content.classList.remove(themeColors.dark.text.secondary);
       });
+
+      allClientsTableHeader.classList.remove(
+        themeColors.dark.allClientsTable.headerBackground
+      );
+      allClientsTableHeader.classList.add(
+        themeColors.light.allClientsTable.headerBackground
+      );
+      allClientsTableBody.classList.remove(
+        themeColors.dark.allClientsTable.bodyBackground
+      );
+      allClientsTableBody.classList.add(
+        themeColors.light.allClientsTable.bodyBackground
+      );
       break;
     case "dark":
       body.classList.remove(themeColors.light.background);
@@ -836,6 +861,19 @@ function applyTheme(themeName) {
       tabContents.forEach((content) => {
         content.classList.add(themeColors.dark.text.secondary);
       });
+
+      allClientsTableHeader.classList.add(
+        themeColors.dark.allClientsTable.headerBackground
+      );
+      allClientsTableBody.classList.add(
+        themeColors.dark.allClientsTable.bodyBackground
+      );
+      allClientsTableHeader.classList.remove(
+        themeColors.light.allClientsTable.headerBackground
+      );
+      allClientsTableBody.classList.remove(
+        themeColors.light.allClientsTable.bodyBackground
+      );
       break;
 
     default:
