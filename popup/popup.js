@@ -640,6 +640,7 @@ function setupFavoriteButtons() {
             () => {
               // Re-render the table to reflect changes
               renderAllClientsTable(Object.values(jobcodes));
+              initializeColourTheme();
             }
           );
         }
