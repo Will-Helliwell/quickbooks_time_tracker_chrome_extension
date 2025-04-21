@@ -251,6 +251,11 @@ function updateUserUI(user) {
   document.getElementById("user-initials").textContent = userInitials;
 }
 
+/**
+ * Renders the table displaying all clients
+ * @param {Object} userProfile - The user profile object containing user and jobcode information
+ * @returns {void}
+ */
 function renderAllClientsTable(userProfile) {
   const userProfileId = userProfile.id;
   let jobcodes = Object.values(userProfile.jobcodes) || [];
