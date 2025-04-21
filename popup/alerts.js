@@ -10,19 +10,21 @@ export async function addNewAlert(userProfile) {
   const timeInSeconds = convertToSeconds(hours, minutes, seconds);
 
   if (timeInSeconds === 0) {
-    alert("Please enter a valid time");
+    alert("Please enter a valid time for your new alert.");
     return;
   }
 
-  const alert = {
+  const newAlert = {
     type: "badge_colour",
     time_in_seconds: timeInSeconds,
     alert_string: color,
   };
+  console.log("alert to add = ");
+  console.log(newAlert);
 
   // Add to DOM
   const activeAlerts = document.getElementById("active-alerts");
-  activeAlerts.appendChild(createAlertElement(alert));
+  activeAlerts.appendChild(createAlertElement(newAlert));
 
   // Save new alert to local storage
   if (
@@ -35,7 +37,7 @@ export async function addNewAlert(userProfile) {
     );
   }
 
-  userProfile.preferences.alerts.push(alert);
+  userProfile.preferences.alerts.push(newAlert);
 
   await overwriteUserProfileInStorage(userProfile);
 
@@ -102,19 +104,3 @@ function createAlertElement(alert) {
 
   return alertElement;
 }
-
-// Initialize alerts functionality
-// document.addEventListener("DOMContentLoaded", () => {
-//   const addAlertButton = document.getElementById("add-alert");
-//   if (addAlertButton) {
-//     addAlertButton.addEventListener("click", addNewAlert);
-//   }
-// TODO: Load existing alerts from storage
-// const userProfile = await loadOrFetchUserProfile();
-// if (userProfile.alerts) {
-//     userProfile.alerts.forEach(alert => {
-//         const activeAlerts = document.getElementById('active-alerts');
-//         activeAlerts.appendChild(createAlertElement(alert));
-//     });
-// }
-// });
