@@ -1,5 +1,7 @@
+import { overwriteUserProfileInStorage } from "/popup/user.js";
+
 // Function to add a new alert
-export async function addNewAlert() {
+export async function addNewAlert(userProfile) {
   const hours = parseInt(document.getElementById("alert-hours").value) || 0;
   const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
   const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
@@ -13,21 +15,29 @@ export async function addNewAlert() {
   }
 
   const alert = {
-    timeInSeconds,
-    color,
+    type: "badge_colour",
+    time_in_seconds: timeInSeconds,
+    alert_string: color,
   };
 
   // Add to DOM
   const activeAlerts = document.getElementById("active-alerts");
   activeAlerts.appendChild(createAlertElement(alert));
 
-  // TODO: Save to storage
-  // const userProfile = await loadOrFetchUserProfile();
-  // if (!userProfile.alerts) {
-  //     userProfile.alerts = [];
-  // }
-  // userProfile.alerts.push(alert);
-  // await overwriteUserProfileInStorage(userProfile);
+  // Save new alert to local storage
+  if (
+    !userProfile.preferences.alerts ||
+    !Array.isArray(userProfile.preferences.alerts)
+  ) {
+    // Convert existing alerts object to array if it exists, or create new array
+    userProfile.preferences.alerts = Object.values(
+      userProfile.preferences.alerts || {}
+    );
+  }
+
+  userProfile.preferences.alerts.push(alert);
+
+  await overwriteUserProfileInStorage(userProfile);
 
   // Clear inputs
   document.getElementById("alert-hours").value = "";
@@ -53,7 +63,7 @@ function createAlertElement(alert) {
   const alertElement = document.createElement("div");
   alertElement.className =
     "flex items-center justify-between rounded-md overflow-hidden";
-  alertElement.style.backgroundColor = alert.color;
+  alertElement.style.backgroundColor = alert.alert_string;
 
   // Time section with white background
   const timeSection = document.createElement("div");
@@ -61,7 +71,7 @@ function createAlertElement(alert) {
 
   const timeText = document.createElement("span");
   timeText.className = "text-sm font-medium";
-  timeText.textContent = formatTime(alert.timeInSeconds);
+  timeText.textContent = formatTime(alert.time_in_seconds);
 
   timeSection.appendChild(timeText);
 

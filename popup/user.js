@@ -50,7 +50,7 @@ export async function updateUserProfileFromAPI() {
     userProfileAPI.jobcodes = {}; // add jobcodes to the user profile
     userProfileAPI.preferences = {}; // initialize preferences
     userProfileAPI.preferences.theme_choice = "light"; // add theme_choice to the user profile
-    userProfileAPI.preferences.alerts = {}; // initialize alerts
+    userProfileAPI.preferences.alerts = []; // initialize alerts as an array
     overwriteUserProfileInStorage(userProfileAPI);
     return userProfileAPI;
   }

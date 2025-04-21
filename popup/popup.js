@@ -89,7 +89,7 @@ async function handlePopupOpen() {
   // Handle add alert button click
   const addAlertButton = document.getElementById("add-alert");
   if (addAlertButton) {
-    addAlertButton.addEventListener("click", addNewAlert);
+    addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
 }
 
