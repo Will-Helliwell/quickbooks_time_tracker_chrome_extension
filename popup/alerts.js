@@ -37,10 +37,6 @@ export async function addNewAlert(userProfile) {
     alert_string: color,
   };
 
-  // Add to DOM
-  const activeAlerts = document.getElementById("active-alerts");
-  activeAlerts.appendChild(createAlertElement(newAlert, userProfile));
-
   // Save new alert to local storage
   if (
     !userProfile.preferences.alerts ||
@@ -55,6 +51,9 @@ export async function addNewAlert(userProfile) {
   userProfile.preferences.alerts.push(newAlert);
   await overwriteUserProfileInStorage(userProfile);
 
+  // Re-populate alerts to maintain sorted order
+  populateAlerts(userProfile);
+
   // Clear inputs
   document.getElementById("alert-hours").value = "";
   document.getElementById("alert-minutes").value = "";
@@ -65,10 +64,15 @@ export function populateAlerts(userProfile) {
   const activeAlerts = document.getElementById("active-alerts");
   const alerts = userProfile.preferences.alerts || [];
 
+  // Filter for badge_colour type and sort by time_in_seconds descending
+  const badgeAlerts = alerts
+    .filter((alert) => alert.type === "badge_colour")
+    .sort((a, b) => b.time_in_seconds - a.time_in_seconds);
+
   // Clear existing alerts
   activeAlerts.innerHTML = "";
   // Populate active alerts
-  alerts.forEach((alert) => {
+  badgeAlerts.forEach((alert) => {
     const alertElement = createAlertElement(alert, userProfile);
     activeAlerts.appendChild(alertElement);
   });
