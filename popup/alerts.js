@@ -45,6 +45,19 @@ export async function addNewAlert(userProfile) {
   document.getElementById("alert-seconds").value = "";
 }
 
+export function populateAlerts(userProfile) {
+  const activeAlerts = document.getElementById("active-alerts");
+  const alerts = userProfile.preferences.alerts || [];
+
+  // Clear existing alerts
+  activeAlerts.innerHTML = "";
+  // Populate active alerts
+  alerts.forEach((alert) => {
+    const alertElement = createAlertElement(alert);
+    activeAlerts.appendChild(alertElement);
+  });
+}
+
 // Function to convert hours, minutes, and seconds to total seconds
 function convertToSeconds(hours, minutes, seconds) {
   return hours * 3600 + minutes * 60 + seconds;

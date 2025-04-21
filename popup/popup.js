@@ -17,7 +17,7 @@ import {
   startLiveCountup,
   stopAllTimers,
 } from "/popup/timer.js";
-import { addNewAlert } from "/popup/alerts.js";
+import { addNewAlert, populateAlerts } from "/popup/alerts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -120,6 +120,8 @@ async function updateUIWithUserProfile(userProfile) {
       button.classList.remove("text-black", "font-bold");
     }
   });
+
+  populateAlerts(userProfile);
 
   renderAllClientsTable(userProfile);
 }
