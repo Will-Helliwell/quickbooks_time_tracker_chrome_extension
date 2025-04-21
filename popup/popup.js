@@ -19,6 +19,7 @@ import {
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
+  initializeColourThemeToggling();
 });
 
 async function handlePopupOpen() {
@@ -701,5 +702,73 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
       loginDetails.currentUserId
     );
     updateUIWithActiveRecording(userProfile);
+  }
+}
+
+// Dark mode functionality
+async function initializeColourThemeToggling() {
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  const { themeChoice } = await chrome.storage.local.get("themeChoice");
+
+  // Set initial theme according to local storage
+  if (themeChoice === "dark") {
+    darkModeToggle.checked = true;
+    applyTheme("dark");
+  } else {
+    darkModeToggle.checked = false;
+    applyTheme("light");
+  }
+
+  // Add event listener for toggle
+  darkModeToggle.addEventListener("change", async () => {
+    const themeChoice = darkModeToggle.checked ? "dark" : "light";
+    await chrome.storage.local.set({ themeChoice: themeChoice });
+    applyTheme(themeChoice);
+  });
+}
+
+function applyTheme(themeName) {
+  const body = document.body;
+  const mainContent = document.getElementById("main-content");
+  const userInfo = document.getElementById("user-info");
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  switch (themeName) {
+    case "light":
+      body.classList.remove("bg-gray-900");
+      body.classList.add("bg-gray-100");
+      mainContent.classList.remove("text-white");
+      userInfo.classList.remove("bg-gray-800", "border-gray-700");
+      userInfo.classList.add("bg-white");
+
+      tabButtons.forEach((button) => {
+        button.classList.remove("text-gray-300", "hover:text-white");
+        button.classList.add("text-gray-600", "hover:text-black");
+      });
+
+      tabContents.forEach((content) => {
+        content.classList.remove("text-gray-300");
+      });
+      break;
+    case "dark":
+      body.classList.add("bg-gray-900");
+      body.classList.remove("bg-gray-100");
+      mainContent.classList.add("text-white");
+      userInfo.classList.add("bg-gray-800", "border-gray-700");
+      userInfo.classList.remove("bg-white");
+
+      tabButtons.forEach((button) => {
+        button.classList.add("text-gray-300", "hover:text-white");
+        button.classList.remove("text-gray-600", "hover:text-black");
+      });
+
+      tabContents.forEach((content) => {
+        content.classList.add("text-gray-300");
+      });
+      break;
+
+    default:
+      break;
   }
 }
