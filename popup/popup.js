@@ -109,7 +109,6 @@ async function handlePopupOpen() {
  */
 async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
-  const allJobcodesArray = Object.values(userProfile.jobcodes);
 
   // Set the favorites toggle to checked by default
   document.getElementById("favorites-toggle").checked = true;
@@ -123,7 +122,7 @@ async function updateUIWithUserProfile(userProfile) {
     }
   });
 
-  renderAllClientsTable(allJobcodesArray);
+  renderAllClientsTable(userProfile);
 }
 
 /**
@@ -252,7 +251,10 @@ function updateUserUI(user) {
   document.getElementById("user-initials").textContent = userInitials;
 }
 
-function renderAllClientsTable(jobcodes) {
+function renderAllClientsTable(userProfile) {
+  const userProfileId = userProfile.id;
+  let jobcodes = Object.values(userProfile.jobcodes) || [];
+
   // filter out any jobcodes with children as these cannot have timesheets assigned
   jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
 
@@ -429,7 +431,7 @@ function renderAllClientsTable(jobcodes) {
   setupFavoritesToggle();
 
   updateActiveRecordingUIWithLatestUserProfile();
-  initializeColourTheme();
+  initializeColourTheme(userProfileId);
 }
 
 /**
@@ -622,7 +624,8 @@ function setupFavoriteButtons() {
 
       chrome.storage.local.get("userProfiles", (data) => {
         const userProfiles = data.userProfiles || {};
-        const jobcodes = userProfiles[currentUserId]?.jobcodes || {};
+        const userProfile = userProfiles[currentUserId] || {};
+        const jobcodes = userProfile.jobcodes || {};
 
         if (jobcodes[jobcodeId]) {
           jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
@@ -639,7 +642,7 @@ function setupFavoriteButtons() {
             },
             () => {
               // Re-render the table to reflect changes
-              renderAllClientsTable(Object.values(jobcodes));
+              renderAllClientsTable(userProfile);
             }
           );
         }
@@ -655,8 +658,7 @@ function setupFavoritesToggle() {
     const currentUserId = currentLoginDetails.currentUserId;
 
     chrome.storage.local.get("userProfiles", (data) => {
-      const jobcodes = data.userProfiles[currentUserId]?.jobcodes || {};
-      renderAllClientsTable(Object.values(jobcodes));
+      renderAllClientsTable(data.userProfiles[currentUserId] || {});
     });
   });
 }
@@ -716,7 +718,7 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
  * @function
  * @returns {Promise<void>}
  */
-async function initializeColourTheme() {
+async function initializeColourTheme(userProfileId) {
   const darkModeToggle = document.getElementById("dark-mode-toggle");
   const { themeChoice } = await chrome.storage.local.get("themeChoice");
 
