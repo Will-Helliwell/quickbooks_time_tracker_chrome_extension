@@ -48,6 +48,8 @@ export async function updateUserProfileFromAPI() {
   if (!userProfileStored) {
     userProfileAPI.last_fetched_timesheets = null; // add last_fetched_timesheets to the user profile
     userProfileAPI.jobcodes = {}; // add jobcodes to the user profile
+    userProfileAPI.preferences = {}; // initialize preferences
+    userProfileAPI.preferences.themeChoice = "light"; // add themeChoice to the user profile
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }
@@ -66,6 +68,7 @@ export async function updateUserProfileFromAPI() {
     userProfileAPI.last_fetched_timesheets =
       userProfileStored.last_fetched_timesheets; // preserve last_fetched_timesheets
     userProfileAPI.jobcodes = userProfileStored.jobcodes; // preserve jobcodes
+    userProfileAPI.preferences = userProfileStored.preferences; // preserve all preferences
     saveUserProfileToStorage(userProfileAPI);
     return userProfileAPI;
   }
