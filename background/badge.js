@@ -131,14 +131,6 @@ async function playAudio(sound) {
   });
 }
 
-async function checkNotificationPermission() {
-  const result = await chrome.permissions.contains({
-    permissions: ["notifications"],
-  });
-  hasNotificationPermission = result;
-  return result;
-}
-
 async function createChromeAlert() {
   if (!hasNotificationPermission) {
     console.log("No notification permission, skipping notification");
@@ -163,9 +155,6 @@ async function createChromeAlert() {
     }
   );
 }
-
-// Check permission status when the extension loads
-checkNotificationPermission();
 
 // Listen for permission changes
 chrome.permissions.onAdded.addListener((permissions) => {
