@@ -4,6 +4,7 @@
 
 let badgeCountdownInterval = null;
 let currentRemainingSeconds = null;
+let hasNotificationPermission = false;
 
 /**
  * Starts a countdown timer from the given argument; updates the badge text; triggers alerts accordingly.
@@ -129,3 +130,52 @@ async function playAudio(sound) {
     sound: sound,
   });
 }
+
+async function checkNotificationPermission() {
+  const result = await chrome.permissions.contains({
+    permissions: ["notifications"],
+  });
+  hasNotificationPermission = result;
+  return result;
+}
+
+async function createChromeAlert() {
+  if (!hasNotificationPermission) {
+    console.log("No notification permission, skipping notification");
+    return;
+  }
+
+  chrome.notifications.create(
+    {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("images/icon_notification_48.png"),
+      title: "QuickBooks Time Alert!",
+      message:
+        "This is a test notification. If you can see this, notifications are working!",
+      priority: 2,
+      requireInteraction: true, // This will make the notification stay until you click it
+      silent: false, // This will ensure the notification makes a sound
+    },
+    (notificationId) => {
+      if (chrome.runtime.lastError) {
+        console.error("Error creating notification:", chrome.runtime.lastError);
+      }
+    }
+  );
+}
+
+// Check permission status when the extension loads
+checkNotificationPermission();
+
+// Listen for permission changes
+chrome.permissions.onAdded.addListener((permissions) => {
+  if (permissions.permissions.includes("notifications")) {
+    hasNotificationPermission = true;
+  }
+});
+
+chrome.permissions.onRemoved.addListener((permissions) => {
+  if (permissions.permissions.includes("notifications")) {
+    hasNotificationPermission = false;
+  }
+});
