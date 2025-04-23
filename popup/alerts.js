@@ -6,7 +6,9 @@ export async function addNewAlert(userProfile) {
   const hours = parseInt(document.getElementById("alert-hours").value) || 0;
   const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
   const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
+  const alertType = document.getElementById("alert-type").value;
   const color = document.getElementById("alert-color").value;
+  const sound = document.getElementById("alert-sound").value;
 
   const timeInSeconds = isOvertimeAlert
     ? 0
@@ -17,11 +19,11 @@ export async function addNewAlert(userProfile) {
     return;
   }
 
-  // Check for existing alert with same time
+  // Check for existing alert with same time and type
   if (userProfile.preferences.alerts) {
     const existingAlert = userProfile.preferences.alerts.find(
       (alert) =>
-        alert.type === "badge_colour" && alert.time_in_seconds === timeInSeconds
+        alert.type === alertType && alert.time_in_seconds === timeInSeconds
     );
 
     if (existingAlert) {
@@ -39,9 +41,9 @@ export async function addNewAlert(userProfile) {
   }
 
   const newAlert = {
-    type: "badge_colour",
+    type: alertType,
     time_in_seconds: timeInSeconds,
-    alert_string: color,
+    alert_string: alertType === "badge" ? color : sound,
   };
 
   // Save new alert to local storage
@@ -65,22 +67,21 @@ export async function addNewAlert(userProfile) {
   document.getElementById("alert-hours").value = "";
   document.getElementById("alert-minutes").value = "";
   document.getElementById("alert-seconds").value = "";
-  document.getElementById("overtime-alert").checked = false;
 }
 
 export function populateAlerts(userProfile) {
   const activeAlerts = document.getElementById("active-alerts");
   const alerts = userProfile.preferences.alerts || [];
 
-  // Filter for badge_colour type and sort by time_in_seconds ascending
-  const badgeAlerts = alerts
-    .filter((alert) => alert.type === "badge_colour")
-    .sort((a, b) => a.time_in_seconds - b.time_in_seconds);
+  // Sort by time_in_seconds ascending
+  const sortedAlerts = alerts.sort(
+    (a, b) => a.time_in_seconds - b.time_in_seconds
+  );
 
   // Clear existing alerts
   activeAlerts.innerHTML = "";
   // Populate active alerts
-  badgeAlerts.forEach((alert) => {
+  sortedAlerts.forEach((alert) => {
     const alertElement = createAlertElement(alert, userProfile);
     activeAlerts.appendChild(alertElement);
   });
@@ -104,7 +105,13 @@ function createAlertElement(alert, userProfile) {
   const alertElement = document.createElement("div");
   alertElement.className =
     "flex items-center justify-between rounded-md overflow-hidden border border-black/10";
-  alertElement.style.backgroundColor = alert.alert_string;
+
+  // Set background color
+  if (alert.type === "badge") {
+    alertElement.style.backgroundColor = alert.alert_string;
+  } else {
+    alertElement.style.backgroundColor = "#FFFFFF"; // white
+  }
 
   // Time section with white background
   const timeSection = document.createElement("div");
@@ -118,6 +125,16 @@ function createAlertElement(alert, userProfile) {
       : formatTime(alert.time_in_seconds);
 
   timeSection.appendChild(timeText);
+
+  // Alert type indicator
+  const typeIndicator = document.createElement("span");
+  typeIndicator.className = "text-sm font-medium ml-2";
+  typeIndicator.textContent =
+    alert.type === "badge"
+      ? "Badge"
+      : `Sound (${alert.alert_string
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase())})`;
 
   // Delete button
   const deleteButton = document.createElement("button");
@@ -145,7 +162,38 @@ function createAlertElement(alert, userProfile) {
   };
 
   alertElement.appendChild(timeSection);
+  alertElement.appendChild(typeIndicator);
   alertElement.appendChild(deleteButton);
 
   return alertElement;
+}
+
+/**
+ * Initializes the alert type selector and manages the visibility of color picker and sound selector containers
+ *
+ * This function sets up event listeners for the alert type selector dropdown to toggle between
+ * badge alerts (with color picker) and sound alerts (with sound selector). When the alert type
+ * changes, it shows/hides the appropriate input container.
+ *
+ * @function
+ * @returns {void}
+ */
+export function initializeAlertTypeSelector() {
+  const alertTypeSelect = document.getElementById("alert-type");
+  const colorPickerContainer = document.getElementById(
+    "color-picker-container"
+  );
+  const soundSelectorContainer = document.getElementById(
+    "sound-selector-container"
+  );
+
+  alertTypeSelect.addEventListener("change", () => {
+    if (alertTypeSelect.value === "badge") {
+      colorPickerContainer.classList.remove("hidden");
+      soundSelectorContainer.classList.add("hidden");
+    } else {
+      colorPickerContainer.classList.add("hidden");
+      soundSelectorContainer.classList.remove("hidden");
+    }
+  });
 }

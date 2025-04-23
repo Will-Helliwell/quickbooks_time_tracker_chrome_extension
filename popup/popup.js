@@ -17,7 +17,11 @@ import {
   startLiveCountup,
   stopAllTimers,
 } from "/popup/timer.js";
-import { addNewAlert, populateAlerts } from "/popup/alerts.js";
+import {
+  addNewAlert,
+  populateAlerts,
+  initializeAlertTypeSelector,
+} from "/popup/alerts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -91,6 +95,7 @@ async function handlePopupOpen() {
   if (addAlertButton) {
     addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
+  initializeAlertTypeSelector();
 }
 
 /**

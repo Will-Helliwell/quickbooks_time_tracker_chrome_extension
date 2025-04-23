@@ -94,12 +94,29 @@
             <!-- Alerts Section -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-2">Alerts</h3>
-                <h4 class="text-sm font-medium mb-2">Badge Colour</h4>
 
                 <!-- Time and Color Inputs in a Row -->
                 <div class="flex items-center justify-between gap-3 bg-white p-3 rounded-lg shadow-sm"
                     id="alerts-input-container">
                     <div class="flex items-center gap-3">
+                        <!-- Alert Type Selector -->
+                        <select id="alert-type" class="border rounded-md p-1 text-sm">
+                            <option value="badge">Badge</option>
+                            <option value="sound">Sound</option>
+                        </select>
+
+                        <!-- Color Picker (shown by default) -->
+                        <div id="color-picker-container" class="w-24">
+                            <input type="color" id="alert-color" class="w-full h-8 border rounded-md p-1">
+                        </div>
+
+                        <!-- Sound Selector (hidden by default) -->
+                        <div id="sound-selector-container" class="w-24 hidden">
+                            <select id="alert-sound" class="w-full h-8 border rounded-md p-1 text-sm">
+                                <option value="eastern_whip">Eastern Whip</option>
+                            </select>
+                        </div>
+
                         <!-- Time Input -->
                         <div class="flex gap-2">
                             <input type="number" id="alert-hours" class="w-16 border rounded-md p-1 text-sm"
@@ -108,11 +125,6 @@
                                 placeholder="M" min="0" max="59">
                             <input type="number" id="alert-seconds" class="w-16 border rounded-md p-1 text-sm"
                                 placeholder="S" min="0" max="59">
-                        </div>
-
-                        <!-- Color Picker -->
-                        <div class="w-24">
-                            <input type="color" id="alert-color" class="w-full h-8 border rounded-md p-1">
                         </div>
 
                         <!-- Overtime Checkbox -->
