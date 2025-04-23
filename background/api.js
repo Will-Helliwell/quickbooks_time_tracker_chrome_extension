@@ -173,7 +173,7 @@ async function getTimesheetsFromAPI() {
   }
 
   // Get the user profile to determine the fetch date range
-  const userProfile = await getUserProfileFromStorage();
+  const userProfile = await getUserProfileForLoggedInUserFromStorage();
   if (!userProfile) {
     console.error("No user profile found");
     return false;

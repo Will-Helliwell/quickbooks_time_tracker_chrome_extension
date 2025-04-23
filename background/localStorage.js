@@ -66,7 +66,7 @@ async function getAuthToken() {
 }
 
 /**
- * Retrieves the current user ID from the local storage.
+ * Retrieves the current user ID from the local storage by looking at loginDetails.
  *
  * @returns {Promise<string|null>} A promise that resolves to the `currentUserId` if it is found in local storage,
  *                                 or `null` if the `currentUserId` is not available.
@@ -99,27 +99,28 @@ async function getActiveRecordingFromLocalStorage() {
 
 // USER PROFILES
 
+async function getUserProfileFromStorage(userProfileId) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      const userProfiles = data.userProfiles || {};
+      resolve(userProfiles[userProfileId] || null);
+    });
+  });
+}
 /**
- * Retrieves the user profile for the given user ID from local storage.
+ * Retrieves the user profile for the currently logged-in user (from oginDetails in local storage).
  *
  * @param {string} userProfileId - The ID of the user profile to retrieve.
  * @returns {Promise<Object|null>} A promise resolving to the user profile object if found, otherwise null.
  */
-async function getUserProfileFromStorage() {
+async function getUserProfileForLoggedInUserFromStorage() {
   const loginDetails = await new Promise((resolve) => {
     chrome.storage.local.get("loginDetails", (data) => {
       resolve(data.loginDetails || {}); // Ensure we always return an object
     });
   });
   const userProfileId = loginDetails.currentUserId;
-  const userProfiles = await new Promise((resolve) => {
-    chrome.storage.local.get("userProfiles", (data) => {
-      resolve(data.userProfiles || {}); // Ensure we always return an object
-    });
-  });
-
-  // Return the profile if it exists, otherwise null
-  return userProfiles[userProfileId] || null;
+  return getUserProfileFromStorage(userProfileId);
 }
 
 // JOBCODES

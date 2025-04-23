@@ -33,6 +33,8 @@ async function pollForActivity() {
     return;
   }
 
+  const currentUserProfile = await getUserProfileFromStorage(currentUserId);
+
   const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
   currentTotalsResponse.api_call_timestamp = new Date().toISOString();
 
@@ -82,7 +84,7 @@ async function pollForActivity() {
         : secondsAssigned - secondsCompleted - shiftSeconds;
 
     // Start or update the badge countdown
-    startBadgeCountdown(remainingSeconds);
+    startBadgeCountdown(remainingSeconds, currentUserProfile);
 
     // Notify the popup about the timer state
     try {
