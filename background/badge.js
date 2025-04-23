@@ -26,6 +26,7 @@ async function startBadgeCountdownAndTriggerAlerts(
 
   // Update badge immediately with initial value
   updateBadge(currentRemainingSeconds, userProfile);
+  checkForSoundAlerts(currentRemainingSeconds, userProfile); // Check for sound alerts immediately
 
   // start coundown
   badgeCountdownInterval = setInterval(() => {
@@ -33,6 +34,7 @@ async function startBadgeCountdownAndTriggerAlerts(
 
     // Update the badge text and color every second
     updateBadge(currentRemainingSeconds, userProfile);
+    checkForSoundAlerts(currentRemainingSeconds, userProfile); // Check for sound alerts every second
 
     // Stop the countdown if we've reached 0 or gone negative
     if (currentRemainingSeconds <= 0) {
@@ -94,4 +96,36 @@ function updateBadge(seconds_remaining, userProfile) {
   }
 
   chrome.action.setBadgeText({ text: displayText });
+}
+
+function checkForSoundAlerts(seconds_remaining, userProfile) {
+  // Check if the user has any sound alerts set
+  const soundAlerts = userProfile.preferences.alerts || [];
+  const soundAlert = soundAlerts.find(
+    (alert) =>
+      alert.type === "sound" && alert.time_in_seconds === seconds_remaining
+  );
+
+  // If a sound alert is found, play the sound
+  if (soundAlert) {
+    playAudio(soundAlert.alert_string);
+  }
+}
+
+async function playAudio(sound) {
+  // Create the offscreen document if it doesn't exist
+  if (!(await chrome.offscreen.hasDocument())) {
+    await chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["AUDIO_PLAYBACK"],
+      justification: "Playing audio notifications",
+    });
+  }
+
+  // Send message to the offscreen document to play the sound
+  chrome.runtime.sendMessage({
+    target: "offscreen",
+    action: "playSound",
+    sound: sound,
+  });
 }
