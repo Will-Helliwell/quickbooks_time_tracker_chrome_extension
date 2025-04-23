@@ -100,9 +100,11 @@ function updateBadge(seconds_remaining, userProfile) {
 }
 
 function checkForSoundAlerts(seconds_remaining, userProfile) {
-  // Check if the user has any sound alerts set
-  const soundAlerts = userProfile.preferences.alerts || [];
-  const soundAlert = soundAlerts.find(
+  // Check if the user has any sound or notification alerts set
+  const alerts = userProfile.preferences.alerts || [];
+
+  // Check for sound alerts
+  const soundAlert = alerts.find(
     (alert) =>
       alert.type === "sound" && alert.time_in_seconds === seconds_remaining
   );
@@ -110,6 +112,18 @@ function checkForSoundAlerts(seconds_remaining, userProfile) {
   // If a sound alert is found, play the sound
   if (soundAlert) {
     playAudio(soundAlert.alert_string);
+  }
+
+  // Check for notification alerts
+  const notificationAlert = alerts.find(
+    (alert) =>
+      alert.type === "notification" &&
+      alert.time_in_seconds === seconds_remaining
+  );
+
+  // If a notification alert is found, create the notification
+  if (notificationAlert) {
+    createChromeAlert(seconds_remaining);
   }
 }
 
@@ -131,19 +145,28 @@ async function playAudio(sound) {
   });
 }
 
-async function createChromeAlert() {
-  if (!hasNotificationPermission) {
-    console.log("No notification permission, skipping notification");
-    return;
+async function createChromeAlert(seconds_remaining) {
+  let message;
+  if (seconds_remaining === 0) {
+    message = "You have reached overtime!";
+  } else if (seconds_remaining >= 3600) {
+    const hours = Math.round(seconds_remaining / 3600);
+    message = `${hours} hour${hours > 1 ? "s" : ""} remaining`;
+  } else if (seconds_remaining >= 60) {
+    const minutes = Math.ceil(seconds_remaining / 60);
+    message = `${minutes} minute${minutes > 1 ? "s" : ""} remaining`;
+  } else {
+    message = `${seconds_remaining} second${
+      seconds_remaining > 1 ? "s" : ""
+    } remaining`;
   }
 
   chrome.notifications.create(
     {
       type: "basic",
       iconUrl: chrome.runtime.getURL("images/icon_notification_48.png"),
-      title: "QuickBooks Time Alert!",
-      message:
-        "This is a test notification. If you can see this, notifications are working!",
+      title: "QuickBooks Time Alert",
+      message: message,
       priority: 2,
       requireInteraction: true, // This will make the notification stay until you click it
       silent: false, // This will ensure the notification makes a sound
@@ -155,16 +178,3 @@ async function createChromeAlert() {
     }
   );
 }
-
-// Listen for permission changes
-chrome.permissions.onAdded.addListener((permissions) => {
-  if (permissions.permissions.includes("notifications")) {
-    hasNotificationPermission = true;
-  }
-});
-
-chrome.permissions.onRemoved.addListener((permissions) => {
-  if (permissions.permissions.includes("notifications")) {
-    hasNotificationPermission = false;
-  }
-});

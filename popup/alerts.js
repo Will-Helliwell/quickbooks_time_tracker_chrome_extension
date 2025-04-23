@@ -43,7 +43,8 @@ export async function addNewAlert(userProfile) {
   const newAlert = {
     type: alertType,
     time_in_seconds: timeInSeconds,
-    alert_string: alertType === "badge" ? color : sound,
+    alert_string:
+      alertType === "badge" ? color : alertType === "sound" ? sound : "",
   };
 
   // Save new alert to local storage
@@ -132,9 +133,11 @@ function createAlertElement(alert, userProfile) {
   typeIndicator.textContent =
     alert.type === "badge"
       ? "Badge"
-      : `Sound (${alert.alert_string
+      : alert.type === "sound"
+      ? `Sound (${alert.alert_string
           .replace(/_/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase())})`;
+          .replace(/\b\w/g, (l) => l.toUpperCase())})`
+      : "Chrome Notification";
 
   // Delete button
   const deleteButton = document.createElement("button");
@@ -191,9 +194,13 @@ export function initializeAlertTypeSelector() {
     if (alertTypeSelect.value === "badge") {
       colorPickerContainer.classList.remove("hidden");
       soundSelectorContainer.classList.add("hidden");
-    } else {
+    } else if (alertTypeSelect.value === "sound") {
       colorPickerContainer.classList.add("hidden");
       soundSelectorContainer.classList.remove("hidden");
+    } else {
+      // For notification type, hide both containers
+      colorPickerContainer.classList.add("hidden");
+      soundSelectorContainer.classList.add("hidden");
     }
   });
 }
