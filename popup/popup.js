@@ -787,6 +787,9 @@ function applyTheme(themeName) {
   const timeInputs = document.querySelectorAll(
     "#alert-hours, #alert-minutes, #alert-seconds"
   );
+  const notificationPlaceholder = document.getElementById(
+    "notification-placeholder"
+  );
 
   // define theme colors
   const themeColors = {
@@ -809,6 +812,7 @@ function applyTheme(themeName) {
         background: "bg-gray-700",
         text: "text-gray-300",
       },
+      notificationPlaceholder: "bg-gray-700",
     },
     light: {
       background: "bg-gray-100",
@@ -829,6 +833,7 @@ function applyTheme(themeName) {
         background: "bg-white",
         text: "text-black",
       },
+      notificationPlaceholder: "bg-white",
     },
   };
 
@@ -891,6 +896,15 @@ function applyTheme(themeName) {
         input.classList.remove("text-gray-300");
         input.classList.add("text-black");
       });
+
+      if (notificationPlaceholder) {
+        notificationPlaceholder.classList.remove(
+          themeColors.dark.notificationPlaceholder
+        );
+        notificationPlaceholder.classList.add(
+          themeColors.light.notificationPlaceholder
+        );
+      }
       break;
     case "dark":
       body.classList.remove(themeColors.light.background);
@@ -949,6 +963,15 @@ function applyTheme(themeName) {
         input.classList.remove("text-black");
         input.classList.add("text-gray-300");
       });
+
+      if (notificationPlaceholder) {
+        notificationPlaceholder.classList.remove(
+          themeColors.light.notificationPlaceholder
+        );
+        notificationPlaceholder.classList.add(
+          themeColors.dark.notificationPlaceholder
+        );
+      }
       break;
 
     default:

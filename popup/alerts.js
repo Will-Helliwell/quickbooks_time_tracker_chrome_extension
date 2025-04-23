@@ -190,17 +190,31 @@ export function initializeAlertTypeSelector() {
     "sound-selector-container"
   );
 
+  // Create a placeholder container for notification type
+  const placeholderContainer = document.createElement("div");
+  placeholderContainer.id = "notification-placeholder";
+  placeholderContainer.className =
+    "w-24 h-8 border rounded-md p-1 notification-placeholder";
+  placeholderContainer.style.display = "none";
+  colorPickerContainer.parentNode.insertBefore(
+    placeholderContainer,
+    colorPickerContainer.nextSibling
+  );
+
   alertTypeSelect.addEventListener("change", () => {
     if (alertTypeSelect.value === "badge") {
       colorPickerContainer.classList.remove("hidden");
       soundSelectorContainer.classList.add("hidden");
+      placeholderContainer.style.display = "none";
     } else if (alertTypeSelect.value === "sound") {
       colorPickerContainer.classList.add("hidden");
       soundSelectorContainer.classList.remove("hidden");
+      placeholderContainer.style.display = "none";
     } else {
-      // For notification type, hide both containers
+      // For notification type, hide both containers and show placeholder
       colorPickerContainer.classList.add("hidden");
       soundSelectorContainer.classList.add("hidden");
+      placeholderContainer.style.display = "block";
     }
   });
 }
