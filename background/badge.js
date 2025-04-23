@@ -6,36 +6,40 @@ let badgeCountdownInterval = null;
 let currentRemainingSeconds = null;
 
 /**
- * Starts a countdown timer from the given argument and updates the badge text accordingly.
+ * Starts a countdown timer from the given argument; updates the badge text; triggers alerts accordingly.
  * If in the seconds range, it will update the badge text every second.
  *
  * @param {number|null} initialSeconds - The initial number of seconds for the countdown.
  *                                      If null, displays infinity symbol.
  * @returns {void}
  */
-async function startBadgeCountdown(initialSeconds, userProfile) {
+async function startBadgeCountdownAndTriggerAlerts(
+  initialSeconds,
+  userProfile
+) {
   // Clear any existing interval
   if (badgeCountdownInterval) {
     clearInterval(badgeCountdownInterval);
   }
 
   currentRemainingSeconds = initialSeconds;
+
   // Update badge immediately with initial value
   updateBadge(currentRemainingSeconds, userProfile);
 
-  // Start countdown if we're in the seconds range
-  if (Math.abs(initialSeconds) < 60) {
-    badgeCountdownInterval = setInterval(() => {
-      currentRemainingSeconds--;
-      updateBadge(currentRemainingSeconds, userProfile);
+  // start coundown
+  badgeCountdownInterval = setInterval(() => {
+    currentRemainingSeconds--;
 
-      // Stop the countdown if we've reached 0 or gone negative
-      if (currentRemainingSeconds <= 0) {
-        clearInterval(badgeCountdownInterval);
-        badgeCountdownInterval = null;
-      }
-    }, 1000);
-  }
+    // Update the badge text and color every second
+    updateBadge(currentRemainingSeconds, userProfile);
+
+    // Stop the countdown if we've reached 0 or gone negative
+    if (currentRemainingSeconds <= 0) {
+      clearInterval(badgeCountdownInterval);
+      badgeCountdownInterval = null;
+    }
+  }, 1000);
 }
 
 function clearBadge() {
@@ -58,7 +62,7 @@ function updateBadge(seconds_remaining, userProfile) {
 
   // render badge according to user alert preferences
   const alerts = userProfile.preferences.alerts || [];
-  const badgeAlerts = alerts.filter((alert) => alert.type === "badge_colour");
+  const badgeAlerts = alerts.filter((alert) => alert.type === "badge");
 
   // find the lowest alert time in seconds_remaining that is greater than the current remaining seconds_remaining
   const nextAlert = badgeAlerts
