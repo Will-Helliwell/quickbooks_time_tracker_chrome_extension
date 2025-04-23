@@ -2,14 +2,17 @@ import { overwriteUserProfileInStorage } from "/popup/user.js";
 
 // Function to add a new alert
 export async function addNewAlert(userProfile) {
+  const isOvertimeAlert = document.getElementById("overtime-alert").checked;
   const hours = parseInt(document.getElementById("alert-hours").value) || 0;
   const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
   const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
   const color = document.getElementById("alert-color").value;
 
-  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
+  const timeInSeconds = isOvertimeAlert
+    ? 0
+    : convertToSeconds(hours, minutes, seconds);
 
-  if (timeInSeconds === 0) {
+  if (!isOvertimeAlert && timeInSeconds === 0) {
     alert("Please enter a valid time for your new alert.");
     return;
   }
@@ -22,11 +25,15 @@ export async function addNewAlert(userProfile) {
     );
 
     if (existingAlert) {
-      alert(
-        `An alert already exists for ${formatTime(
-          timeInSeconds
-        )}. Please choose a different time.`
-      );
+      if (isOvertimeAlert) {
+        alert("An overtime alert already exists. Please remove it first.");
+      } else {
+        alert(
+          `An alert already exists for ${formatTime(
+            timeInSeconds
+          )}. Please choose a different time.`
+        );
+      }
       return;
     }
   }
@@ -58,16 +65,17 @@ export async function addNewAlert(userProfile) {
   document.getElementById("alert-hours").value = "";
   document.getElementById("alert-minutes").value = "";
   document.getElementById("alert-seconds").value = "";
+  document.getElementById("overtime-alert").checked = false;
 }
 
 export function populateAlerts(userProfile) {
   const activeAlerts = document.getElementById("active-alerts");
   const alerts = userProfile.preferences.alerts || [];
 
-  // Filter for badge_colour type and sort by time_in_seconds descending
+  // Filter for badge_colour type and sort by time_in_seconds ascending
   const badgeAlerts = alerts
     .filter((alert) => alert.type === "badge_colour")
-    .sort((a, b) => b.time_in_seconds - a.time_in_seconds);
+    .sort((a, b) => a.time_in_seconds - b.time_in_seconds);
 
   // Clear existing alerts
   activeAlerts.innerHTML = "";
@@ -104,7 +112,10 @@ function createAlertElement(alert, userProfile) {
 
   const timeText = document.createElement("span");
   timeText.className = "text-sm font-medium";
-  timeText.textContent = formatTime(alert.time_in_seconds);
+  timeText.textContent =
+    alert.time_in_seconds === 0
+      ? "Overtime"
+      : formatTime(alert.time_in_seconds);
 
   timeSection.appendChild(timeText);
 

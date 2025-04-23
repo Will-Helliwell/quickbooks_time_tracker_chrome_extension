@@ -775,6 +775,13 @@ function applyTheme(themeName) {
   );
   const userFullName = document.getElementById("user-full-name");
   const userCompany = document.getElementById("user-company");
+  const alertsInputContainer = document.getElementById(
+    "alerts-input-container"
+  );
+  const overtimeText = document.getElementById("overtime-text");
+  const timeInputs = document.querySelectorAll(
+    "#alert-hours, #alert-minutes, #alert-seconds"
+  );
 
   // define theme colors
   const themeColors = {
@@ -793,6 +800,10 @@ function applyTheme(themeName) {
         headerBackground: "bg-gray-700",
         bodyBackground: "bg-gray-600",
       },
+      alerts: {
+        background: "bg-gray-700",
+        text: "text-gray-300",
+      },
     },
     light: {
       background: "bg-gray-100",
@@ -808,6 +819,10 @@ function applyTheme(themeName) {
       allClientsTable: {
         headerBackground: "bg-gray-200",
         bodyBackground: "bg-white",
+      },
+      alerts: {
+        background: "bg-white",
+        text: "text-black",
       },
     },
   };
@@ -857,6 +872,20 @@ function applyTheme(themeName) {
       allClientsTableBody.classList.add(
         themeColors.light.allClientsTable.bodyBackground
       );
+      alertsInputContainer.classList.remove(
+        themeColors.dark.alerts.background,
+        themeColors.dark.alerts.text
+      );
+      alertsInputContainer.classList.add(
+        themeColors.light.alerts.background,
+        themeColors.light.alerts.text
+      );
+      overtimeText.classList.remove("text-gray-300");
+      overtimeText.classList.add("text-gray-600");
+      timeInputs.forEach((input) => {
+        input.classList.remove("text-gray-300");
+        input.classList.add("text-black");
+      });
       break;
     case "dark":
       body.classList.remove(themeColors.light.background);
@@ -901,6 +930,20 @@ function applyTheme(themeName) {
       allClientsTableBody.classList.remove(
         themeColors.light.allClientsTable.bodyBackground
       );
+      alertsInputContainer.classList.remove(
+        themeColors.light.alerts.background,
+        themeColors.light.alerts.text
+      );
+      alertsInputContainer.classList.add(
+        themeColors.dark.alerts.background,
+        themeColors.dark.alerts.text
+      );
+      overtimeText.classList.remove("text-gray-600");
+      overtimeText.classList.add("text-gray-300");
+      timeInputs.forEach((input) => {
+        input.classList.remove("text-black");
+        input.classList.add("text-gray-300");
+      });
       break;
 
     default:
