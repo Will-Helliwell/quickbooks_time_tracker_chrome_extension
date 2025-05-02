@@ -147,6 +147,12 @@ async function updateUIWithUserProfile(userProfile) {
  */
 function updateRemainingTimeStyle(element, remainingSeconds, totalSeconds) {
   element.className = "job-remaining p-2 w-28 text-right";
+
+  // do not highlight if no limit is assigned
+  if (totalSeconds == null) {
+    return;
+  }
+
   if (remainingSeconds === 0) {
     element.classList.add("text-red-600", "font-bold");
   } else if (remainingSeconds < totalSeconds * 0.1) {
