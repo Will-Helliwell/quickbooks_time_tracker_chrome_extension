@@ -86,7 +86,6 @@ async function pollForActivity() {
       });
     } catch (error) {
       // Ignore errors when popup is not open
-      console.log("Popup not open, skipping timer update");
     }
   } else {
     clearBadge();
@@ -95,7 +94,6 @@ async function pollForActivity() {
       await chrome.runtime.sendMessage({ action: "offTheClock" });
     } catch (error) {
       // Ignore errors when popup is not open
-      console.log("Popup not open, skipping timer stop");
     }
   }
 }

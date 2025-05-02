@@ -29,7 +29,12 @@ async function startBadgeCountdownAndTriggerAlerts(
   updateBadge(currentRemainingSeconds, userProfile);
   checkForSoundAlerts(currentRemainingSeconds, userProfile); // Check for sound alerts immediately
 
-  // start coundown
+  // exit early if no limit is assigned
+  if (currentRemainingSeconds == null) {
+    return;
+  }
+
+  // start coundown if the user has assigned a limit
   badgeCountdownInterval = setInterval(() => {
     currentRemainingSeconds--;
 
