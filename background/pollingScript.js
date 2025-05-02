@@ -27,14 +27,14 @@ if (inTestMode) {
 async function pollForActivity() {
   console.log("Polling for activity...");
 
-  const currentUserId = await getCurrentUserId();
+  const currentUserId = await getCurrentUserIdFromLoginDetails();
+
+  // exit early if no user is logged in
   if (!currentUserId) {
-    console.log("User not logged in, exiting early");
     return;
   }
 
   const currentUserProfile = await getUserProfileFromStorage(currentUserId);
-
   const currentTotalsResponse = await fetchCurrentTotals(currentUserId);
   currentTotalsResponse.api_call_timestamp = new Date().toISOString();
 
@@ -46,21 +46,13 @@ async function pollForActivity() {
   const onTheClock = currentTotalsResponse.on_the_clock;
   const APITimesheetId = currentTotalsResponse.timesheet_id;
 
-  // get the active recording from local storage
+  // get the stored active recording from local storage
   const storedActiveRecording = await getActiveRecordingFromLocalStorage();
   const storedActiveRecordingTimesheetId =
     storedActiveRecording.timesheet_id || null;
 
   // only update jobcodes if the active recording has changed
-  console.log(
-    "storedActiveRecordingTimesheetId",
-    storedActiveRecordingTimesheetId
-  );
-  console.log("APITimesheetId", APITimesheetId);
-
   if (storedActiveRecordingTimesheetId !== APITimesheetId) {
-    console.log("active recording has changed, updating jobcodes");
-    // update jobcodes and timesheets from API
     await updateJobcodesAndTimesheetsFromAPI();
   }
 

@@ -70,7 +70,7 @@ async function getAuthToken() {
  *
  * @returns {Promise<string|null>} A promise that resolves to the `currentUserId` if it is found in local storage,
  *                                 or `null` if the `currentUserId` is not available.
- */ async function getCurrentUserId() {
+ */ async function getCurrentUserIdFromLoginDetails() {
   return new Promise((resolve) => {
     chrome.storage.local.get("loginDetails", (data) => {
       resolve(data.loginDetails?.currentUserId || null);
