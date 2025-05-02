@@ -1,4 +1,3 @@
-const CLIENT_ID = chrome.runtime.getManifest().env.CLIENT_ID;
 import { REDIRECT_URL } from "/src/config.js";
 const STATE = "123";
 
@@ -11,7 +10,8 @@ const STATE = "123";
  *
  * @returns {void}
  */
-export function authenticateUser() {
+export async function authenticateUser() {
+  const CLIENT_ID = await getClientId();
   return new Promise((resolve) => {
     chrome.identity.launchWebAuthFlow(
       {
@@ -58,4 +58,13 @@ export function logout() {
   chrome.storage.local.remove("loginDetails");
   chrome.storage.local.remove("activeRecording");
   window.location.reload();
+}
+
+/**
+ * Retrieves the client ID from local storage.
+ *
+ */
+async function getClientId() {
+  const result = await chrome.storage.local.get("client_id");
+  return result.client_id;
 }

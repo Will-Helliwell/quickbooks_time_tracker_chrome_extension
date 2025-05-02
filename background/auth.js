@@ -1,4 +1,3 @@
-const CLIENT_ID = chrome.runtime.getManifest().env.CLIENT_ID;
 const REDIRECT_URL = chrome.identity.getRedirectURL();
 /**
  * Listens for messages from other parts of the extension and exchanges an authorization code for an access token.

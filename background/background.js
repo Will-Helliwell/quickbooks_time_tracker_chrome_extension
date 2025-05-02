@@ -1,4 +1,5 @@
 importScripts(
+  "/background/config.js",
   "/background/localStorage.js",
   "/background/api.js",
   "/background/auth.js",

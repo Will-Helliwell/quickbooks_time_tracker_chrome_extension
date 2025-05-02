@@ -33,8 +33,5 @@
         "<all_urls>"
       ]
     }
-  ],
-  "env": {
-    "CLIENT_ID": "c68135e240a7e3c9e314171a1acec86e"
-  }
+  ]
 }
