@@ -189,9 +189,11 @@ async function updateUIWithActiveRecording(userProfile) {
       // get details for currently active jobcode
       const activeJobcode = userProfile.jobcodes[activeRecordingJobcodeId];
       const activeJobcodeSecondsAssigned = activeJobcode.seconds_assigned;
-      const activeJobcodeSecondsCompleted = activeJobcode.seconds_completed;
+      const activeJobcodeSecondsCompletedThisMonth =
+        calculateSecondsCompletedThisMonth(activeJobcode);
+
       const activeJobcodeSecondsRemaining =
-        activeJobcodeSecondsAssigned - activeJobcodeSecondsCompleted;
+        activeJobcodeSecondsAssigned - activeJobcodeSecondsCompletedThisMonth;
 
       const remainingElement = jobRow.querySelector(".job-remaining");
       const completedElement = jobRow.querySelector(".job-completed");
@@ -216,7 +218,7 @@ async function updateUIWithActiveRecording(userProfile) {
 
       // Calculate new completed time by adding current session time
       const newCompletedSeconds =
-        activeJobcodeSecondsCompleted + totalCurrentSessionSeconds;
+        activeJobcodeSecondsCompletedThisMonth + totalCurrentSessionSeconds;
 
       // Update the displays
       remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
