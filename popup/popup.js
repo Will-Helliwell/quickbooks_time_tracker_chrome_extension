@@ -300,22 +300,8 @@ function renderAllClientsTable(userProfile) {
     // Format time displays
     const jobcodeTimesheets = jobcode.timesheets || [];
 
-    const secondsCompletedThisMonth = Object.values(jobcodeTimesheets).reduce(
-      (acc, timesheet) => {
-        const timesheetDate = new Date(timesheet.date);
-
-        const currentDate = new Date();
-        const isCurrentMonth =
-          timesheetDate.getMonth() === currentDate.getMonth() &&
-          timesheetDate.getFullYear() === currentDate.getFullYear();
-
-        if (isCurrentMonth) {
-          return acc + timesheet.duration;
-        }
-        return acc;
-      },
-      0
-    );
+    const secondsCompletedThisMonth =
+      calculateSecondsCompletedThisMonth(jobcode);
 
     // Display friendly text for null values
     const assignedValue =
@@ -1000,4 +986,28 @@ function applyTheme(themeName) {
     default:
       break;
   }
+}
+
+/**
+ * Calculates the total duration of timesheets completed in the current month for a given jobcode
+ *
+ * @param {Object} jobcode - The jobcode object containing timesheet information
+ * @param {Object} jobcode.timesheets - Object containing timesheet entries
+ * @param {Object} jobcode.timesheets[].date - String date in format "YYYY-MM-DD"
+ * @param {number} jobcode.timesheets[].duration - Duration in seconds
+ * @returns {number} Total duration in seconds of timesheets from the current month
+ */
+function calculateSecondsCompletedThisMonth(jobcode) {
+  const timesheets = jobcode.timesheets || {};
+  return Object.values(timesheets).reduce((acc, timesheet) => {
+    const timesheetDate = new Date(timesheet.date);
+    const currentDate = new Date();
+    const isCurrentMonth =
+      timesheetDate.getMonth() === currentDate.getMonth() &&
+      timesheetDate.getFullYear() === currentDate.getFullYear();
+    if (isCurrentMonth) {
+      return acc + timesheet.duration;
+    }
+    return acc;
+  }, 0);
 }
