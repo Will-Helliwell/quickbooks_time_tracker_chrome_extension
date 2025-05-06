@@ -298,7 +298,24 @@ function renderAllClientsTable(userProfile) {
 
   jobcodes.forEach((jobcode) => {
     // Format time displays
-    const completedFormatted = formatSecondsToTime(jobcode.seconds_completed);
+    const jobcodeTimesheets = jobcode.timesheets || [];
+
+    const secondsCompletedThisMonth = Object.values(jobcodeTimesheets).reduce(
+      (acc, timesheet) => {
+        const timesheetDate = new Date(timesheet.date);
+
+        const currentDate = new Date();
+        const isCurrentMonth =
+          timesheetDate.getMonth() === currentDate.getMonth() &&
+          timesheetDate.getFullYear() === currentDate.getFullYear();
+
+        if (isCurrentMonth) {
+          return acc + timesheet.duration;
+        }
+        return acc;
+      },
+      0
+    );
 
     // Display friendly text for null values
     const assignedValue =
@@ -313,7 +330,7 @@ function renderAllClientsTable(userProfile) {
     if (jobcode.seconds_assigned !== null) {
       remainingSeconds = Math.max(
         0,
-        jobcode.seconds_assigned - jobcode.seconds_completed
+        jobcode.seconds_assigned - secondsCompletedThisMonth
       );
       remainingFormatted = formatSecondsToTime(remainingSeconds);
 
@@ -353,9 +370,9 @@ function renderAllClientsTable(userProfile) {
         <div class="job-name p-2 flex-1 truncate">${
           jobcode.parent_path_name + jobcode.name
         }</div>
-        <div class="job-completed p-2 w-42 text-left" data-completed="${
-          jobcode.seconds_completed
-        }">${completedFormatted}</div>
+        <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">${formatSecondsToTime(
+      secondsCompletedThisMonth
+    )}</div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
             <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
