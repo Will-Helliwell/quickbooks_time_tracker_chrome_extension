@@ -146,7 +146,7 @@ async function updateUIWithUserProfile(userProfile) {
  *
  */
 function updateRemainingTimeStyle(element, remainingSeconds, totalSeconds) {
-  element.className = "job-remaining p-2 w-28 text-right";
+  element.className = "job-remaining p-2 w-28 text-left";
 
   // do not highlight if no limit is assigned
   if (totalSeconds == null) {
@@ -288,7 +288,7 @@ function renderAllClientsTable(userProfile) {
       <div id="all-clients-table-header" class="bg-gray-200 flex w-full">
         <div class="p-2 text-left font-semibold w-10"></div>
         <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
-        <div class="p-2 text-left font-semibold w-28 table-column-completed">Completed</div>
+        <div class="p-2 text-left font-semibold w-42 table-column-completed">Completed This Month</div>
         <div class="p-2 text-left font-semibold w-28 table-column-assigned">Assigned</div>
         <div class="p-2 text-left font-semibold w-28 table-column-remaining">Remaining</div>
       </div>
@@ -353,11 +353,11 @@ function renderAllClientsTable(userProfile) {
         <div class="job-name p-2 flex-1 truncate">${
           jobcode.parent_path_name + jobcode.name
         }</div>
-        <div class="job-completed p-2 w-28 text-right" data-completed="${
+        <div class="job-completed p-2 w-42 text-left" data-completed="${
           jobcode.seconds_completed
         }">${completedFormatted}</div>
-        <div class="job-assigned-container p-2 w-28 text-right relative group">
-          <div class="flex items-center justify-end">
+        <div class="job-assigned-container p-2 w-28 text-left relative group">
+          <div class="flex items-center justify-start">
             <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
                   data-value="${
                     jobcode.seconds_assigned !== null
@@ -431,7 +431,7 @@ function renderAllClientsTable(userProfile) {
             </div>
           </div>
         </div>
-        <div class="job-remaining p-2 w-28 text-right ${remainingClass}" data-remaining="${remainingSeconds}">${remainingFormatted}</div>
+        <div class="job-remaining p-2 w-28 text-left ${remainingClass}" data-remaining="${remainingSeconds}">${remainingFormatted}</div>
       </div>`;
   });
 
@@ -596,7 +596,7 @@ function setupJobcodeTimeAssignmentEditing() {
         } else {
           remainingElement.textContent = "∞";
           remainingElement.className =
-            "job-remaining p-2 w-28 text-right text-gray-500 italic";
+            "job-remaining p-2 w-28 text-left text-gray-500 italic";
         }
 
         // Hide the edit form
