@@ -90,7 +90,7 @@ function updateBadge(seconds_remaining, userProfile) {
   // render the badge text
   let displayText;
   if (seconds_remaining >= 3600) {
-    const hours = Math.round(seconds_remaining / 3600);
+    const hours = (seconds_remaining / 3600).toFixed(1);
     displayText = `${hours}h`;
   } else if (seconds_remaining >= 60) {
     const minutes = Math.ceil(seconds_remaining / 60);
