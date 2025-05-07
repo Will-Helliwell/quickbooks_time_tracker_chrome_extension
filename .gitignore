@@ -1,3 +1,6 @@
 api_testing/
 json_examples
 .codebuddy
+node_modules
+dist
+*.zip

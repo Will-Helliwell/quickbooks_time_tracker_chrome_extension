@@ -1,0 +1,19 @@
+{
+  "name": "quickbooks_time_tracker_chrome_extension",
+  "version": "1.0.0",
+  "description": "",
+  "main": "offscreen.js",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./popup/styles.css --watch",
+    "build:prod": "tailwindcss -i ./src/input.css -o ./popup/styles.css --minify",
+    "package": "npm run build:prod && rm -rf dist && mkdir dist && cp -r manifest.json popup background images sounds offscreen.html offscreen.js src dist/ && cd dist && zip -r ../quickbooks-time-tracker.zip ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
+  }
+}
