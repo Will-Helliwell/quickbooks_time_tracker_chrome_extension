@@ -3,6 +3,11 @@
   "name": "QuickBooks Time Manager",
   "version": "1.0",
   "description": "Manage QuickBooks Time data from a Chrome extension",
+  "icons": {
+    "16": "images/hourglass_icon_16.png",
+    "48": "images/hourglass_icon_48.png",
+    "128": "images/hourglass_icon_128.png"
+  },
   "permissions": [
     "identity",
     "storage",

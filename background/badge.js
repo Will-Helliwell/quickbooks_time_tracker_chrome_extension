@@ -169,7 +169,7 @@ async function createChromeAlert(seconds_remaining) {
   chrome.notifications.create(
     {
       type: "basic",
-      iconUrl: chrome.runtime.getURL("images/icon_notification_48.png"),
+      iconUrl: chrome.runtime.getURL("images/hourglass_icon_48.png"),
       title: "QuickBooks Time Alert",
       message: message,
       priority: 2,
