@@ -20,10 +20,6 @@
   "background": {
     "service_worker": "background/background.js"
   },
-  "offscreen": {
-    "page": "offscreen.html",
-    "reason": "audio-playback"
-  },
   "web_accessible_resources": [
     {
       "resources": [
