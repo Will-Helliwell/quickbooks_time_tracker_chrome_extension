@@ -2,6 +2,37 @@ import { REDIRECT_URL } from "/src/config.js";
 const STATE = "123";
 
 /**
+ * Displays the redirect URL in the popup and sets up copy functionality
+ */
+function displayRedirectUrl() {
+  const redirectUrlElement = document.getElementById("redirect-url");
+  const copyButton = document.getElementById("copy-url");
+
+  if (redirectUrlElement) {
+    const redirectUrl = chrome.identity.getRedirectURL();
+    redirectUrlElement.textContent = redirectUrl;
+
+    if (copyButton) {
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(redirectUrl);
+          // Visual feedback for copy
+          copyButton.classList.add("text-green-600");
+          setTimeout(() => {
+            copyButton.classList.remove("text-green-600");
+          }, 1000);
+        } catch (err) {
+          console.error("Failed to copy URL:", err);
+        }
+      });
+    }
+  }
+}
+
+// Call displayRedirectUrl when the popup loads
+document.addEventListener("DOMContentLoaded", displayRedirectUrl);
+
+/**
  * Initiates the OAuth authentication process using Chrome's identity API.
  *
  * This function launches a web authentication flow for the TSheets API, prompting
