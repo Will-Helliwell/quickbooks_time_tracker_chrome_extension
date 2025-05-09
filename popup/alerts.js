@@ -172,15 +172,72 @@ function createAlertElement(alert, userProfile) {
 }
 
 /**
- * Initializes the alert type selector and manages the visibility of color picker and sound selector containers
+ * Populates the sound selector dropdown with all available sound files
  *
- * This function sets up event listeners for the alert type selector dropdown to toggle between
- * badge alerts (with color picker) and sound alerts (with sound selector). When the alert type
- * changes, it shows/hides the appropriate input container.
+ * This function reads the sounds directory and populates the sound selector
+ * with all available sound files. Each option's value is the filename without extension,
+ * and the display text is the filename with underscores replaced by spaces and capitalized.
  *
  * @function
- * @returns {void}
+ * @returns {Promise<void>}
  */
+async function populateSoundSelector() {
+  const soundSelector = document.getElementById("alert-sound");
+  soundSelector.innerHTML = ""; // Clear existing options
+
+  try {
+    // Get the sounds directory entry
+    const soundsDir = await new Promise((resolve, reject) => {
+      chrome.runtime.getPackageDirectoryEntry((root) => {
+        root.getDirectory("sounds", {}, (dir) => resolve(dir), reject);
+      });
+    });
+
+    // Read all files in the directory
+    const soundFiles = await new Promise((resolve, reject) => {
+      const reader = soundsDir.createReader();
+      const files = [];
+
+      function readEntries() {
+        reader.readEntries((entries) => {
+          if (entries.length) {
+            entries.forEach((entry) => {
+              if (entry.isFile && entry.name.endsWith(".mp3")) {
+                files.push(entry.name.replace(".mp3", ""));
+              }
+            });
+            readEntries(); // Continue reading if there are more entries
+          } else {
+            resolve(files);
+          }
+        }, reject);
+      }
+
+      readEntries();
+    });
+
+    // Sort the files alphabetically
+    soundFiles.sort();
+
+    // Add each sound file as an option
+    soundFiles.forEach((soundFile) => {
+      const option = document.createElement("option");
+      option.value = soundFile;
+      option.textContent = soundFile
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+      soundSelector.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error reading sounds directory:", error);
+    // Fallback to a default sound if there's an error
+    const option = document.createElement("option");
+    option.value = "eastern_whip";
+    option.textContent = "Eastern Whip";
+    soundSelector.appendChild(option);
+  }
+}
+
 export function initializeAlertTypeSelector() {
   const alertTypeSelect = document.getElementById("alert-type");
   const colorPickerContainer = document.getElementById(
@@ -189,6 +246,9 @@ export function initializeAlertTypeSelector() {
   const soundSelectorContainer = document.getElementById(
     "sound-selector-container"
   );
+
+  // Populate sound selector when initializing
+  populateSoundSelector();
 
   // Create a placeholder container for notification type
   const placeholderContainer = document.createElement("div");
