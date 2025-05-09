@@ -94,7 +94,7 @@ export async function overwriteUserProfileInStorage(user) {
     userProfiles[user.id] = user;
 
     chrome.storage.local.set({ userProfiles }, () => {
-      console.log(`User profile saved for ID: ${user.id}`);
+      // console.log(`User profile saved for ID: ${user.id}`);
     });
   });
 }

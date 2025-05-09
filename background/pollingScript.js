@@ -1,16 +1,14 @@
-const pollFrequencyMinutes = 0.15; // 0.25 = 15 seconds
-const inTestMode = false; // TODO - get rid of this when finished testing
+const pollFrequencyMinutes = 0.15; // 0.15 minutes = 9 seconds
+const inTestMode = false; // Test mode only polls once, then stops
 
 if (inTestMode) {
-  console.log("Running in test mode");
   chrome.runtime.onInstalled.addListener(() => {
     // wait for 2 seconds before polling
     setTimeout(() => {
-      pollForActivity(); // only do this once for testing purposes
+      pollForActivity();
     }, 2000);
   });
 } else {
-  console.log("Running in production mode");
   chrome.runtime.onInstalled.addListener(() => {
     chrome.alarms.create("pollForActivity", {
       periodInMinutes: pollFrequencyMinutes,
@@ -25,7 +23,7 @@ if (inTestMode) {
 }
 
 async function pollForActivity() {
-  console.log("Polling for activity...");
+  // console.log("Polling for activity...");
 
   const currentUserId = await getCurrentUserIdFromLoginDetails();
 
