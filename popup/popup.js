@@ -1177,7 +1177,7 @@ function renderTimesheetsTable(timesheets) {
 
   let tableHtml = `
     <div class="mb-4">
-      <h3 class="text-lg font-semibold">${clientName} - Completed timesheets this month (${count})</h3>
+      <h3 class="text-lg font-semibold">${clientName} - completed timesheets this month (${count})</h3>
     </div>
     <div class="overflow-hidden bg-white shadow-md rounded-lg">
       <!-- Table Header -->
