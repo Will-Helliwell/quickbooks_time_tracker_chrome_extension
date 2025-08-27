@@ -1090,6 +1090,12 @@ function showClientInfoView(jobcodeId) {
   console.log("userProfile = ");
   console.log(userProfile);
 
+  // Get the client name from the jobcode
+  const jobcode = userProfile.jobcodes[jobcodeId];
+  const clientName = jobcode
+    ? jobcode.parent_path_name + jobcode.name
+    : "Unknown Client";
+
   const recentTimesheets = getRecentTimesheetsForJobcode(
     userProfile,
     jobcodeId
@@ -1101,8 +1107,9 @@ function showClientInfoView(jobcodeId) {
   const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
   jobcodeDetailScreen.classList.remove("hidden");
 
-  // Store the jobcode ID for potential future use
+  // Store the jobcode ID and client name for potential future use
   jobcodeDetailScreen.setAttribute("data-current-jobcode-id", jobcodeId);
+  jobcodeDetailScreen.setAttribute("data-current-client-name", clientName);
 
   // Render the timesheets table
   renderTimesheetsTable(recentTimesheets);
@@ -1153,10 +1160,16 @@ function renderTimesheetsTable(timesheets) {
   const container = document.getElementById("timesheets-container");
   const count = timesheets.length;
 
+  // Get client name from data attribute
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  const clientName =
+    jobcodeDetailScreen.getAttribute("data-current-client-name") ||
+    "Unknown Client";
+
   if (count === 0) {
     container.innerHTML = `
       <div class="text-center py-8">
-        <p class="text-gray-500">No completed timesheets found for this month</p>
+        <p class="text-gray-500">No completed timesheets found for ${clientName} this month</p>
       </div>
     `;
     return;
@@ -1164,15 +1177,15 @@ function renderTimesheetsTable(timesheets) {
 
   let tableHtml = `
     <div class="mb-4">
-      <h3 class="text-lg font-semibold">Completed timesheets this month (${count})</h3>
+      <h3 class="text-lg font-semibold">${clientName} - Completed timesheets this month (${count})</h3>
     </div>
     <div class="overflow-hidden bg-white shadow-md rounded-lg">
       <!-- Table Header -->
       <div class="bg-gray-200 flex w-full">
-        <div class="p-3 text-left font-semibold w-48">Start</div>
-        <div class="p-3 text-left font-semibold w-48">End</div>
-        <div class="p-3 text-left font-semibold w-24">Duration</div>
-        <div class="p-3 text-left font-semibold flex-1">Notes</div>
+        <div class="p-3 text-left font-semibold" style="width: 25%;">Start</div>
+        <div class="p-3 text-left font-semibold" style="width: 25%;">End</div>
+        <div class="p-3 text-left font-semibold" style="width: 15%;">Duration</div>
+        <div class="p-3 text-left font-semibold" style="width: 35%;">Notes</div>
       </div>
       
       <!-- Table Body -->
@@ -1187,10 +1200,10 @@ function renderTimesheetsTable(timesheets) {
 
     tableHtml += `
       <div class="flex w-full hover:bg-gray-50">
-        <div class="p-3 w-48 text-sm">${formattedStart}</div>
-        <div class="p-3 w-48 text-sm">${formattedEnd}</div>
-        <div class="p-3 w-24 text-sm">${formattedDuration}</div>
-        <div class="p-3 flex-1 text-sm text-gray-600">${notes}</div>
+        <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
+        <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
+        <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
+        <div class="p-3 text-sm text-gray-600" style="width: 35%;">${notes}</div>
       </div>
     `;
   });
