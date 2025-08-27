@@ -1,3 +1,5 @@
+import { isDateInCurrentMonth } from "/shared/dateUtils.js";
+
 const pollFrequencyMinutes = 0.15; // 0.15 minutes = 9 seconds
 const inTestMode = false; // Test mode only polls once, then stops
 
@@ -109,13 +111,10 @@ async function pollForActivity() {
  */
 function calculateSecondsCompletedThisMonth(jobcode) {
   const timesheets = jobcode.timesheets || {};
-  return Object.values(timesheets).reduce((acc, timesheet) => {
-    const timesheetDate = new Date(timesheet.date);
-    const currentDate = new Date();
-    const isCurrentMonth =
-      timesheetDate.getMonth() === currentDate.getMonth() &&
-      timesheetDate.getFullYear() === currentDate.getFullYear();
-    if (isCurrentMonth) {
+  const allTimesheets = Object.values(timesheets);
+
+  return allTimesheets.reduce((acc, timesheet) => {
+    if (isDateInCurrentMonth(timesheet.date)) {
       return acc + timesheet.duration;
     }
     return acc;

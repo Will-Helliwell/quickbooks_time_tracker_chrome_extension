@@ -22,6 +22,7 @@ import {
   populateAlerts,
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
+import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
 
 // Global application state
 const AppState = {
@@ -1088,6 +1089,13 @@ function showClientInfoView(jobcodeId) {
   console.log("userProfile = ");
   console.log(userProfile);
 
+  const recentTimesheets = getRecentTimesheetsForJobcode(
+    userProfile,
+    jobcodeId
+  );
+  console.log("recentTimesheets = ");
+  console.log(recentTimesheets);
+
   // Show jobcode detail screen
   const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
   jobcodeDetailScreen.classList.remove("hidden");
@@ -1111,6 +1119,35 @@ function showJobcodeDetailView(jobcodeId) {
 // **
 // BELOW ARE UTILITY FUNCTIONS
 // **
+
+/**
+ * Filters timesheets to only include those with non-zero duration in current month
+ * @param {Array} timesheets - Array of timesheet objects
+ * @returns {Array} Filtered timesheets
+ */
+function filterCurrentMonthNonZeroTimesheets(timesheets) {
+  return timesheets.filter(
+    (timesheet) =>
+      timesheet.duration > 0 && isDateInCurrentMonth(timesheet.date)
+  );
+}
+
+function getRecentTimesheetsForJobcode(userProfile, jobcodeId) {
+  // Check if there are any timesheets for the given jobcode
+  const jobcode = userProfile.jobcodes[jobcodeId];
+  if (!jobcode.timesheets) {
+    return [];
+  }
+
+  // Get all timesheet objects as an array
+  const allTimesheets = Object.values(jobcode.timesheets);
+
+  // Filter out zero duration and non-current month timesheets
+  const filteredTimesheets = filterCurrentMonthNonZeroTimesheets(allTimesheets);
+
+  // Sort by date (newest first)
+  return filteredTimesheets.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
 
 // Function to format seconds into HH:MM:SS format
 function formatSecondsToTime(seconds) {
@@ -1139,13 +1176,10 @@ function formatSecondsToTime(seconds) {
  */
 function calculateSecondsCompletedThisMonth(jobcode) {
   const timesheets = jobcode.timesheets || {};
-  return Object.values(timesheets).reduce((acc, timesheet) => {
-    const timesheetDate = new Date(timesheet.date);
-    const currentDate = new Date();
-    const isCurrentMonth =
-      timesheetDate.getMonth() === currentDate.getMonth() &&
-      timesheetDate.getFullYear() === currentDate.getFullYear();
-    if (isCurrentMonth) {
+  const allTimesheets = Object.values(timesheets);
+
+  return allTimesheets.reduce((acc, timesheet) => {
+    if (isDateInCurrentMonth(timesheet.date)) {
       return acc + timesheet.duration;
     }
     return acc;
