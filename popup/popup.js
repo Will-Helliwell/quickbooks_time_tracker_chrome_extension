@@ -101,6 +101,12 @@ async function handlePopupOpen() {
     addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
   initializeAlertTypeSelector();
+
+  // Handle back to clients button click
+  document.getElementById("back-to-clients").addEventListener("click", () => {
+    hideClientInfoView();
+    showMyClientsView();
+  });
 }
 
 /**
@@ -304,7 +310,6 @@ function renderAllClientsTable(userProfile) {
       <div id="all-clients-table-body" class="overflow-y-auto max-h-64">`;
 
   jobcodes.forEach((jobcode) => {
-    // Format time displays
     const jobcodeTimesheets = jobcode.timesheets || [];
 
     const secondsCompletedThisMonth =
@@ -455,6 +460,7 @@ function renderAllClientsTable(userProfile) {
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
   setupFavoritesToggle();
+  setupJobNameClickListeners();
 
   updateActiveRecordingUIWithLatestUserProfile();
   initializeColourTheme(userProfile);
@@ -1017,4 +1023,88 @@ function calculateSecondsCompletedThisMonth(jobcode) {
     }
     return acc;
   }, 0);
+}
+
+// BELOW ARE ALL FUNCTIONS FOR NAVIGATION AND VIEW SWITCHING
+
+function setupJobNameClickListeners() {
+  document.querySelectorAll(".job-name").forEach((jobNameElement) => {
+    jobNameElement.addEventListener("click", function () {
+      // Get the parent row
+      const jobRow = this.closest(".job-row");
+      // Retrieve the jobcode id from data attribute
+      const jobcodeId = jobRow.getAttribute("data-jobcode-id");
+      // Switch to jobcode detail view
+      showJobcodeDetailView(jobcodeId);
+    });
+  });
+}
+
+// Tab utility functions
+function showTabs() {
+  const tabNavigation = document.querySelector(
+    ".flex.justify-between.border-b.mb-4"
+  );
+  tabNavigation.classList.remove("hidden");
+}
+
+function hideTabs() {
+  const tabNavigation = document.querySelector(
+    ".flex.justify-between.border-b.mb-4"
+  );
+  tabNavigation.classList.add("hidden");
+}
+
+function hideAllTabContent() {
+  const tabContents = document.querySelectorAll(".tab-content");
+  tabContents.forEach((content) => {
+    content.classList.add("hidden");
+  });
+}
+
+function showMyClientsView() {
+  showTabs();
+
+  // Show clients screen
+  const clientsScreen = document.getElementById("clients-screen");
+  clientsScreen.classList.remove("hidden");
+
+  // Update tab button styling to show clients as active
+  const tabButtons = document.querySelectorAll(".tab-button");
+  tabButtons.forEach((button) => {
+    if (button.getAttribute("data-tab") === "clients-screen") {
+      button.classList.add("text-black", "font-bold");
+    } else {
+      button.classList.remove("text-black", "font-bold");
+    }
+  });
+}
+
+function hideMyClientsView() {
+  // Hide clients screen
+  const clientsScreen = document.getElementById("clients-screen");
+  clientsScreen.classList.add("hidden");
+
+  hideTabs();
+}
+
+function showClientInfoView(jobcodeId) {
+  // Show jobcode detail screen
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  jobcodeDetailScreen.classList.remove("hidden");
+
+  // Store the jobcode ID for potential future use
+  jobcodeDetailScreen.setAttribute("data-current-jobcode-id", jobcodeId);
+}
+
+function hideClientInfoView() {
+  // Hide jobcode detail screen
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  jobcodeDetailScreen.classList.add("hidden");
+}
+
+function showJobcodeDetailView(jobcodeId) {
+  hideAllTabContent();
+  hideMyClientsView();
+  showClientInfoView(jobcodeId);
 }
