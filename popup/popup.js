@@ -1198,12 +1198,21 @@ function renderTimesheetsTable(timesheets) {
     const formattedDuration = formatSecondsToTime(timesheet.duration);
     const notes = timesheet.notes || "No notes";
 
+    // Cap notes at 25 characters and add ellipsis if needed
+    const displayNotes =
+      notes.length > 25 ? notes.substring(0, 25) + "..." : notes;
+    const isLongNote = notes.length > 25;
+
     tableHtml += `
-      <div class="flex w-full hover:bg-gray-50">
+      <div class="flex w-full hover:bg-gray-50 group">
         <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
         <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
         <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
-        <div class="p-3 text-sm text-gray-600" style="width: 35%;">${notes}</div>
+                <div class="p-3 text-sm text-gray-600" style="width: 35%;">
+          <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
+      isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
+    }>${displayNotes}</span>
+        </div>
       </div>
     `;
   });
@@ -1214,6 +1223,64 @@ function renderTimesheetsTable(timesheets) {
   `;
 
   container.innerHTML = tableHtml;
+
+  // Set up tooltip functionality
+  setupTooltips();
+}
+
+/**
+ * Sets up global tooltip functionality using fixed positioning
+ */
+function setupTooltips() {
+  // Remove any existing tooltip
+  const existingTooltip = document.getElementById("global-tooltip");
+  if (existingTooltip) {
+    existingTooltip.remove();
+  }
+
+  // Create global tooltip element
+  const tooltip = document.createElement("div");
+  tooltip.id = "global-tooltip";
+  tooltip.className =
+    "fixed z-50 hidden bg-black text-white text-xs px-3 py-2 rounded shadow-lg max-w-xs whitespace-normal pointer-events-none";
+  document.body.appendChild(tooltip);
+
+  // Add event listeners to all tooltip triggers
+  document.querySelectorAll(".tooltip-trigger").forEach((trigger) => {
+    trigger.addEventListener("mouseenter", (e) => {
+      const tooltipText = e.target.getAttribute("data-tooltip");
+      if (tooltipText) {
+        tooltip.textContent = tooltipText;
+        tooltip.classList.remove("hidden");
+
+        // Position tooltip above the element
+        const rect = e.target.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        // Position above the element, centered horizontally
+        let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+        let top = rect.top - tooltipRect.height - 8; // 8px gap
+
+        // Ensure tooltip doesn't go off screen horizontally
+        if (left < 8) left = 8;
+        if (left + tooltipRect.width > window.innerWidth - 8) {
+          left = window.innerWidth - tooltipRect.width - 8;
+        }
+
+        // If tooltip would go above viewport, show it below instead
+        if (top < 8) {
+          top = rect.bottom + 8;
+        }
+
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      }
+    });
+
+    trigger.addEventListener("mouseleave", () => {
+      tooltip.classList.add("hidden");
+    });
+  });
 }
 
 /**
