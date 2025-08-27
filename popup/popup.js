@@ -327,18 +327,18 @@ function renderAllClientsTable(userProfile) {
   }
 
   let allClientsTableHtml = `
-    <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
+    <div class="table-container overflow-hidden flex flex-col bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Fixed header -->
-      <div id="all-clients-table-header" class="bg-gray-200 flex w-full">
-        <div class="p-2 text-left font-semibold w-10"></div>
-        <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
-        <div class="p-2 text-left font-semibold w-42 table-column-completed">Completed This Month</div>
-        <div class="p-2 text-left font-semibold w-28 table-column-assigned">Assigned</div>
-        <div class="p-2 text-left font-semibold w-28 table-column-remaining">Remaining</div>
+      <div id="all-clients-table-header" class="bg-gray-200 dark:bg-gray-600 flex w-full">
+        <div class="p-2 text-left font-semibold w-10 text-gray-800 dark:text-white"></div>
+        <div class="p-2 text-left font-semibold flex-1 table-column-name text-gray-800 dark:text-white">Name</div>
+        <div class="p-2 text-left font-semibold w-42 table-column-completed text-gray-800 dark:text-white">Completed This Month</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-assigned text-gray-800 dark:text-white">Assigned</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-remaining text-gray-800 dark:text-white">Remaining</div>
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto max-h-64">`;
+      <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
     const jobcodeTimesheets = jobcode.timesheets || [];
@@ -382,7 +382,7 @@ function renderAllClientsTable(userProfile) {
     }
 
     allClientsTableHtml += `
-      <div class="job-row flex w-full border-t border-gray-200 hover:bg-gray-50" data-jobcode-id="${
+      <div class="job-row flex w-full border-t border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-white" data-jobcode-id="${
         jobcode.id
       }">
         <div class="p-2 w-10">
@@ -420,7 +420,7 @@ function renderAllClientsTable(userProfile) {
               </svg>
             </button>
           </div>
-          <div class="edit-form hidden absolute right-0 mt-1 bg-white p-2 shadow-lg rounded-md z-10 border border-gray-200" style="min-width: 220px;">
+          <div class="edit-form hidden absolute right-0 mt-1 bg-white dark:bg-gray-700 p-2 shadow-lg rounded-md z-10 border border-gray-200 dark:border-gray-600" style="min-width: 220px;">
             <div class="mb-2">
               <label class="flex items-center">
                 <input type="checkbox" class="limit-checkbox mr-2" ${
@@ -473,7 +473,7 @@ function renderAllClientsTable(userProfile) {
               <button class="save-assigned-btn px-2 py-1 bg-blue-600 text-white text-xs rounded" data-jobcode-id="${
                 jobcode.id
               }">Save</button>
-              <button class="cancel-assigned-btn px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded">Cancel</button>
+              <button class="cancel-assigned-btn px-2 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">Cancel</button>
             </div>
           </div>
         </div>
@@ -763,7 +763,7 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
  * Initializes the color theme and adds event listeners for the dark mode toggle
  *
  * This function sets up the dark mode toggle and applies the appropriate theme based on
- * the user's stored preference. It also handles theme changes when the toggle is switched.
+ * the user's stored preference using Tailwind's built-in dark mode system.
  *
  * @async
  * @function
@@ -799,224 +799,22 @@ async function initializeColourTheme(userProfile) {
 }
 
 /**
- * Applies the specified theme to the popup interface
+ * Applies the specified theme using Tailwind's built-in dark mode system
  *
- * This function handles the visual application of theme colors to various UI elements
- * including the body, main content area, user info section, and tab elements.
- * It uses Tailwind CSS classes to implement the theme changes.
+ * This function simply toggles the 'dark' class on the document element,
+ * which automatically applies all dark: variants defined in the HTML.
  *
  * @function
  * @param {string} themeName - The name of the theme to apply ('light' or 'dark')
  * @returns {void}
  */
 function applyTheme(themeName) {
-  const body = document.body;
-  const mainContent = document.getElementById("main-content");
-  const userInfo = document.getElementById("user-info");
-  const tabButtons = document.querySelectorAll(".tab-button");
-  const tabContents = document.querySelectorAll(".tab-content");
-  const allClientsTableBody = document.getElementById("all-clients-table-body");
-  const allClientsTableHeader = document.getElementById(
-    "all-clients-table-header"
-  );
-  const userFullName = document.getElementById("user-full-name");
-  const userCompany = document.getElementById("user-company");
-  const alertsInputContainer = document.getElementById(
-    "alerts-input-container"
-  );
-  const overtimeText = document.getElementById("overtime-text");
-  const timeInputs = document.querySelectorAll(
-    "#alert-hours, #alert-minutes, #alert-seconds"
-  );
-  const notificationPlaceholder = document.getElementById(
-    "notification-placeholder"
-  );
+  const html = document.documentElement;
 
-  // define theme colors
-  const themeColors = {
-    dark: {
-      background: "bg-gray-800",
-      text: {
-        primary: "text-white",
-        secondary: "text-gray-300",
-        hover: "hover:text-white",
-      },
-      border: "border-gray-700",
-      userInfo: {
-        background: "bg-gray-800",
-      },
-      allClientsTable: {
-        headerBackground: "bg-gray-700",
-        bodyBackground: "bg-gray-600",
-      },
-      alerts: {
-        background: "bg-gray-700",
-        text: "text-gray-300",
-      },
-      notificationPlaceholder: "bg-gray-700",
-    },
-    light: {
-      background: "bg-gray-100",
-      text: {
-        primary: "text-gray-800",
-        secondary: "text-gray-600",
-        hover: "hover:text-black",
-      },
-      border: "border-gray-200",
-      userInfo: {
-        background: "bg-white",
-      },
-      allClientsTable: {
-        headerBackground: "bg-gray-200",
-        bodyBackground: "bg-white",
-      },
-      alerts: {
-        background: "bg-white",
-        text: "text-black",
-      },
-      notificationPlaceholder: "bg-white",
-    },
-  };
-
-  // Apply theme colours
-  switch (themeName) {
-    case "light":
-      body.classList.remove(themeColors.dark.background);
-      body.classList.add(themeColors.light.background);
-
-      mainContent.classList.remove(themeColors.dark.text.primary);
-      userInfo.classList.remove(
-        themeColors.dark.userInfo.background,
-        themeColors.dark.border
-      );
-      userInfo.classList.add(themeColors.light.userInfo.background);
-
-      userFullName.classList.remove(themeColors.dark.text.primary);
-      userFullName.classList.add(themeColors.light.text.primary);
-      userCompany.classList.remove(themeColors.dark.text.secondary);
-      userCompany.classList.add(themeColors.light.text.secondary);
-
-      tabButtons.forEach((button) => {
-        button.classList.remove(
-          themeColors.dark.text.secondary,
-          themeColors.dark.text.hover
-        );
-        button.classList.add(
-          themeColors.light.text.secondary,
-          themeColors.light.text.hover
-        );
-      });
-
-      tabContents.forEach((content) => {
-        content.classList.remove(themeColors.dark.text.secondary);
-      });
-
-      allClientsTableHeader.classList.remove(
-        themeColors.dark.allClientsTable.headerBackground
-      );
-      allClientsTableHeader.classList.add(
-        themeColors.light.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.remove(
-        themeColors.dark.allClientsTable.bodyBackground
-      );
-      allClientsTableBody.classList.add(
-        themeColors.light.allClientsTable.bodyBackground
-      );
-      alertsInputContainer.classList.remove(
-        themeColors.dark.alerts.background,
-        themeColors.dark.alerts.text
-      );
-      alertsInputContainer.classList.add(
-        themeColors.light.alerts.background,
-        themeColors.light.alerts.text
-      );
-      overtimeText.classList.remove("text-gray-300");
-      overtimeText.classList.add("text-gray-600");
-      timeInputs.forEach((input) => {
-        input.classList.remove("text-gray-300");
-        input.classList.add("text-black");
-      });
-
-      if (notificationPlaceholder) {
-        notificationPlaceholder.classList.remove(
-          themeColors.dark.notificationPlaceholder
-        );
-        notificationPlaceholder.classList.add(
-          themeColors.light.notificationPlaceholder
-        );
-      }
-      break;
-    case "dark":
-      body.classList.remove(themeColors.light.background);
-      body.classList.add(themeColors.dark.background);
-
-      mainContent.classList.add(themeColors.dark.text.primary);
-      userInfo.classList.add(
-        themeColors.dark.userInfo.background,
-        themeColors.dark.border
-      );
-      userInfo.classList.remove(themeColors.light.userInfo.background);
-
-      userFullName.classList.add(themeColors.dark.text.primary);
-      userFullName.classList.remove(themeColors.light.text.primary);
-      userCompany.classList.add(themeColors.dark.text.secondary);
-      userCompany.classList.remove(themeColors.light.text.secondary);
-
-      tabButtons.forEach((button) => {
-        button.classList.add(
-          themeColors.dark.text.secondary,
-          themeColors.dark.text.hover
-        );
-        button.classList.remove(
-          themeColors.light.text.secondary,
-          themeColors.light.text.hover
-        );
-      });
-
-      tabContents.forEach((content) => {
-        content.classList.add(themeColors.dark.text.secondary);
-      });
-
-      allClientsTableHeader.classList.add(
-        themeColors.dark.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.add(
-        themeColors.dark.allClientsTable.bodyBackground
-      );
-      allClientsTableHeader.classList.remove(
-        themeColors.light.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.remove(
-        themeColors.light.allClientsTable.bodyBackground
-      );
-      alertsInputContainer.classList.remove(
-        themeColors.light.alerts.background,
-        themeColors.light.alerts.text
-      );
-      alertsInputContainer.classList.add(
-        themeColors.dark.alerts.background,
-        themeColors.dark.alerts.text
-      );
-      overtimeText.classList.remove("text-gray-600");
-      overtimeText.classList.add("text-gray-300");
-      timeInputs.forEach((input) => {
-        input.classList.remove("text-black");
-        input.classList.add("text-gray-300");
-      });
-
-      if (notificationPlaceholder) {
-        notificationPlaceholder.classList.remove(
-          themeColors.light.notificationPlaceholder
-        );
-        notificationPlaceholder.classList.add(
-          themeColors.dark.notificationPlaceholder
-        );
-      }
-      break;
-
-    default:
-      break;
+  if (themeName === "dark") {
+    html.classList.add("dark");
+  } else {
+    html.classList.remove("dark");
   }
 }
 
@@ -1179,17 +977,17 @@ function renderTimesheetsTable(timesheets) {
     <div class="mb-4">
       <h3 class="text-lg font-semibold">${clientName} - completed timesheets this month (${count})</h3>
     </div>
-    <div class="overflow-hidden bg-white shadow-md rounded-lg">
+    <div class="overflow-hidden bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Table Header -->
-      <div class="bg-gray-200 flex w-full">
-        <div class="p-3 text-left font-semibold" style="width: 25%;">Start</div>
-        <div class="p-3 text-left font-semibold" style="width: 25%;">End</div>
-        <div class="p-3 text-left font-semibold" style="width: 15%;">Duration</div>
-        <div class="p-3 text-left font-semibold" style="width: 35%;">Notes</div>
+      <div class="bg-gray-200 dark:bg-gray-600 flex w-full">
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
       </div>
       
       <!-- Table Body -->
-      <div class="divide-y divide-gray-200">
+      <div class="divide-y divide-gray-200 dark:divide-gray-600 bg-white dark:bg-gray-700">
   `;
 
   timesheets.forEach((timesheet) => {
@@ -1204,7 +1002,7 @@ function renderTimesheetsTable(timesheets) {
     const isLongNote = notes.length > 25;
 
     tableHtml += `
-      <div class="flex w-full hover:bg-gray-50 group">
+      <div class="flex w-full hover:bg-gray-50 dark:hover:bg-gray-600 group text-gray-900 dark:text-white">
         <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
         <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
         <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
