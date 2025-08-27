@@ -1006,7 +1006,7 @@ function renderTimesheetsTable(timesheets) {
         <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
         <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
         <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
-                <div class="p-3 text-sm text-gray-600" style="width: 35%;">
+                <div class="p-3 text-sm style="width: 35%;">
           <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
       isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
     }>${displayNotes}</span>
