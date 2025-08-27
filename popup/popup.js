@@ -23,6 +23,27 @@ import {
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
 
+// Global application state
+const AppState = {
+  userProfile: null,
+
+  /**
+   * Sets the user profile in global state
+   * @param {Object} profile - The user profile object
+   */
+  setUserProfile(profile) {
+    this.userProfile = profile;
+  },
+
+  /**
+   * Gets the user profile from global state
+   * @returns {Object|null} The user profile object or null if not set
+   */
+  getUserProfile() {
+    return this.userProfile;
+  },
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
 });
@@ -57,6 +78,7 @@ async function handlePopupOpen() {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
     userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
+    AppState.setUserProfile(userProfile);
     await updateUIWithUserProfile(userProfile);
   }
 
@@ -77,6 +99,7 @@ async function handlePopupOpen() {
       userProfile = await updateUserProfileFromAPI();
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
+      AppState.setUserProfile(userProfile);
       await updateUIWithUserProfile(userProfile);
     }
   });
@@ -1061,6 +1084,10 @@ function hideMyClientsView() {
 }
 
 function showClientInfoView(jobcodeId) {
+  const userProfile = AppState.getUserProfile();
+  console.log("userProfile = ");
+  console.log(userProfile);
+
   // Show jobcode detail screen
   const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
   jobcodeDetailScreen.classList.remove("hidden");
