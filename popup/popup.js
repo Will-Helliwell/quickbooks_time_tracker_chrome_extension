@@ -396,7 +396,7 @@ function renderAllClientsTable(userProfile) {
             </svg>
           </button>
         </div>
-        <div class="job-name p-2 flex-1 truncate">${
+        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
         <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">${formatSecondsToTime(
