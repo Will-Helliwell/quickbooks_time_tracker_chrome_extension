@@ -27,6 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
 });
 
+/**
+ * This is the main handler function that runs when the popup is opened.
+ * It initializes the user profile and sets up the necessary event listeners.
+ * @async
+ * @function
+ */
 async function handlePopupOpen() {
   let userProfile = {};
   const loginScreen = document.getElementById("login-screen");
@@ -695,22 +701,6 @@ function setupFavoritesToggle() {
   });
 }
 
-// Function to format seconds into HH:MM:SS format
-function formatSecondsToTime(seconds) {
-  if (seconds === 0) return "0h 0m";
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-
-  let result = "";
-  if (hours > 0) result += `${hours}h `;
-  if (minutes > 0 || hours > 0) result += `${minutes}m`;
-  if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
-
-  return result.trim();
-}
-
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "onTheClock") {
@@ -739,6 +729,10 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
     updateUIWithActiveRecording(userProfile);
   }
 }
+
+// **
+// BELOW ARE THE FUNCTIONS RELATED TO COLOR THEME MANAGEMENT
+// **
 
 /**
  * Initializes the color theme and adds event listeners for the dark mode toggle
@@ -1001,31 +995,9 @@ function applyTheme(themeName) {
   }
 }
 
-/**
- * Calculates the total duration of timesheets completed in the current month for a given jobcode
- *
- * @param {Object} jobcode - The jobcode object containing timesheet information
- * @param {Object} jobcode.timesheets - Object containing timesheet entries
- * @param {Object} jobcode.timesheets[].date - String date in format "YYYY-MM-DD"
- * @param {number} jobcode.timesheets[].duration - Duration in seconds
- * @returns {number} Total duration in seconds of timesheets from the current month
- */
-function calculateSecondsCompletedThisMonth(jobcode) {
-  const timesheets = jobcode.timesheets || {};
-  return Object.values(timesheets).reduce((acc, timesheet) => {
-    const timesheetDate = new Date(timesheet.date);
-    const currentDate = new Date();
-    const isCurrentMonth =
-      timesheetDate.getMonth() === currentDate.getMonth() &&
-      timesheetDate.getFullYear() === currentDate.getFullYear();
-    if (isCurrentMonth) {
-      return acc + timesheet.duration;
-    }
-    return acc;
-  }, 0);
-}
-
+// **
 // BELOW ARE ALL FUNCTIONS FOR NAVIGATION AND VIEW SWITCHING
+// **
 
 function setupJobNameClickListeners() {
   document.querySelectorAll(".job-name").forEach((jobNameElement) => {
@@ -1107,4 +1079,48 @@ function showJobcodeDetailView(jobcodeId) {
   hideAllTabContent();
   hideMyClientsView();
   showClientInfoView(jobcodeId);
+}
+
+// **
+// BELOW ARE UTILITY FUNCTIONS
+// **
+
+// Function to format seconds into HH:MM:SS format
+function formatSecondsToTime(seconds) {
+  if (seconds === 0) return "0h 0m";
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  let result = "";
+  if (hours > 0) result += `${hours}h `;
+  if (minutes > 0 || hours > 0) result += `${minutes}m`;
+  if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
+
+  return result.trim();
+}
+
+/**
+ * Calculates the total duration of timesheets completed in the current month for a given jobcode
+ *
+ * @param {Object} jobcode - The jobcode object containing timesheet information
+ * @param {Object} jobcode.timesheets - Object containing timesheet entries
+ * @param {Object} jobcode.timesheets[].date - String date in format "YYYY-MM-DD"
+ * @param {number} jobcode.timesheets[].duration - Duration in seconds
+ * @returns {number} Total duration in seconds of timesheets from the current month
+ */
+function calculateSecondsCompletedThisMonth(jobcode) {
+  const timesheets = jobcode.timesheets || {};
+  return Object.values(timesheets).reduce((acc, timesheet) => {
+    const timesheetDate = new Date(timesheet.date);
+    const currentDate = new Date();
+    const isCurrentMonth =
+      timesheetDate.getMonth() === currentDate.getMonth() &&
+      timesheetDate.getFullYear() === currentDate.getFullYear();
+    if (isCurrentMonth) {
+      return acc + timesheet.duration;
+    }
+    return acc;
+  }, 0);
 }
