@@ -1120,18 +1120,6 @@ function showJobcodeDetailView(jobcodeId) {
 // BELOW ARE UTILITY FUNCTIONS
 // **
 
-/**
- * Filters timesheets to only include those with non-zero duration in current month
- * @param {Array} timesheets - Array of timesheet objects
- * @returns {Array} Filtered timesheets
- */
-function filterCurrentMonthNonZeroTimesheets(timesheets) {
-  return timesheets.filter(
-    (timesheet) =>
-      timesheet.duration > 0 && isDateInCurrentMonth(timesheet.date)
-  );
-}
-
 function getRecentTimesheetsForJobcode(userProfile, jobcodeId) {
   // Check if there are any timesheets for the given jobcode
   const jobcode = userProfile.jobcodes[jobcodeId];
@@ -1143,7 +1131,10 @@ function getRecentTimesheetsForJobcode(userProfile, jobcodeId) {
   const allTimesheets = Object.values(jobcode.timesheets);
 
   // Filter out zero duration and non-current month timesheets
-  const filteredTimesheets = filterCurrentMonthNonZeroTimesheets(allTimesheets);
+  const filteredTimesheets = allTimesheets.filter(
+    (timesheet) =>
+      timesheet.duration > 0 && isDateInCurrentMonth(timesheet.date)
+  );
 
   // Sort by date (newest first)
   return filteredTimesheets.sort((a, b) => new Date(b.date) - new Date(a.date));
