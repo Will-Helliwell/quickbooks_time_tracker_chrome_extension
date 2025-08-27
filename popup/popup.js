@@ -23,6 +23,7 @@ import {
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
+import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
 
 // Global application state
 const AppState = {
@@ -1102,6 +1103,9 @@ function showClientInfoView(jobcodeId) {
 
   // Store the jobcode ID for potential future use
   jobcodeDetailScreen.setAttribute("data-current-jobcode-id", jobcodeId);
+
+  // Render the timesheets table
+  renderTimesheetsTable(recentTimesheets);
 }
 
 function hideClientInfoView() {
@@ -1140,20 +1144,63 @@ function getRecentTimesheetsForJobcode(userProfile, jobcodeId) {
   return filteredTimesheets.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-// Function to format seconds into HH:MM:SS format
-function formatSecondsToTime(seconds) {
-  if (seconds === 0) return "0h 0m";
+/**
+ * Renders the timesheets table for the jobcode detail view
+ * @param {Array} timesheets - Array of timesheet objects
+ * @returns {void}
+ */
+function renderTimesheetsTable(timesheets) {
+  const container = document.getElementById("timesheets-container");
+  const count = timesheets.length;
 
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
+  if (count === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <p class="text-gray-500">No completed timesheets found for this month</p>
+      </div>
+    `;
+    return;
+  }
 
-  let result = "";
-  if (hours > 0) result += `${hours}h `;
-  if (minutes > 0 || hours > 0) result += `${minutes}m`;
-  if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
+  let tableHtml = `
+    <div class="mb-4">
+      <h3 class="text-lg font-semibold">Completed timesheets this month (${count})</h3>
+    </div>
+    <div class="overflow-hidden bg-white shadow-md rounded-lg">
+      <!-- Table Header -->
+      <div class="bg-gray-200 flex w-full">
+        <div class="p-3 text-left font-semibold w-48">Start</div>
+        <div class="p-3 text-left font-semibold w-48">End</div>
+        <div class="p-3 text-left font-semibold w-24">Duration</div>
+        <div class="p-3 text-left font-semibold flex-1">Notes</div>
+      </div>
+      
+      <!-- Table Body -->
+      <div class="divide-y divide-gray-200">
+  `;
 
-  return result.trim();
+  timesheets.forEach((timesheet) => {
+    const formattedStart = formatStartEndTime(timesheet.start);
+    const formattedEnd = formatStartEndTime(timesheet.end);
+    const formattedDuration = formatSecondsToTime(timesheet.duration);
+    const notes = timesheet.notes || "No notes";
+
+    tableHtml += `
+      <div class="flex w-full hover:bg-gray-50">
+        <div class="p-3 w-48 text-sm">${formattedStart}</div>
+        <div class="p-3 w-48 text-sm">${formattedEnd}</div>
+        <div class="p-3 w-24 text-sm">${formattedDuration}</div>
+        <div class="p-3 flex-1 text-sm text-gray-600">${notes}</div>
+      </div>
+    `;
+  });
+
+  tableHtml += `
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = tableHtml;
 }
 
 /**
