@@ -210,6 +210,48 @@
                     <!-- Alerts will be added here dynamically -->
                 </div>
             </div>
+
+            <!-- Custom Sounds Section -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-2">Custom Sounds</h3>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
+                    
+                    <!-- Upload Section -->
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Upload MP3 Files</label>
+                            <div id="upload-status" class="text-xs text-gray-500 hidden"></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="select-audio-file" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm transition-colors">
+                                Select MP3 File
+                            </button>
+                            <button id="upload-audio-file" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" 
+                                disabled>
+                                Upload File
+                            </button>
+                        </div>
+                        <div id="selected-file-info" class="mt-2 text-xs text-gray-600 dark:text-gray-400 hidden">
+                            <!-- Selected file info will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Uploaded Files List -->
+                    <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Uploaded Files</h4>
+                            <div id="storage-stats" class="text-xs text-gray-500">
+                                <!-- Storage stats will appear here -->
+                            </div>
+                        </div>
+                        <div id="uploaded-files-list" class="space-y-2">
+                            <!-- Uploaded files will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -218,6 +260,7 @@
     <script type="module" src="/popup/user.js"></script>
     <script type="module" src="/popup/jobcodes.js"></script>
     <script type="module" src="/popup/alerts.js"></script>
+    <script type="module" src="/popup/audioUpload.js"></script>
     <script type="module" src="popup.js"></script>
 </body>
 

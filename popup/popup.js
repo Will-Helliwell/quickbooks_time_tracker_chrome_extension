@@ -22,6 +22,7 @@ import {
   populateAlerts,
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
+import { initializeAudioUpload } from "/popup/audioUpload.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
 import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
 
@@ -132,6 +133,9 @@ async function handlePopupOpen() {
     addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
   initializeAlertTypeSelector();
+  
+  // Initialize audio upload functionality
+  initializeAudioUpload();
 
   // Handle back to clients button click
   document.getElementById("back-to-clients").addEventListener("click", () => {
@@ -341,7 +345,6 @@ function renderAllClientsTable(userProfile) {
       <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
-    const jobcodeTimesheets = jobcode.timesheets || [];
 
     const secondsCompletedThisMonth =
       calculateSecondsCompletedThisMonth(jobcode);
@@ -727,7 +730,7 @@ function setupFavoritesToggle() {
 }
 
 // Add message listener for timer updates
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "onTheClock") {
     updateActiveRecordingUIWithLatestUserProfile();
     sendResponse({ success: true });
