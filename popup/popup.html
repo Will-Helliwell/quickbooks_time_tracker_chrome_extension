@@ -8,7 +8,7 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 
-<body class="w-[750px] bg-gray-100">
+<body class="w-[750px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200">
 
     <!-- Login Screen -->
     <div id="login-screen" class="flex flex-col items-center justify-center space-y-4 p-4">
@@ -67,26 +67,31 @@
     <!-- Main Content (Hidden Until Logged In) -->
     <div id="main-content" class="hidden">
         <!-- User Info Top Bar -->
-        <div id="user-info" class="bg-white border-b px-4 py-2 flex items-center justify-between">
+        <div id="user-info"
+            class="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-4 py-2 flex items-center justify-between">
             <div class="flex items-center">
                 <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold mr-2"
                     id="user-initials"></div>
                 <div>
-                    <span class="text-sm font-medium text-gray-800" id="user-full-name"></span>
-                    <span class="text-xs text-gray-500 ml-1" id="user-company"></span>
+                    <span class="text-sm font-medium text-gray-800 dark:text-white" id="user-full-name"></span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-1" id="user-company"></span>
                 </div>
             </div>
-            <button id="logout-button" class="text-xs text-gray-500 hover:text-red-600">
+            <button id="logout-button"
+                class="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">
                 Logout
             </button>
         </div>
 
         <!-- Tab Navigation -->
-        <div class="flex justify-between border-b mb-4">
-            <button class="tab-button px-4 py-2 text-gray-600 hover:text-black active" data-tab="clients-screen">
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-600 mb-4">
+            <button
+                class="tab-button px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white active"
+                data-tab="clients-screen">
                 My Clients
             </button>
-            <button class="tab-button px-4 py-2 text-gray-600 hover:text-black" data-tab="settings-screen">
+            <button class="tab-button px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                data-tab="settings-screen">
                 Settings
             </button>
         </div>
@@ -106,6 +111,23 @@
                 </div>
             </div>
             <div id="my-clients-table"> </div>
+        </div>
+
+        <!-- Jobcode Detail View -->
+        <div id="jobcode-detail-screen" class="hidden p-4">
+            <div class="mb-4">
+                <button id="back-to-clients" class="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to My Clients
+                </button>
+            </div>
+            <!-- Timesheets Table Container -->
+            <div id="timesheets-container">
+                <!-- Table will be rendered here dynamically -->
+            </div>
         </div>
 
         <!-- Settings Page -->
@@ -128,11 +150,12 @@
                 <h3 class="text-lg font-semibold mb-2">Alerts</h3>
 
                 <!-- Time and Color Inputs in a Row -->
-                <div class="flex items-center justify-between gap-3 bg-white p-3 rounded-lg shadow-sm"
+                <div class="flex items-center justify-between gap-3 bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600"
                     id="alerts-input-container">
                     <div class="flex items-center gap-3">
                         <!-- Alert Type Selector -->
-                        <select id="alert-type" class="border rounded-md p-1 text-sm">
+                        <select id="alert-type"
+                            class="border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                             <option value="badge">Badge</option>
                             <option value="sound">Sound</option>
                             <option value="notification">Chrome Notification</option>
@@ -140,23 +163,28 @@
 
                         <!-- Color Picker (shown by default) -->
                         <div id="color-picker-container" class="w-24">
-                            <input type="color" id="alert-color" class="w-full h-8 border rounded-md p-1">
+                            <input type="color" id="alert-color"
+                                class="w-full h-8 border border-gray-300 dark:border-gray-600 rounded-md p-1 bg-white dark:bg-gray-800">
                         </div>
 
                         <!-- Sound Selector (hidden by default) -->
                         <div id="sound-selector-container" class="w-24 hidden">
-                            <select id="alert-sound" class="w-full h-8 border rounded-md p-1 text-sm">
+                            <select id="alert-sound"
+                                class="w-full h-8 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                 <option value="eastern_whip">Eastern Whip</option>
                             </select>
                         </div>
 
                         <!-- Time Input -->
                         <div class="flex gap-2">
-                            <input type="number" id="alert-hours" class="w-16 border rounded-md p-1 text-sm"
+                            <input type="number" id="alert-hours"
+                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="H" min="0">
-                            <input type="number" id="alert-minutes" class="w-16 border rounded-md p-1 text-sm"
+                            <input type="number" id="alert-minutes"
+                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="M" min="0" max="59">
-                            <input type="number" id="alert-seconds" class="w-16 border rounded-md p-1 text-sm"
+                            <input type="number" id="alert-seconds"
+                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="S" min="0" max="59">
                         </div>
 
@@ -164,7 +192,8 @@
                         <div class="flex items-center">
                             <label class="flex items-center gap-2">
                                 <input type="checkbox" id="overtime-alert" class="form-checkbox h-4 w-4 text-blue-600">
-                                <span class="text-sm text-gray-600" id="overtime-text">Overtime</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-300"
+                                    id="overtime-text">Overtime</span>
                             </label>
                         </div>
                     </div>

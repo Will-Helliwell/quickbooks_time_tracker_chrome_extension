@@ -22,11 +22,40 @@ import {
   populateAlerts,
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
+import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
+import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
+
+// Global application state
+const AppState = {
+  userProfile: null,
+
+  /**
+   * Sets the user profile in global state
+   * @param {Object} profile - The user profile object
+   */
+  setUserProfile(profile) {
+    this.userProfile = profile;
+  },
+
+  /**
+   * Gets the user profile from global state
+   * @returns {Object|null} The user profile object or null if not set
+   */
+  getUserProfile() {
+    return this.userProfile;
+  },
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
 });
 
+/**
+ * This is the main handler function that runs when the popup is opened.
+ * It initializes the user profile and sets up the necessary event listeners.
+ * @async
+ * @function
+ */
 async function handlePopupOpen() {
   let userProfile = {};
   const loginScreen = document.getElementById("login-screen");
@@ -51,6 +80,7 @@ async function handlePopupOpen() {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
     userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
+    AppState.setUserProfile(userProfile);
     await updateUIWithUserProfile(userProfile);
   }
 
@@ -71,6 +101,7 @@ async function handlePopupOpen() {
       userProfile = await updateUserProfileFromAPI();
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
+      AppState.setUserProfile(userProfile);
       await updateUIWithUserProfile(userProfile);
     }
   });
@@ -101,6 +132,12 @@ async function handlePopupOpen() {
     addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
   initializeAlertTypeSelector();
+
+  // Handle back to clients button click
+  document.getElementById("back-to-clients").addEventListener("click", () => {
+    hideClientInfoView();
+    showMyClientsView();
+  });
 }
 
 /**
@@ -290,21 +327,20 @@ function renderAllClientsTable(userProfile) {
   }
 
   let allClientsTableHtml = `
-    <div class="table-container overflow-hidden flex flex-col bg-white shadow-md rounded-lg">
+    <div class="table-container overflow-hidden flex flex-col bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Fixed header -->
-      <div id="all-clients-table-header" class="bg-gray-200 flex w-full">
-        <div class="p-2 text-left font-semibold w-10"></div>
-        <div class="p-2 text-left font-semibold flex-1 table-column-name">Name</div>
-        <div class="p-2 text-left font-semibold w-42 table-column-completed">Completed This Month</div>
-        <div class="p-2 text-left font-semibold w-28 table-column-assigned">Assigned</div>
-        <div class="p-2 text-left font-semibold w-28 table-column-remaining">Remaining</div>
+      <div id="all-clients-table-header" class="bg-gray-200 dark:bg-gray-600 flex w-full">
+        <div class="p-2 text-left font-semibold w-10 text-gray-800 dark:text-white"></div>
+        <div class="p-2 text-left font-semibold flex-1 table-column-name text-gray-800 dark:text-white">Name</div>
+        <div class="p-2 text-left font-semibold w-42 table-column-completed text-gray-800 dark:text-white">Completed This Month</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-assigned text-gray-800 dark:text-white">Assigned</div>
+        <div class="p-2 text-left font-semibold w-28 table-column-remaining text-gray-800 dark:text-white">Remaining</div>
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto max-h-64">`;
+      <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
-    // Format time displays
     const jobcodeTimesheets = jobcode.timesheets || [];
 
     const secondsCompletedThisMonth =
@@ -346,7 +382,7 @@ function renderAllClientsTable(userProfile) {
     }
 
     allClientsTableHtml += `
-      <div class="job-row flex w-full border-t border-gray-200 hover:bg-gray-50" data-jobcode-id="${
+      <div class="job-row flex w-full border-t border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-white" data-jobcode-id="${
         jobcode.id
       }">
         <div class="p-2 w-10">
@@ -360,7 +396,7 @@ function renderAllClientsTable(userProfile) {
             </svg>
           </button>
         </div>
-        <div class="job-name p-2 flex-1 truncate">${
+        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
         <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">${formatSecondsToTime(
@@ -384,7 +420,7 @@ function renderAllClientsTable(userProfile) {
               </svg>
             </button>
           </div>
-          <div class="edit-form hidden absolute right-0 mt-1 bg-white p-2 shadow-lg rounded-md z-10 border border-gray-200" style="min-width: 220px;">
+          <div class="edit-form hidden absolute right-0 mt-1 bg-white dark:bg-gray-700 p-2 shadow-lg rounded-md z-10 border border-gray-200 dark:border-gray-600" style="min-width: 220px;">
             <div class="mb-2">
               <label class="flex items-center">
                 <input type="checkbox" class="limit-checkbox mr-2" ${
@@ -437,7 +473,7 @@ function renderAllClientsTable(userProfile) {
               <button class="save-assigned-btn px-2 py-1 bg-blue-600 text-white text-xs rounded" data-jobcode-id="${
                 jobcode.id
               }">Save</button>
-              <button class="cancel-assigned-btn px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded">Cancel</button>
+              <button class="cancel-assigned-btn px-2 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">Cancel</button>
             </div>
           </div>
         </div>
@@ -455,6 +491,7 @@ function renderAllClientsTable(userProfile) {
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
   setupFavoritesToggle();
+  setupJobNameClickListeners();
 
   updateActiveRecordingUIWithLatestUserProfile();
   initializeColourTheme(userProfile);
@@ -689,22 +726,6 @@ function setupFavoritesToggle() {
   });
 }
 
-// Function to format seconds into HH:MM:SS format
-function formatSecondsToTime(seconds) {
-  if (seconds === 0) return "0h 0m";
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-
-  let result = "";
-  if (hours > 0) result += `${hours}h `;
-  if (minutes > 0 || hours > 0) result += `${minutes}m`;
-  if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
-
-  return result.trim();
-}
-
 // Add message listener for timer updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "onTheClock") {
@@ -734,11 +755,15 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
   }
 }
 
+// **
+// BELOW ARE THE FUNCTIONS RELATED TO COLOR THEME MANAGEMENT
+// **
+
 /**
  * Initializes the color theme and adds event listeners for the dark mode toggle
  *
  * This function sets up the dark mode toggle and applies the appropriate theme based on
- * the user's stored preference. It also handles theme changes when the toggle is switched.
+ * the user's stored preference using Tailwind's built-in dark mode system.
  *
  * @async
  * @function
@@ -774,225 +799,286 @@ async function initializeColourTheme(userProfile) {
 }
 
 /**
- * Applies the specified theme to the popup interface
+ * Applies the specified theme using Tailwind's built-in dark mode system
  *
- * This function handles the visual application of theme colors to various UI elements
- * including the body, main content area, user info section, and tab elements.
- * It uses Tailwind CSS classes to implement the theme changes.
+ * This function simply toggles the 'dark' class on the document element,
+ * which automatically applies all dark: variants defined in the HTML.
  *
  * @function
  * @param {string} themeName - The name of the theme to apply ('light' or 'dark')
  * @returns {void}
  */
 function applyTheme(themeName) {
-  const body = document.body;
-  const mainContent = document.getElementById("main-content");
-  const userInfo = document.getElementById("user-info");
-  const tabButtons = document.querySelectorAll(".tab-button");
-  const tabContents = document.querySelectorAll(".tab-content");
-  const allClientsTableBody = document.getElementById("all-clients-table-body");
-  const allClientsTableHeader = document.getElementById(
-    "all-clients-table-header"
-  );
-  const userFullName = document.getElementById("user-full-name");
-  const userCompany = document.getElementById("user-company");
-  const alertsInputContainer = document.getElementById(
-    "alerts-input-container"
-  );
-  const overtimeText = document.getElementById("overtime-text");
-  const timeInputs = document.querySelectorAll(
-    "#alert-hours, #alert-minutes, #alert-seconds"
-  );
-  const notificationPlaceholder = document.getElementById(
-    "notification-placeholder"
-  );
+  const html = document.documentElement;
 
-  // define theme colors
-  const themeColors = {
-    dark: {
-      background: "bg-gray-800",
-      text: {
-        primary: "text-white",
-        secondary: "text-gray-300",
-        hover: "hover:text-white",
-      },
-      border: "border-gray-700",
-      userInfo: {
-        background: "bg-gray-800",
-      },
-      allClientsTable: {
-        headerBackground: "bg-gray-700",
-        bodyBackground: "bg-gray-600",
-      },
-      alerts: {
-        background: "bg-gray-700",
-        text: "text-gray-300",
-      },
-      notificationPlaceholder: "bg-gray-700",
-    },
-    light: {
-      background: "bg-gray-100",
-      text: {
-        primary: "text-gray-800",
-        secondary: "text-gray-600",
-        hover: "hover:text-black",
-      },
-      border: "border-gray-200",
-      userInfo: {
-        background: "bg-white",
-      },
-      allClientsTable: {
-        headerBackground: "bg-gray-200",
-        bodyBackground: "bg-white",
-      },
-      alerts: {
-        background: "bg-white",
-        text: "text-black",
-      },
-      notificationPlaceholder: "bg-white",
-    },
-  };
-
-  // Apply theme colours
-  switch (themeName) {
-    case "light":
-      body.classList.remove(themeColors.dark.background);
-      body.classList.add(themeColors.light.background);
-
-      mainContent.classList.remove(themeColors.dark.text.primary);
-      userInfo.classList.remove(
-        themeColors.dark.userInfo.background,
-        themeColors.dark.border
-      );
-      userInfo.classList.add(themeColors.light.userInfo.background);
-
-      userFullName.classList.remove(themeColors.dark.text.primary);
-      userFullName.classList.add(themeColors.light.text.primary);
-      userCompany.classList.remove(themeColors.dark.text.secondary);
-      userCompany.classList.add(themeColors.light.text.secondary);
-
-      tabButtons.forEach((button) => {
-        button.classList.remove(
-          themeColors.dark.text.secondary,
-          themeColors.dark.text.hover
-        );
-        button.classList.add(
-          themeColors.light.text.secondary,
-          themeColors.light.text.hover
-        );
-      });
-
-      tabContents.forEach((content) => {
-        content.classList.remove(themeColors.dark.text.secondary);
-      });
-
-      allClientsTableHeader.classList.remove(
-        themeColors.dark.allClientsTable.headerBackground
-      );
-      allClientsTableHeader.classList.add(
-        themeColors.light.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.remove(
-        themeColors.dark.allClientsTable.bodyBackground
-      );
-      allClientsTableBody.classList.add(
-        themeColors.light.allClientsTable.bodyBackground
-      );
-      alertsInputContainer.classList.remove(
-        themeColors.dark.alerts.background,
-        themeColors.dark.alerts.text
-      );
-      alertsInputContainer.classList.add(
-        themeColors.light.alerts.background,
-        themeColors.light.alerts.text
-      );
-      overtimeText.classList.remove("text-gray-300");
-      overtimeText.classList.add("text-gray-600");
-      timeInputs.forEach((input) => {
-        input.classList.remove("text-gray-300");
-        input.classList.add("text-black");
-      });
-
-      if (notificationPlaceholder) {
-        notificationPlaceholder.classList.remove(
-          themeColors.dark.notificationPlaceholder
-        );
-        notificationPlaceholder.classList.add(
-          themeColors.light.notificationPlaceholder
-        );
-      }
-      break;
-    case "dark":
-      body.classList.remove(themeColors.light.background);
-      body.classList.add(themeColors.dark.background);
-
-      mainContent.classList.add(themeColors.dark.text.primary);
-      userInfo.classList.add(
-        themeColors.dark.userInfo.background,
-        themeColors.dark.border
-      );
-      userInfo.classList.remove(themeColors.light.userInfo.background);
-
-      userFullName.classList.add(themeColors.dark.text.primary);
-      userFullName.classList.remove(themeColors.light.text.primary);
-      userCompany.classList.add(themeColors.dark.text.secondary);
-      userCompany.classList.remove(themeColors.light.text.secondary);
-
-      tabButtons.forEach((button) => {
-        button.classList.add(
-          themeColors.dark.text.secondary,
-          themeColors.dark.text.hover
-        );
-        button.classList.remove(
-          themeColors.light.text.secondary,
-          themeColors.light.text.hover
-        );
-      });
-
-      tabContents.forEach((content) => {
-        content.classList.add(themeColors.dark.text.secondary);
-      });
-
-      allClientsTableHeader.classList.add(
-        themeColors.dark.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.add(
-        themeColors.dark.allClientsTable.bodyBackground
-      );
-      allClientsTableHeader.classList.remove(
-        themeColors.light.allClientsTable.headerBackground
-      );
-      allClientsTableBody.classList.remove(
-        themeColors.light.allClientsTable.bodyBackground
-      );
-      alertsInputContainer.classList.remove(
-        themeColors.light.alerts.background,
-        themeColors.light.alerts.text
-      );
-      alertsInputContainer.classList.add(
-        themeColors.dark.alerts.background,
-        themeColors.dark.alerts.text
-      );
-      overtimeText.classList.remove("text-gray-600");
-      overtimeText.classList.add("text-gray-300");
-      timeInputs.forEach((input) => {
-        input.classList.remove("text-black");
-        input.classList.add("text-gray-300");
-      });
-
-      if (notificationPlaceholder) {
-        notificationPlaceholder.classList.remove(
-          themeColors.light.notificationPlaceholder
-        );
-        notificationPlaceholder.classList.add(
-          themeColors.dark.notificationPlaceholder
-        );
-      }
-      break;
-
-    default:
-      break;
+  if (themeName === "dark") {
+    html.classList.add("dark");
+  } else {
+    html.classList.remove("dark");
   }
+}
+
+// **
+// BELOW ARE ALL FUNCTIONS FOR NAVIGATION AND VIEW SWITCHING
+// **
+
+function setupJobNameClickListeners() {
+  document.querySelectorAll(".job-name").forEach((jobNameElement) => {
+    jobNameElement.addEventListener("click", function () {
+      // Get the parent row
+      const jobRow = this.closest(".job-row");
+      // Retrieve the jobcode id from data attribute
+      const jobcodeId = jobRow.getAttribute("data-jobcode-id");
+      // Switch to jobcode detail view
+      showJobcodeDetailView(jobcodeId);
+    });
+  });
+}
+
+// Tab utility functions
+function showTabs() {
+  const tabNavigation = document.querySelector(
+    ".flex.justify-between.border-b.mb-4"
+  );
+  tabNavigation.classList.remove("hidden");
+}
+
+function hideTabs() {
+  const tabNavigation = document.querySelector(
+    ".flex.justify-between.border-b.mb-4"
+  );
+  tabNavigation.classList.add("hidden");
+}
+
+function hideAllTabContent() {
+  const tabContents = document.querySelectorAll(".tab-content");
+  tabContents.forEach((content) => {
+    content.classList.add("hidden");
+  });
+}
+
+function showMyClientsView() {
+  showTabs();
+
+  // Show clients screen
+  const clientsScreen = document.getElementById("clients-screen");
+  clientsScreen.classList.remove("hidden");
+
+  // Update tab button styling to show clients as active
+  const tabButtons = document.querySelectorAll(".tab-button");
+  tabButtons.forEach((button) => {
+    if (button.getAttribute("data-tab") === "clients-screen") {
+      button.classList.add("text-black", "font-bold");
+    } else {
+      button.classList.remove("text-black", "font-bold");
+    }
+  });
+}
+
+function hideMyClientsView() {
+  // Hide clients screen
+  const clientsScreen = document.getElementById("clients-screen");
+  clientsScreen.classList.add("hidden");
+
+  hideTabs();
+}
+
+function showClientInfoView(jobcodeId) {
+  const userProfile = AppState.getUserProfile();
+  console.log("userProfile = ");
+  console.log(userProfile);
+
+  // Get the client name from the jobcode
+  const jobcode = userProfile.jobcodes[jobcodeId];
+  const clientName = jobcode
+    ? jobcode.parent_path_name + jobcode.name
+    : "Unknown Client";
+
+  const recentTimesheets = getRecentTimesheetsForJobcode(
+    userProfile,
+    jobcodeId
+  );
+  console.log("recentTimesheets = ");
+  console.log(recentTimesheets);
+
+  // Show jobcode detail screen
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  jobcodeDetailScreen.classList.remove("hidden");
+
+  // Store the jobcode ID and client name for potential future use
+  jobcodeDetailScreen.setAttribute("data-current-jobcode-id", jobcodeId);
+  jobcodeDetailScreen.setAttribute("data-current-client-name", clientName);
+
+  // Render the timesheets table
+  renderTimesheetsTable(recentTimesheets);
+}
+
+function hideClientInfoView() {
+  // Hide jobcode detail screen
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  jobcodeDetailScreen.classList.add("hidden");
+}
+
+function showJobcodeDetailView(jobcodeId) {
+  hideAllTabContent();
+  hideMyClientsView();
+  showClientInfoView(jobcodeId);
+}
+
+// **
+// BELOW ARE UTILITY FUNCTIONS
+// **
+
+function getRecentTimesheetsForJobcode(userProfile, jobcodeId) {
+  // Check if there are any timesheets for the given jobcode
+  const jobcode = userProfile.jobcodes[jobcodeId];
+  if (!jobcode.timesheets) {
+    return [];
+  }
+
+  // Get all timesheet objects as an array
+  const allTimesheets = Object.values(jobcode.timesheets);
+
+  // Filter out zero duration and non-current month timesheets
+  const filteredTimesheets = allTimesheets.filter(
+    (timesheet) =>
+      timesheet.duration > 0 && isDateInCurrentMonth(timesheet.date)
+  );
+
+  // Sort by date (newest first)
+  return filteredTimesheets.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+/**
+ * Renders the timesheets table for the jobcode detail view
+ * @param {Array} timesheets - Array of timesheet objects
+ * @returns {void}
+ */
+function renderTimesheetsTable(timesheets) {
+  const container = document.getElementById("timesheets-container");
+  const count = timesheets.length;
+
+  // Get client name from data attribute
+  const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
+  const clientName =
+    jobcodeDetailScreen.getAttribute("data-current-client-name") ||
+    "Unknown Client";
+
+  if (count === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <p class="text-gray-500">No completed timesheets found for ${clientName} this month</p>
+      </div>
+    `;
+    return;
+  }
+
+  let tableHtml = `
+    <div class="mb-4">
+      <h3 class="text-lg font-semibold">${clientName} - completed timesheets this month (${count})</h3>
+    </div>
+    <div class="overflow-hidden bg-white dark:bg-gray-700 shadow-md rounded-lg">
+      <!-- Table Header -->
+      <div class="bg-gray-200 dark:bg-gray-600 flex w-full">
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
+        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
+      </div>
+      
+      <!-- Table Body -->
+      <div class="divide-y divide-gray-200 dark:divide-gray-600 bg-white dark:bg-gray-700">
+  `;
+
+  timesheets.forEach((timesheet) => {
+    const formattedStart = formatStartEndTime(timesheet.start);
+    const formattedEnd = formatStartEndTime(timesheet.end);
+    const formattedDuration = formatSecondsToTime(timesheet.duration);
+    const notes = timesheet.notes || "No notes";
+
+    // Cap notes at 25 characters and add ellipsis if needed
+    const displayNotes =
+      notes.length > 25 ? notes.substring(0, 25) + "..." : notes;
+    const isLongNote = notes.length > 25;
+
+    tableHtml += `
+      <div class="flex w-full hover:bg-gray-50 dark:hover:bg-gray-600 group text-gray-900 dark:text-white">
+        <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
+        <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
+        <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
+                <div class="p-3 text-sm style="width: 35%;">
+          <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
+      isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
+    }>${displayNotes}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  tableHtml += `
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = tableHtml;
+
+  // Set up tooltip functionality
+  setupTooltips();
+}
+
+/**
+ * Sets up global tooltip functionality using fixed positioning
+ */
+function setupTooltips() {
+  // Remove any existing tooltip
+  const existingTooltip = document.getElementById("global-tooltip");
+  if (existingTooltip) {
+    existingTooltip.remove();
+  }
+
+  // Create global tooltip element
+  const tooltip = document.createElement("div");
+  tooltip.id = "global-tooltip";
+  tooltip.className =
+    "fixed z-50 hidden bg-black text-white text-xs px-3 py-2 rounded shadow-lg max-w-xs whitespace-normal pointer-events-none";
+  document.body.appendChild(tooltip);
+
+  // Add event listeners to all tooltip triggers
+  document.querySelectorAll(".tooltip-trigger").forEach((trigger) => {
+    trigger.addEventListener("mouseenter", (e) => {
+      const tooltipText = e.target.getAttribute("data-tooltip");
+      if (tooltipText) {
+        tooltip.textContent = tooltipText;
+        tooltip.classList.remove("hidden");
+
+        // Position tooltip above the element
+        const rect = e.target.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        // Position above the element, centered horizontally
+        let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+        let top = rect.top - tooltipRect.height - 8; // 8px gap
+
+        // Ensure tooltip doesn't go off screen horizontally
+        if (left < 8) left = 8;
+        if (left + tooltipRect.width > window.innerWidth - 8) {
+          left = window.innerWidth - tooltipRect.width - 8;
+        }
+
+        // If tooltip would go above viewport, show it below instead
+        if (top < 8) {
+          top = rect.bottom + 8;
+        }
+
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      }
+    });
+
+    trigger.addEventListener("mouseleave", () => {
+      tooltip.classList.add("hidden");
+    });
+  });
 }
 
 /**
@@ -1006,13 +1092,10 @@ function applyTheme(themeName) {
  */
 function calculateSecondsCompletedThisMonth(jobcode) {
   const timesheets = jobcode.timesheets || {};
-  return Object.values(timesheets).reduce((acc, timesheet) => {
-    const timesheetDate = new Date(timesheet.date);
-    const currentDate = new Date();
-    const isCurrentMonth =
-      timesheetDate.getMonth() === currentDate.getMonth() &&
-      timesheetDate.getFullYear() === currentDate.getFullYear();
-    if (isCurrentMonth) {
+  const allTimesheets = Object.values(timesheets);
+
+  return allTimesheets.reduce((acc, timesheet) => {
+    if (isDateInCurrentMonth(timesheet.date)) {
       return acc + timesheet.duration;
     }
     return acc;
