@@ -1,5 +1,5 @@
 /**
- * This script handles the badge countdown for the Chrome extension.
+ * This script handles the countdown timer and triggering of alerts for the extension.
  */
 
 let backgroundCountdownReference = null;
