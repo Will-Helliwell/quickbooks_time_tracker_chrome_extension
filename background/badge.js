@@ -83,7 +83,7 @@ function updateBadge(seconds_remaining, userProfile) {
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
     // otherwise, set the badge to the alert colour
-    const alertColour = nextAlert.alert_string;
+    const alertColour = nextAlert.asset_reference || nextAlert.alert_string; // fallback for legacy alerts
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
   }
 
@@ -105,18 +105,39 @@ function updateBadge(seconds_remaining, userProfile) {
 }
 
 function checkForSoundAlerts(seconds_remaining, userProfile) {
+  console.log(
+    "Checking for sound/notification alerts at",
+    seconds_remaining,
+    "seconds remaining"
+  );
+
   // Check if the user has any sound or notification alerts set
   const alerts = userProfile.preferences.alerts || [];
 
-  // Check for sound alerts
+  // Check for sound alerts (both new and legacy types)
   const soundAlert = alerts.find(
     (alert) =>
-      alert.type === "sound" && alert.time_in_seconds === seconds_remaining
+      (alert.type === "sound_default" ||
+        alert.type === "sound_custom" ||
+        alert.type === "sound") &&
+      alert.time_in_seconds === seconds_remaining
   );
 
-  // If a sound alert is found, play the sound
+  // If a sound alert is found, play the appropriate sound
   if (soundAlert) {
-    playAudio(soundAlert.alert_string);
+    console.log("Sound alert found: ", soundAlert);
+
+    if (soundAlert.type === "sound_default" || soundAlert.type === "sound") {
+      console.log("Playing default/legacy sound: ", soundAlert);
+
+      // Play pre-packaged sound (legacy support for "sound" type)
+      const soundName = soundAlert.asset_reference || soundAlert.alert_string;
+      playAudio(soundName);
+    } else if (soundAlert.type === "sound_custom") {
+      console.log("Playing custom sound: ", soundAlert);
+      // Play custom sound using new playback system
+      playCustomAudio(soundAlert.asset_reference || soundAlert.alert_string);
+    }
   }
 
   // Check for notification alerts
@@ -150,6 +171,21 @@ async function playAudio(sound) {
   });
 }
 
+/**
+ * Play a custom audio file from IndexedDB using the new playback system
+ * @param {string} audioId - The IndexedDB ID of the custom audio file
+ */
+async function playCustomAudio(audioId) {
+  console.log("In playCustomAudio with ID:", audioId);
+
+  try {
+    await handleCustomSoundPlaybackById(audioId);
+    console.log("Called handleCustomSoundPlaybackById via shared helper");
+  } catch (error) {
+    console.error("Error playing custom audio:", error);
+  }
+}
+
 async function createChromeAlert(seconds_remaining) {
   let message;
   if (seconds_remaining === 0) {
@@ -176,7 +212,7 @@ async function createChromeAlert(seconds_remaining) {
       requireInteraction: true, // This will make the notification stay until you click it
       silent: false, // This will ensure the notification makes a sound
     },
-    (notificationId) => {
+    (_notificationId) => {
       if (chrome.runtime.lastError) {
         console.error("Error creating notification:", chrome.runtime.lastError);
       }

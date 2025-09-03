@@ -40,12 +40,50 @@ export async function addNewAlert(userProfile) {
     }
   }
 
+  // Parse sound selection to determine type and asset reference
+  let alertTypeToUse = alertType;
+  let assetReference = "";
+  let displayName = "";
+  
+  if (alertType === "badge") {
+    assetReference = color;
+  } else if (alertType === "sound") {
+    // Parse the sound selection to determine if it's default or custom
+    const soundParts = sound.split(":");
+    if (soundParts[0] === "default") {
+      alertTypeToUse = "sound_default";
+      assetReference = soundParts[1]; // filename
+      displayName = soundParts[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    } else if (soundParts[0] === "custom") {
+      alertTypeToUse = "sound_custom";
+      assetReference = soundParts[1]; // IndexedDB ID
+      // Get display name from the custom sound data
+      try {
+        const { getAudioFile } = await import('/shared/audioStorage.js');
+        const audioRecord = await getAudioFile(soundParts[1]);
+        displayName = audioRecord ? audioRecord.name : soundParts[1];
+      } catch (error) {
+        console.error("Error getting custom sound name:", error);
+        displayName = soundParts[1];
+      }
+    } else {
+      // Legacy support - assume it's a default sound
+      alertTypeToUse = "sound_default";
+      assetReference = sound;
+      displayName = sound.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    }
+  }
+
   const newAlert = {
-    type: alertType,
+    type: alertTypeToUse,
     time_in_seconds: timeInSeconds,
-    alert_string:
-      alertType === "badge" ? color : alertType === "sound" ? sound : "",
+    asset_reference: assetReference,
   };
+
+  // Add display_name for sound alerts
+  if (alertTypeToUse.startsWith("sound")) {
+    newAlert.display_name = displayName;
+  }
 
   // Save new alert to local storage
   if (
@@ -109,7 +147,7 @@ function createAlertElement(alert, userProfile) {
 
   // Set background color
   if (alert.type === "badge") {
-    alertElement.style.backgroundColor = alert.alert_string;
+    alertElement.style.backgroundColor = alert.asset_reference || alert.alert_string; // fallback for legacy
   } else {
     alertElement.style.backgroundColor = "#FFFFFF"; // white
   }
@@ -131,14 +169,30 @@ function createAlertElement(alert, userProfile) {
   // Alert type indicator
   const typeIndicator = document.createElement("span");
   typeIndicator.className = "text-sm font-medium ml-2";
-  typeIndicator.textContent =
-    alert.type === "badge"
-      ? "Badge"
-      : alert.type === "sound"
-      ? `Sound (${alert.alert_string
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase())})`
-      : "Chrome Notification";
+  
+  let displayText = "";
+  if (alert.type === "badge") {
+    displayText = "Badge";
+  } else if (alert.type === "sound_default" || alert.type === "sound_custom") {
+    // Use display_name if available, otherwise fallback to formatted asset_reference
+    const soundName = alert.display_name || 
+      (alert.asset_reference || alert.alert_string || "Unknown")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+    displayText = `Sound (${soundName})`;
+  } else if (alert.type === "sound") {
+    // Legacy support
+    const soundName = (alert.alert_string || "Unknown")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+    displayText = `Sound (${soundName})`;
+  } else if (alert.type === "notification") {
+    displayText = "Chrome Notification";
+  } else {
+    displayText = alert.type || "Unknown";
+  }
+  
+  typeIndicator.textContent = displayText;
 
   // Delete button
   const deleteButton = document.createElement("button");
@@ -159,7 +213,7 @@ function createAlertElement(alert, userProfile) {
         (existingAlert) =>
           existingAlert.type !== alert.type ||
           existingAlert.time_in_seconds !== alert.time_in_seconds ||
-          existingAlert.alert_string !== alert.alert_string
+          (existingAlert.asset_reference || existingAlert.alert_string) !== (alert.asset_reference || alert.alert_string)
       );
       await overwriteUserProfileInStorage(userProfile);
     }
@@ -174,10 +228,7 @@ function createAlertElement(alert, userProfile) {
 
 /**
  * Populates the sound selector dropdown with all available sound files
- *
- * This function reads the sounds directory and populates the sound selector
- * with all available sound files. Each option's value is the filename without extension,
- * and the display text is the filename with underscores replaced by spaces and capitalized.
+ * Includes both pre-packaged sounds from /sounds directory and custom uploaded sounds
  *
  * @function
  * @returns {Promise<void>}
@@ -186,6 +237,28 @@ async function populateSoundSelector() {
   const soundSelector = document.getElementById("alert-sound");
   soundSelector.innerHTML = ""; // Clear existing options
 
+  try {
+    // Add pre-packaged sounds
+    await addPrePackagedSounds(soundSelector);
+    
+    // Add custom sounds
+    await addCustomSounds(soundSelector);
+    
+  } catch (error) {
+    console.error("Error populating sound selector:", error);
+    // Fallback to a default sound if there's an error
+    const option = document.createElement("option");
+    option.value = "default:eastern_whip";
+    option.textContent = "Eastern Whip";
+    soundSelector.appendChild(option);
+  }
+}
+
+/**
+ * Add pre-packaged sounds to the selector dropdown
+ * @param {HTMLSelectElement} soundSelector - The select element to populate
+ */
+async function addPrePackagedSounds(soundSelector) {
   try {
     // Get the sounds directory entry
     const soundsDir = await new Promise((resolve, reject) => {
@@ -220,22 +293,75 @@ async function populateSoundSelector() {
     // Sort the files alphabetically
     soundFiles.sort();
 
-    // Add each sound file as an option
+    // Add header for pre-packaged sounds if we have both types
+    const customSounds = await getCustomSounds();
+    if (customSounds.length > 0) {
+      const headerOption = document.createElement("option");
+      headerOption.disabled = true;
+      headerOption.textContent = "── Pre-packaged Sounds ──";
+      soundSelector.appendChild(headerOption);
+    }
+
+    // Add each pre-packaged sound file as an option
     soundFiles.forEach((soundFile) => {
       const option = document.createElement("option");
-      option.value = soundFile;
+      option.value = `default:${soundFile}`; // Prefix to identify type
       option.textContent = soundFile
         .replace(/_/g, " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
       soundSelector.appendChild(option);
     });
+    
   } catch (error) {
-    console.error("Error reading sounds directory:", error);
-    // Fallback to a default sound if there's an error
-    const option = document.createElement("option");
-    option.value = "eastern_whip";
-    option.textContent = "Eastern Whip";
-    soundSelector.appendChild(option);
+    console.error("Error reading pre-packaged sounds:", error);
+  }
+}
+
+/**
+ * Add custom uploaded sounds to the selector dropdown
+ * @param {HTMLSelectElement} soundSelector - The select element to populate
+ */
+async function addCustomSounds(soundSelector) {
+  try {
+    const customSounds = await getCustomSounds();
+    
+    if (customSounds.length > 0) {
+      // Add header for custom sounds
+      const headerOption = document.createElement("option");
+      headerOption.disabled = true;
+      headerOption.textContent = "── Custom Sounds ──";
+      soundSelector.appendChild(headerOption);
+
+      // Sort custom sounds alphabetically by name
+      customSounds.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Add each custom sound as an option
+      customSounds.forEach((audioFile) => {
+        const option = document.createElement("option");
+        option.value = `custom:${audioFile.id}`; // Prefix to identify type
+        option.textContent = audioFile.name
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        soundSelector.appendChild(option);
+      });
+    }
+    
+  } catch (error) {
+    console.error("Error reading custom sounds:", error);
+  }
+}
+
+/**
+ * Get custom sounds from IndexedDB
+ * @returns {Promise<Array>} Array of custom audio files
+ */
+async function getCustomSounds() {
+  try {
+    const { getAllAudioFiles } = await import('/shared/audioStorage.js');
+    return await getAllAudioFiles();
+  } catch (error) {
+    console.error("Error getting custom sounds:", error);
+    return [];
   }
 }
 

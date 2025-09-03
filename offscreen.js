@@ -14,7 +14,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "playCustomSound") {
       // Custom sound with raw audio data
-
       try {
         // Convert array back to Uint8Array for Blob creation
         const audioBuffer = new Uint8Array(message.audioData);
@@ -27,7 +26,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // Clean up blob URL after playback
           setTimeout(() => {
             URL.revokeObjectURL(blobUrl);
-            console.log("Offscreen cleaned up blob URL");
           }, 1000);
         });
       } catch (error) {
@@ -35,6 +33,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       }
 
+      return true;
+    }
+
+    if (message.action === "playCustomSoundById") {
+      // Custom sound by ID - need to get audio data from IndexedDB
+      handleCustomSoundById(message.soundId, sendResponse);
       return true;
     }
   }
@@ -47,7 +51,6 @@ function playAudioFromUrl(audioUrl, soundName, sendResponse, onSuccess = null) {
   audio
     .play()
     .then(() => {
-      console.log(`Successfully played sound: ${soundName}`);
       sendResponse({ success: true });
       if (onSuccess) onSuccess();
     })
@@ -55,4 +58,40 @@ function playAudioFromUrl(audioUrl, soundName, sendResponse, onSuccess = null) {
       console.error("Error playing sound:", error);
       sendResponse({ success: false, error: error.message });
     });
+}
+
+/**
+ * Handle custom sound playback by ID - gets audio from IndexedDB
+ * @param {string} soundId - The IndexedDB ID of the custom sound
+ * @param {function} sendResponse - Response callback
+ */
+async function handleCustomSoundById(soundId, sendResponse) {
+  try {
+    // Import the audioStorage module
+    const { getAudioFile } = await import("./shared/audioStorage.js");
+
+    // Get the audio file from IndexedDB
+    const audioRecord = await getAudioFile(soundId);
+
+    if (!audioRecord) {
+      throw new Error(`Custom sound with ID '${soundId}' not found`);
+    }
+
+    // Convert array back to Uint8Array for Blob creation
+    const audioBuffer = new Uint8Array(audioRecord.data);
+
+    // Create blob URL from the audio data
+    const blob = new Blob([audioBuffer], { type: audioRecord.mimeType });
+    const blobUrl = URL.createObjectURL(blob);
+
+    playAudioFromUrl(blobUrl, audioRecord.name, sendResponse, () => {
+      // Clean up blob URL after playback
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    });
+  } catch (error) {
+    console.error("Offscreen error playing custom sound by ID:", error);
+    sendResponse({ success: false, error: error.message });
+  }
 }

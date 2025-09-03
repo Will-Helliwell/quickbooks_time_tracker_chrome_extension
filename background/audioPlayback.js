@@ -14,8 +14,6 @@ initializeAudioPlayback();
 function initializeAudioPlayback() {
   // Message listener for audio playback requests
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    console.log("Background received message:", message);
-
     if (message.action === "playPrePackagedSound") {
       handlePrePackagedSoundPlayback(message.soundName)
         .then(() => sendResponse({ success: true }))
@@ -26,13 +24,20 @@ function initializeAudioPlayback() {
     }
 
     if (message.action === "playCustomSound") {
-      console.log("about to play custom sound:", message.soundName);
-
       handleCustomSoundPlayback(
         message.audioData,
         message.mimeType,
         message.soundName
       )
+        .then(() => sendResponse({ success: true }))
+        .catch((error) =>
+          sendResponse({ success: false, error: error.message })
+        );
+      return true; // Keep message channel open for async response
+    }
+
+    if (message.action === "playCustomSoundById") {
+      handleCustomSoundPlaybackById(message.soundId)
         .then(() => sendResponse({ success: true }))
         .catch((error) =>
           sendResponse({ success: false, error: error.message })
@@ -97,3 +102,5 @@ async function handleCustomSoundPlayback(audioData, mimeType, soundName) {
     soundName: soundName,
   });
 }
+
+// handleCustomSoundPlaybackById is now imported from shared helper
