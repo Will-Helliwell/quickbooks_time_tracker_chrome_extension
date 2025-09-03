@@ -233,7 +233,7 @@ function createAlertElement(alert, userProfile) {
  * @function
  * @returns {Promise<void>}
  */
-async function populateSoundSelector() {
+export async function populateSoundSelector() {
   const soundSelector = document.getElementById("alert-sound");
   soundSelector.innerHTML = ""; // Clear existing options
 

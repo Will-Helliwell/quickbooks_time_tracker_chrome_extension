@@ -13,6 +13,7 @@ import {
   getStorageStats,
 } from "/shared/audioStorage.js";
 import { playCustomSound } from "/shared/audioPlayback.js";
+import { populateSoundSelector } from "/popup/alerts.js";
 
 // Global state for selected file
 let selectedFile = null;
@@ -33,7 +34,6 @@ export function initializeAudioUpload() {
 function setupEventListeners() {
   const selectButton = document.getElementById("select-audio-file");
   const uploadButton = document.getElementById("upload-audio-file");
-  const testButton = document.getElementById("test-custom-sound");
 
   if (selectButton) {
     selectButton.addEventListener("click", handleFileSelection);
@@ -41,10 +41,6 @@ function setupEventListeners() {
 
   if (uploadButton) {
     uploadButton.addEventListener("click", handleFileUpload);
-  }
-
-  if (testButton) {
-    testButton.addEventListener("click", handleTestCustomSound);
   }
 }
 
@@ -155,6 +151,9 @@ async function handleFileUpload() {
     // Refresh UI
     loadUploadedFilesList();
     updateStorageStats();
+
+    // Refresh the sound dropdown to show the new file
+    populateSoundSelector();
   } catch (error) {
     console.error("Upload error:", error);
     showStatus("Error uploading file", "error");
@@ -243,6 +242,9 @@ async function handleFileDelete(fileId) {
     showStatus("File deleted successfully", "success");
     loadUploadedFilesList();
     updateStorageStats();
+
+    // Refresh the sound dropdown to remove the deleted file
+    populateSoundSelector();
   } catch (error) {
     console.error("Delete error:", error);
     showStatus("Error deleting file", "error");
@@ -363,22 +365,4 @@ function formatDate(dateString) {
     " " +
     date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   );
-}
-
-/**
- * Test function to manually play a known custom sound
- * This is a proof of concept for custom sound playback
- */
-async function handleTestCustomSound() {
-  const testSoundId = "7709518_mj_beat_it_1756827174626"; // Known uploaded sound
-
-  try {
-    showStatus("Playing test sound...", "loading");
-    await playCustomSound(testSoundId);
-    console.log("Test sound played successfully");
-    showStatus("Test sound played successfully!", "success");
-  } catch (error) {
-    console.error("Test playback failed:", error);
-    showStatus(`Test failed: ${error.message}`, "error");
-  }
 }
