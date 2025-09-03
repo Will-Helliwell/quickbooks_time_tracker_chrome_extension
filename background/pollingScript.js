@@ -76,7 +76,7 @@ async function pollForActivity() {
         : secondsAssigned - secondsCompletedThisMonth - shiftSeconds;
 
     // Start or update the badge countdown
-    startBadgeCountdownAndTriggerAlerts(remainingSeconds, currentUserProfile);
+    startBackgroundCountdown(remainingSeconds, currentUserProfile);
 
     // Notify the popup about the timer state
     try {
