@@ -133,7 +133,7 @@ async function handlePopupOpen() {
     addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
   }
   initializeAlertTypeSelector();
-  
+
   // Initialize audio upload functionality
   initializeAudioUpload();
 
@@ -174,7 +174,7 @@ async function updateUIWithUserProfile(userProfile) {
 
   // Migrate legacy alerts before displaying
   await migrateLegacyAlerts(userProfile);
-  
+
   populateAlerts(userProfile);
 
   renderAllClientsTable(userProfile);
@@ -348,7 +348,6 @@ function renderAllClientsTable(userProfile) {
       <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
-
     const secondsCompletedThisMonth =
       calculateSecondsCompletedThisMonth(jobcode);
 
@@ -891,8 +890,6 @@ function hideMyClientsView() {
 
 function showClientInfoView(jobcodeId) {
   const userProfile = AppState.getUserProfile();
-  console.log("userProfile = ");
-  console.log(userProfile);
 
   // Get the client name from the jobcode
   const jobcode = userProfile.jobcodes[jobcodeId];
@@ -904,8 +901,6 @@ function showClientInfoView(jobcodeId) {
     userProfile,
     jobcodeId
   );
-  console.log("recentTimesheets = ");
-  console.log(recentTimesheets);
 
   // Show jobcode detail screen
   const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
@@ -1112,25 +1107,27 @@ async function migrateLegacyAlerts(userProfile) {
     return; // All alerts are already in new format
   }
 
-  console.log("Migrating legacy alerts to new format...");
-
   // Migrate each alert
   for (const alert of alerts) {
     // Migrate "sound" type to "sound_default"
     if (alert.type === "sound") {
       alert.type = "sound_default";
-      console.log(`Migrated sound alert to sound_default: ${alert.alert_string}`);
     }
 
     // Migrate "alert_string" to "asset_reference"
-    if (alert.alert_string !== undefined && alert.asset_reference === undefined) {
+    if (
+      alert.alert_string !== undefined &&
+      alert.asset_reference === undefined
+    ) {
       alert.asset_reference = alert.alert_string;
       delete alert.alert_string;
-      console.log(`Migrated alert_string to asset_reference: ${alert.asset_reference}`);
     }
 
     // Add display_name for sound alerts if missing
-    if ((alert.type === "sound_default" || alert.type === "sound_custom") && !alert.display_name) {
+    if (
+      (alert.type === "sound_default" || alert.type === "sound_custom") &&
+      !alert.display_name
+    ) {
       if (alert.type === "sound_default") {
         // For default sounds, create display name from asset reference
         alert.display_name = alert.asset_reference
@@ -1140,15 +1137,15 @@ async function migrateLegacyAlerts(userProfile) {
         // For custom sounds, we'd need to look up the name from IndexedDB
         // For now, extract from ID (fallback)
         const match = alert.asset_reference.match(/^\d+_(.+)_\d+$/);
-        alert.display_name = match ? match[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : alert.asset_reference;
+        alert.display_name = match
+          ? match[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+          : alert.asset_reference;
       }
-      console.log(`Added display_name: ${alert.display_name}`);
     }
   }
 
   // Save the migrated alerts
   await overwriteUserProfileInStorage(userProfile);
-  console.log("Legacy alerts migration completed");
 }
 
 /**

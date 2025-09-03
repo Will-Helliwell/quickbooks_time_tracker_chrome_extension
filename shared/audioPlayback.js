@@ -63,18 +63,13 @@ export async function playPrePackagedSound(soundName) {
  * @returns {Promise<void>}
  */
 export async function playCustomSound(soundId) {
-  console.log("in playCustomSound with id:", soundId);
   try {
     // Retrieve the audio file from IndexedDB
     const audioRecord = await getAudioFile(soundId);
 
-    console.log("Retrieved audio record:", audioRecord);
-
     if (!audioRecord) {
       throw new Error(`Custom sound with ID '${soundId}' not found`);
     }
-
-    console.log("about to send message to background script...");
 
     // Convert ArrayBuffer to Uint8Array for message passing
     const audioArray = new Uint8Array(audioRecord.data);

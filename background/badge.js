@@ -105,12 +105,6 @@ function updateBadge(seconds_remaining, userProfile) {
 }
 
 function checkForSoundAlerts(seconds_remaining, userProfile) {
-  console.log(
-    "Checking for sound/notification alerts at",
-    seconds_remaining,
-    "seconds remaining"
-  );
-
   // Check if the user has any sound or notification alerts set
   const alerts = userProfile.preferences.alerts || [];
 
@@ -125,16 +119,11 @@ function checkForSoundAlerts(seconds_remaining, userProfile) {
 
   // If a sound alert is found, play the appropriate sound
   if (soundAlert) {
-    console.log("Sound alert found: ", soundAlert);
-
     if (soundAlert.type === "sound_default" || soundAlert.type === "sound") {
-      console.log("Playing default/legacy sound: ", soundAlert);
-
       // Play pre-packaged sound (legacy support for "sound" type)
       const soundName = soundAlert.asset_reference || soundAlert.alert_string;
       playAudio(soundName);
     } else if (soundAlert.type === "sound_custom") {
-      console.log("Playing custom sound: ", soundAlert);
       // Play custom sound using new playback system
       playCustomAudio(soundAlert.asset_reference || soundAlert.alert_string);
     }
@@ -176,11 +165,8 @@ async function playAudio(sound) {
  * @param {string} audioId - The IndexedDB ID of the custom audio file
  */
 async function playCustomAudio(audioId) {
-  console.log("In playCustomAudio with ID:", audioId);
-
   try {
     await handleCustomSoundPlaybackById(audioId);
-    console.log("Called handleCustomSoundPlaybackById via shared helper");
   } catch (error) {
     console.error("Error playing custom audio:", error);
   }

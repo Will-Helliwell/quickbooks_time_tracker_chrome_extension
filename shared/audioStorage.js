@@ -87,9 +87,6 @@ export async function storeAudioFile(name, audioData, mimeType = "audio/mpeg") {
     const request = store.add(audioRecord);
 
     request.onsuccess = () => {
-      console.log(
-        `Audio file '${name}' stored successfully for user ${userId} with ID: ${audioRecord.id}`
-      );
       resolve(audioRecord.id);
     };
 
@@ -187,9 +184,6 @@ export async function deleteAudioFile(id) {
       const deleteRequest = store.delete(id);
 
       deleteRequest.onsuccess = () => {
-        console.log(
-          `Audio file '${record.name}' deleted successfully for user ${userId}`
-        );
         resolve(true);
       };
 

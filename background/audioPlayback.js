@@ -77,21 +77,14 @@ async function handlePrePackagedSoundPlayback(soundName) {
  */
 async function handleCustomSoundPlayback(audioData, mimeType, soundName) {
   // Create the offscreen document if it doesn't exist
-  console.log("in handleCustomSoundPlayback with soundName:", soundName);
 
   if (!(await chrome.offscreen.hasDocument())) {
-    console.log("creating offscreen document...");
-
     await chrome.offscreen.createDocument({
       url: "offscreen.html",
       reasons: ["AUDIO_PLAYBACK"],
       justification: "Playing audio notifications",
     });
-  } else {
-    console.log("offscreen document already exists");
   }
-
-  console.log("Sending raw audio data to offscreen document");
 
   // Send raw audio data to offscreen document - let it create the blob URL
   chrome.runtime.sendMessage({

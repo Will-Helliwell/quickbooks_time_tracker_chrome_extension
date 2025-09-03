@@ -10,22 +10,14 @@
  * @param {string} soundId - The IndexedDB ID of the custom sound
  */
 async function handleCustomSoundPlaybackById(soundId) {
-  console.log("in handleCustomSoundPlaybackById with soundId:", soundId);
-
   // Create the offscreen document if it doesn't exist
   if (!(await chrome.offscreen.hasDocument())) {
-    console.log("creating offscreen document...");
-
     await chrome.offscreen.createDocument({
       url: "offscreen.html",
       reasons: ["AUDIO_PLAYBACK"],
       justification: "Playing audio notifications",
     });
-  } else {
-    console.log("offscreen document already exists");
   }
-
-  console.log("Sending sound ID to offscreen document for IndexedDB lookup");
 
   // Send sound ID to offscreen document - let it handle IndexedDB access
   chrome.runtime.sendMessage({
