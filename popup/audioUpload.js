@@ -1,17 +1,18 @@
 /**
  * Audio Upload Module - Handles file selection and upload functionality
- * 
+ *
  * This module provides the UI logic for selecting and uploading MP3 files
  * using the File System Access API and storing them via the audioStorage utility.
  */
 
-import { 
-  storeAudioFile, 
-  getAllAudioFiles, 
-  deleteAudioFile, 
+import {
+  storeAudioFile,
+  getAllAudioFiles,
+  deleteAudioFile,
   audioFileExists,
-  getStorageStats 
-} from '/shared/audioStorage.js';
+  getStorageStats,
+} from "/shared/audioStorage.js";
+import { playCustomSound } from "/shared/audioPlayback.js";
 
 // Global state for selected file
 let selectedFile = null;
@@ -30,15 +31,20 @@ export function initializeAudioUpload() {
  * Set up event listeners for upload functionality
  */
 function setupEventListeners() {
-  const selectButton = document.getElementById('select-audio-file');
-  const uploadButton = document.getElementById('upload-audio-file');
-  
+  const selectButton = document.getElementById("select-audio-file");
+  const uploadButton = document.getElementById("upload-audio-file");
+  const testButton = document.getElementById("test-custom-sound");
+
   if (selectButton) {
-    selectButton.addEventListener('click', handleFileSelection);
+    selectButton.addEventListener("click", handleFileSelection);
   }
-  
+
   if (uploadButton) {
-    uploadButton.addEventListener('click', handleFileUpload);
+    uploadButton.addEventListener("click", handleFileUpload);
+  }
+
+  if (testButton) {
+    testButton.addEventListener("click", handleTestCustomSound);
   }
 }
 
@@ -49,43 +55,52 @@ async function handleFileSelection() {
   try {
     // Check if File System Access API is supported
     if (!window.showOpenFilePicker) {
-      showStatus('File System Access API not supported in this browser', 'error');
+      showStatus(
+        "File System Access API not supported in this browser",
+        "error"
+      );
       return;
     }
 
     // Configure file picker options
     const options = {
-      types: [{
-        description: 'MP3 Audio Files',
-        accept: {
-          'audio/mpeg': ['.mp3']
-        }
-      }],
+      types: [
+        {
+          description: "MP3 Audio Files",
+          accept: {
+            "audio/mpeg": [".mp3"],
+          },
+        },
+      ],
       multiple: false,
-      excludeAcceptAllOption: true
+      excludeAcceptAllOption: true,
     };
 
     // Show file picker
     const [fileHandle] = await window.showOpenFilePicker(options);
     const file = await fileHandle.getFile();
-    
+
     // Validate file
-    if (!file.type.startsWith('audio/')) {
-      showStatus('Please select a valid audio file', 'error');
+    if (!file.type.startsWith("audio/")) {
+      showStatus("Please select a valid audio file", "error");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      showStatus('File too large. Please select a file smaller than 10MB', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      showStatus(
+        "File too large. Please select a file smaller than 10MB",
+        "error"
+      );
       return;
     }
 
     // Extract name without extension
-    const fileName = file.name.replace(/\.[^/.]+$/, '');
-    
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
+
     // Check if file with this name already exists
     if (await audioFileExists(fileName)) {
-      showStatus(`A file named "${fileName}" already exists`, 'error');
+      showStatus(`A file named "${fileName}" already exists`, "error");
       return;
     }
 
@@ -94,20 +109,19 @@ async function handleFileSelection() {
       file: file,
       name: fileName,
       size: file.size,
-      type: file.type
+      type: file.type,
     };
 
     // Update UI
     updateSelectedFileInfo();
     enableUploadButton();
-    showStatus('File selected successfully', 'success');
-
+    showStatus("File selected successfully", "success");
   } catch (error) {
-    if (error.name === 'AbortError') {
-      showStatus('File selection cancelled', 'info');
+    if (error.name === "AbortError") {
+      showStatus("File selection cancelled", "info");
     } else {
-      console.error('File selection error:', error);
-      showStatus('Error selecting file', 'error');
+      console.error("File selection error:", error);
+      showStatus("Error selecting file", "error");
     }
   }
 }
@@ -117,38 +131,33 @@ async function handleFileSelection() {
  */
 async function handleFileUpload() {
   if (!selectedFile) {
-    showStatus('No file selected', 'error');
+    showStatus("No file selected", "error");
     return;
   }
 
   try {
     disableUploadButton();
-    showStatus('Uploading file...', 'loading');
+    showStatus("Uploading file...", "loading");
 
     // Convert file to ArrayBuffer
     const arrayBuffer = await selectedFile.file.arrayBuffer();
-    
-    // Store in IndexedDB
-    await storeAudioFile(
-      selectedFile.name,
-      arrayBuffer,
-      selectedFile.type
-    );
 
-    showStatus(`File "${selectedFile.name}" uploaded successfully`, 'success');
-    
+    // Store in IndexedDB
+    await storeAudioFile(selectedFile.name, arrayBuffer, selectedFile.type);
+
+    showStatus(`File "${selectedFile.name}" uploaded successfully`, "success");
+
     // Reset state
     selectedFile = null;
     clearSelectedFileInfo();
     disableUploadButton();
-    
+
     // Refresh UI
     loadUploadedFilesList();
     updateStorageStats();
-
   } catch (error) {
-    console.error('Upload error:', error);
-    showStatus('Error uploading file', 'error');
+    console.error("Upload error:", error);
+    showStatus("Error uploading file", "error");
     enableUploadButton();
   }
 }
@@ -157,12 +166,12 @@ async function handleFileUpload() {
  * Load and display the list of uploaded files
  */
 async function loadUploadedFilesList() {
-  const listContainer = document.getElementById('uploaded-files-list');
+  const listContainer = document.getElementById("uploaded-files-list");
   if (!listContainer) return;
 
   try {
     const audioFiles = await getAllAudioFiles();
-    
+
     if (audioFiles.length === 0) {
       listContainer.innerHTML = `
         <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
@@ -175,12 +184,18 @@ async function loadUploadedFilesList() {
     // Sort by upload date (newest first)
     audioFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
 
-    const filesHtml = audioFiles.map(file => `
+    const filesHtml = audioFiles
+      .map(
+        (file) => `
       <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-600 rounded border">
         <div class="flex-1">
-          <div class="text-sm font-medium text-gray-900 dark:text-white">${file.name}</div>
+          <div class="text-sm font-medium text-gray-900 dark:text-white">${
+            file.name
+          }</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">
-            ${formatFileSize(file.size)} • Uploaded ${formatDate(file.uploadDate)}
+            ${formatFileSize(file.size)} • Uploaded ${formatDate(
+          file.uploadDate
+        )}
           </div>
         </div>
         <button 
@@ -192,18 +207,21 @@ async function loadUploadedFilesList() {
           </svg>
         </button>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
     listContainer.innerHTML = filesHtml;
 
     // Add delete event listeners
-    const deleteButtons = listContainer.querySelectorAll('.delete-audio-btn');
-    deleteButtons.forEach(button => {
-      button.addEventListener('click', () => handleFileDelete(button.dataset.fileId));
+    const deleteButtons = listContainer.querySelectorAll(".delete-audio-btn");
+    deleteButtons.forEach((button) => {
+      button.addEventListener("click", () =>
+        handleFileDelete(button.dataset.fileId)
+      );
     });
-
   } catch (error) {
-    console.error('Error loading uploaded files:', error);
+    console.error("Error loading uploaded files:", error);
     listContainer.innerHTML = `
       <div class="text-center py-4 text-red-500 text-sm">
         Error loading uploaded files
@@ -216,18 +234,18 @@ async function loadUploadedFilesList() {
  * Handle file deletion
  */
 async function handleFileDelete(fileId) {
-  if (!confirm('Are you sure you want to delete this audio file?')) {
+  if (!confirm("Are you sure you want to delete this audio file?")) {
     return;
   }
 
   try {
     await deleteAudioFile(fileId);
-    showStatus('File deleted successfully', 'success');
+    showStatus("File deleted successfully", "success");
     loadUploadedFilesList();
     updateStorageStats();
   } catch (error) {
-    console.error('Delete error:', error);
-    showStatus('Error deleting file', 'error');
+    console.error("Delete error:", error);
+    showStatus("Error deleting file", "error");
   }
 }
 
@@ -235,15 +253,15 @@ async function handleFileDelete(fileId) {
  * Update storage statistics display
  */
 async function updateStorageStats() {
-  const statsContainer = document.getElementById('storage-stats');
+  const statsContainer = document.getElementById("storage-stats");
   if (!statsContainer) return;
 
   try {
     const stats = await getStorageStats();
     statsContainer.textContent = `${stats.fileCount} files • ${stats.totalSizeMB}MB used`;
   } catch (error) {
-    console.error('Error getting storage stats:', error);
-    statsContainer.textContent = 'Storage stats unavailable';
+    console.error("Error getting storage stats:", error);
+    statsContainer.textContent = "Storage stats unavailable";
   }
 }
 
@@ -251,7 +269,7 @@ async function updateStorageStats() {
  * Update selected file information display
  */
 function updateSelectedFileInfo() {
-  const infoContainer = document.getElementById('selected-file-info');
+  const infoContainer = document.getElementById("selected-file-info");
   if (!infoContainer || !selectedFile) return;
 
   infoContainer.innerHTML = `
@@ -259,20 +277,22 @@ function updateSelectedFileInfo() {
       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
       </svg>
-      <span><strong>${selectedFile.name}</strong> • ${formatFileSize(selectedFile.size)}</span>
+      <span><strong>${selectedFile.name}</strong> • ${formatFileSize(
+    selectedFile.size
+  )}</span>
     </div>
   `;
-  infoContainer.classList.remove('hidden');
+  infoContainer.classList.remove("hidden");
 }
 
 /**
  * Clear selected file information
  */
 function clearSelectedFileInfo() {
-  const infoContainer = document.getElementById('selected-file-info');
+  const infoContainer = document.getElementById("selected-file-info");
   if (infoContainer) {
-    infoContainer.classList.add('hidden');
-    infoContainer.innerHTML = '';
+    infoContainer.classList.add("hidden");
+    infoContainer.innerHTML = "";
   }
 }
 
@@ -280,7 +300,7 @@ function clearSelectedFileInfo() {
  * Enable upload button
  */
 function enableUploadButton() {
-  const uploadButton = document.getElementById('upload-audio-file');
+  const uploadButton = document.getElementById("upload-audio-file");
   if (uploadButton) {
     uploadButton.disabled = false;
   }
@@ -290,7 +310,7 @@ function enableUploadButton() {
  * Disable upload button
  */
 function disableUploadButton() {
-  const uploadButton = document.getElementById('upload-audio-file');
+  const uploadButton = document.getElementById("upload-audio-file");
   if (uploadButton) {
     uploadButton.disabled = true;
   }
@@ -299,25 +319,25 @@ function disableUploadButton() {
 /**
  * Show status message
  */
-function showStatus(message, type = 'info') {
-  const statusContainer = document.getElementById('upload-status');
+function showStatus(message, type = "info") {
+  const statusContainer = document.getElementById("upload-status");
   if (!statusContainer) return;
 
   const colors = {
-    success: 'text-green-600',
-    error: 'text-red-600',
-    info: 'text-blue-600',
-    loading: 'text-gray-600'
+    success: "text-green-600",
+    error: "text-red-600",
+    info: "text-blue-600",
+    loading: "text-gray-600",
   };
 
   statusContainer.textContent = message;
   statusContainer.className = `text-xs ${colors[type] || colors.info}`;
-  statusContainer.classList.remove('hidden');
+  statusContainer.classList.remove("hidden");
 
   // Auto-hide after 3 seconds for non-loading messages
-  if (type !== 'loading') {
+  if (type !== "loading") {
     setTimeout(() => {
-      statusContainer.classList.add('hidden');
+      statusContainer.classList.add("hidden");
     }, 3000);
   }
 }
@@ -326,11 +346,11 @@ function showStatus(message, type = 'info') {
  * Utility function to format file size
  */
 function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 /**
@@ -338,5 +358,27 @@ function formatFileSize(bytes) {
  */
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  return (
+    date.toLocaleDateString() +
+    " " +
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  );
+}
+
+/**
+ * Test function to manually play a known custom sound
+ * This is a proof of concept for custom sound playback
+ */
+async function handleTestCustomSound() {
+  const testSoundId = "7709518_mj_beat_it_1756827174626"; // Known uploaded sound
+
+  try {
+    showStatus("Playing test sound...", "loading");
+    await playCustomSound(testSoundId);
+    console.log("Test sound played successfully");
+    showStatus("Test sound played successfully!", "success");
+  } catch (error) {
+    console.error("Test playback failed:", error);
+    showStatus(`Test failed: ${error.message}`, "error");
+  }
 }
