@@ -12,7 +12,6 @@ import {
   audioFileExists,
   getStorageStats,
 } from "/shared/audioStorage.js";
-import { playCustomSound } from "/shared/audioPlayback.js";
 import { populateSoundSelector } from "/popup/alerts.js";
 
 // Global state for selected file

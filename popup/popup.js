@@ -172,8 +172,6 @@ async function updateUIWithUserProfile(userProfile) {
     }
   });
 
-  // Migrate legacy alerts before displaying
-  await migrateLegacyAlerts(userProfile);
 
   populateAlerts(userProfile);
 
@@ -1082,71 +1080,6 @@ function setupTooltips() {
   });
 }
 
-/**
- * Migrate legacy alerts from old format to new format
- * Converts "sound" type to "sound_default" and updates field names
- * @param {Object} userProfile - The user profile object
- */
-async function migrateLegacyAlerts(userProfile) {
-  if (!userProfile.preferences || !userProfile.preferences.alerts) {
-    return; // No alerts to migrate
-  }
-
-  let needsMigration = false;
-  const alerts = userProfile.preferences.alerts;
-
-  // Check if any alerts need migration
-  for (const alert of alerts) {
-    if (alert.type === "sound" || alert.alert_string !== undefined) {
-      needsMigration = true;
-      break;
-    }
-  }
-
-  if (!needsMigration) {
-    return; // All alerts are already in new format
-  }
-
-  // Migrate each alert
-  for (const alert of alerts) {
-    // Migrate "sound" type to "sound_default"
-    if (alert.type === "sound") {
-      alert.type = "sound_default";
-    }
-
-    // Migrate "alert_string" to "asset_reference"
-    if (
-      alert.alert_string !== undefined &&
-      alert.asset_reference === undefined
-    ) {
-      alert.asset_reference = alert.alert_string;
-      delete alert.alert_string;
-    }
-
-    // Add display_name for sound alerts if missing
-    if (
-      (alert.type === "sound_default" || alert.type === "sound_custom") &&
-      !alert.display_name
-    ) {
-      if (alert.type === "sound_default") {
-        // For default sounds, create display name from asset reference
-        alert.display_name = alert.asset_reference
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase());
-      } else {
-        // For custom sounds, we'd need to look up the name from IndexedDB
-        // For now, extract from ID (fallback)
-        const match = alert.asset_reference.match(/^\d+_(.+)_\d+$/);
-        alert.display_name = match
-          ? match[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-          : alert.asset_reference;
-      }
-    }
-  }
-
-  // Save the migrated alerts
-  await overwriteUserProfileInStorage(userProfile);
-}
 
 /**
  * Calculates the total duration of timesheets completed in the current month for a given jobcode

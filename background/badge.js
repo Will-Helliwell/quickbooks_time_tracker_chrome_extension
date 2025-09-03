@@ -83,7 +83,7 @@ function updateBadge(seconds_remaining, userProfile) {
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
     // otherwise, set the badge to the alert colour
-    const alertColour = nextAlert.asset_reference || nextAlert.alert_string; // fallback for legacy alerts
+    const alertColour = nextAlert.asset_reference;
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
   }
 
@@ -108,24 +108,22 @@ function checkForSoundAlerts(seconds_remaining, userProfile) {
   // Check if the user has any sound or notification alerts set
   const alerts = userProfile.preferences.alerts || [];
 
-  // Check for sound alerts (both new and legacy types)
+  // Check for sound alerts
   const soundAlert = alerts.find(
     (alert) =>
-      (alert.type === "sound_default" ||
-        alert.type === "sound_custom" ||
-        alert.type === "sound") &&
+      (alert.type === "sound_default" || alert.type === "sound_custom") &&
       alert.time_in_seconds === seconds_remaining
   );
 
   // If a sound alert is found, play the appropriate sound
   if (soundAlert) {
-    if (soundAlert.type === "sound_default" || soundAlert.type === "sound") {
-      // Play pre-packaged sound (legacy support for "sound" type)
-      const soundName = soundAlert.asset_reference || soundAlert.alert_string;
+    if (soundAlert.type === "sound_default") {
+      // Play pre-packaged sound
+      const soundName = soundAlert.asset_reference;
       playAudio(soundName);
     } else if (soundAlert.type === "sound_custom") {
       // Play custom sound using new playback system
-      playCustomAudio(soundAlert.asset_reference || soundAlert.alert_string);
+      playCustomAudio(soundAlert.asset_reference);
     }
   }
 

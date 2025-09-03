@@ -147,7 +147,7 @@ function createAlertElement(alert, userProfile) {
 
   // Set background color
   if (alert.type === "badge") {
-    alertElement.style.backgroundColor = alert.asset_reference || alert.alert_string; // fallback for legacy
+    alertElement.style.backgroundColor = alert.asset_reference;
   } else {
     alertElement.style.backgroundColor = "#FFFFFF"; // white
   }
@@ -176,15 +176,9 @@ function createAlertElement(alert, userProfile) {
   } else if (alert.type === "sound_default" || alert.type === "sound_custom") {
     // Use display_name if available, otherwise fallback to formatted asset_reference
     const soundName = alert.display_name || 
-      (alert.asset_reference || alert.alert_string || "Unknown")
+      (alert.asset_reference || "Unknown")
         .replace(/_/g, " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
-    displayText = `Sound (${soundName})`;
-  } else if (alert.type === "sound") {
-    // Legacy support
-    const soundName = (alert.alert_string || "Unknown")
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
     displayText = `Sound (${soundName})`;
   } else if (alert.type === "notification") {
     displayText = "Chrome Notification";
@@ -213,7 +207,7 @@ function createAlertElement(alert, userProfile) {
         (existingAlert) =>
           existingAlert.type !== alert.type ||
           existingAlert.time_in_seconds !== alert.time_in_seconds ||
-          (existingAlert.asset_reference || existingAlert.alert_string) !== (alert.asset_reference || alert.alert_string)
+          existingAlert.asset_reference !== alert.asset_reference
       );
       await overwriteUserProfileInStorage(userProfile);
     }
