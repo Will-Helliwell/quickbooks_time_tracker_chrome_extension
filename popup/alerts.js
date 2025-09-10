@@ -5,7 +5,7 @@ export async function addNewAlert(userProfile) {
   const hours = parseInt(document.getElementById("alert-hours").value) || 0;
   const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
   const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
-  const alertType = document.getElementById("alert-type").value;
+  const newAlertType = document.getElementById("alert-type").value;
   const color = document.getElementById("alert-color").value;
   const sound = document.getElementById("alert-sound").value;
   const selectedClient = document.getElementById("alert-client").value;
@@ -27,7 +27,7 @@ export async function addNewAlert(userProfile) {
   // Check for conflicting alerts with new client-aware logic
   const conflictMessage = checkForAlertConflicts(
     userProfile.preferences.alerts,
-    alertType,
+    newAlertType,
     timeInSeconds,
     selectedClient
   );
@@ -37,13 +37,13 @@ export async function addNewAlert(userProfile) {
   }
 
   // Parse sound selection to determine type and asset reference
-  let alertTypeToUse = alertType;
+  let alertTypeToUse = newAlertType;
   let assetReference = "";
   let displayName = "";
 
-  if (alertType === "badge") {
+  if (newAlertType === "badge") {
     assetReference = color;
-  } else if (alertType === "sound") {
+  } else if (newAlertType === "sound") {
     // Parse the sound selection to determine if it's default or custom
     const soundParts = sound.split(":");
     if (soundParts[0] === "default") {
@@ -480,14 +480,14 @@ function alertTypesMatch(storedAlertType, formAlertType) {
 /**
  * Checks for conflicting alerts with client-aware logic
  * @param {Array} alerts - Array of existing alerts
- * @param {string} alertType - The form alert type (badge, sound, notification)
+ * @param {string} newAlertType - The form alert type (badge, sound, notification)
  * @param {number} timeInSeconds - The alert time in seconds
  * @param {string} selectedClient - The selected client ID (empty string for "All clients")
  * @returns {string|null} - Error message if conflict exists, null if no conflict
  */
 function checkForAlertConflicts(
   alerts,
-  alertType,
+  newAlertType,
   timeInSeconds,
   selectedClient
 ) {
@@ -498,7 +498,7 @@ function checkForAlertConflicts(
   // Check if there's already an "all clients" alert with same type and time
   const existingAllClientsAlert = alerts.find(
     (alert) =>
-      alertTypesMatch(alert.type, alertType) &&
+      alertTypesMatch(alert.type, newAlertType) &&
       alert.time_in_seconds === timeInSeconds &&
       (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
   );
@@ -511,7 +511,7 @@ function checkForAlertConflicts(
   if (!isNewAlertForAllClients) {
     const clashingAlert = alerts.find(
       (alert) =>
-        alertTypesMatch(alert.type, alertType) &&
+        alertTypesMatch(alert.type, newAlertType) &&
         alert.time_in_seconds === timeInSeconds
     );
 
@@ -524,7 +524,7 @@ function checkForAlertConflicts(
   if (isNewAlertForAllClients) {
     const existingClientSpecificAlert = alerts.find(
       (alert) =>
-        alertTypesMatch(alert.type, alertType) &&
+        alertTypesMatch(alert.type, newAlertType) &&
         alert.time_in_seconds === timeInSeconds
     );
 
