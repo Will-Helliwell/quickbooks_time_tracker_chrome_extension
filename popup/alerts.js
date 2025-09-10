@@ -2,7 +2,6 @@ import { overwriteUserProfileInStorage } from "/popup/user.js";
 
 // Function to add a new alert
 export async function addNewAlert(userProfile) {
-  const isOvertimeAlert = document.getElementById("overtime-alert").checked;
   const hours = parseInt(document.getElementById("alert-hours").value) || 0;
   const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
   const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
@@ -10,12 +9,18 @@ export async function addNewAlert(userProfile) {
   const color = document.getElementById("alert-color").value;
   const sound = document.getElementById("alert-sound").value;
 
-  const timeInSeconds = isOvertimeAlert
-    ? 0
-    : convertToSeconds(hours, minutes, seconds);
+  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
 
-  if (!isOvertimeAlert && timeInSeconds === 0) {
-    alert("Please enter a valid time for your new alert.");
+  // Check if user deliberately entered zero (at least one field has a value)
+  const hasTimeInput =
+    document.getElementById("alert-hours").value !== "" ||
+    document.getElementById("alert-minutes").value !== "" ||
+    document.getElementById("alert-seconds").value !== "";
+
+  if (timeInSeconds === 0 && !hasTimeInput) {
+    alert(
+      "Please enter a time for your new alert (set to 0 for an 'overtime' alert."
+    );
     return;
   }
 
@@ -27,15 +32,11 @@ export async function addNewAlert(userProfile) {
     );
 
     if (existingAlert) {
-      if (isOvertimeAlert) {
-        alert("An overtime alert already exists. Please remove it first.");
-      } else {
-        alert(
-          `An alert already exists for ${formatTime(
-            timeInSeconds
-          )}. Please choose a different time.`
-        );
-      }
+      alert(
+        `An alert already exists for ${formatTime(
+          timeInSeconds
+        )}. Please choose a different time.`
+      );
       return;
     }
   }
@@ -44,7 +45,7 @@ export async function addNewAlert(userProfile) {
   let alertTypeToUse = alertType;
   let assetReference = "";
   let displayName = "";
-  
+
   if (alertType === "badge") {
     assetReference = color;
   } else if (alertType === "sound") {
@@ -53,13 +54,15 @@ export async function addNewAlert(userProfile) {
     if (soundParts[0] === "default") {
       alertTypeToUse = "sound_default";
       assetReference = soundParts[1]; // filename
-      displayName = soundParts[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      displayName = soundParts[1]
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
     } else if (soundParts[0] === "custom") {
       alertTypeToUse = "sound_custom";
       assetReference = soundParts[1]; // IndexedDB ID
       // Get display name from the custom sound data
       try {
-        const { getAudioFile } = await import('/shared/audioStorage.js');
+        const { getAudioFile } = await import("/shared/audioStorage.js");
         const audioRecord = await getAudioFile(soundParts[1]);
         displayName = audioRecord ? audioRecord.name : soundParts[1];
       } catch (error) {
@@ -70,7 +73,9 @@ export async function addNewAlert(userProfile) {
       // Legacy support - assume it's a default sound
       alertTypeToUse = "sound_default";
       assetReference = sound;
-      displayName = sound.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      displayName = sound
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
     }
   }
 
@@ -133,6 +138,9 @@ function convertToSeconds(hours, minutes, seconds) {
 
 // Function to format time for display
 function formatTime(seconds) {
+  if (seconds === 0) {
+    return "0h 0m 0s (Overtime)";
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -159,23 +167,21 @@ function createAlertElement(alert, userProfile) {
 
   const timeText = document.createElement("span");
   timeText.className = "text-sm font-medium";
-  timeText.textContent =
-    alert.time_in_seconds === 0
-      ? "Overtime"
-      : formatTime(alert.time_in_seconds);
+  timeText.textContent = formatTime(alert.time_in_seconds);
 
   timeSection.appendChild(timeText);
 
   // Alert type indicator
   const typeIndicator = document.createElement("span");
   typeIndicator.className = "text-sm font-medium ml-2";
-  
+
   let displayText = "";
   if (alert.type === "badge") {
     displayText = "Badge";
   } else if (alert.type === "sound_default" || alert.type === "sound_custom") {
     // Use display_name if available, otherwise fallback to formatted asset_reference
-    const soundName = alert.display_name || 
+    const soundName =
+      alert.display_name ||
       (alert.asset_reference || "Unknown")
         .replace(/_/g, " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
@@ -185,7 +191,7 @@ function createAlertElement(alert, userProfile) {
   } else {
     displayText = alert.type || "Unknown";
   }
-  
+
   typeIndicator.textContent = displayText;
 
   // Delete button
@@ -234,10 +240,9 @@ export async function populateSoundSelector() {
   try {
     // Add pre-packaged sounds
     await addPrePackagedSounds(soundSelector);
-    
+
     // Add custom sounds
     await addCustomSounds(soundSelector);
-    
   } catch (error) {
     console.error("Error populating sound selector:", error);
     // Fallback to a default sound if there's an error
@@ -305,7 +310,6 @@ async function addPrePackagedSounds(soundSelector) {
         .replace(/\b\w/g, (l) => l.toUpperCase());
       soundSelector.appendChild(option);
     });
-    
   } catch (error) {
     console.error("Error reading pre-packaged sounds:", error);
   }
@@ -318,7 +322,7 @@ async function addPrePackagedSounds(soundSelector) {
 async function addCustomSounds(soundSelector) {
   try {
     const customSounds = await getCustomSounds();
-    
+
     if (customSounds.length > 0) {
       // Add header for custom sounds
       const headerOption = document.createElement("option");
@@ -339,7 +343,6 @@ async function addCustomSounds(soundSelector) {
         soundSelector.appendChild(option);
       });
     }
-    
   } catch (error) {
     console.error("Error reading custom sounds:", error);
   }
@@ -351,7 +354,7 @@ async function addCustomSounds(soundSelector) {
  */
 async function getCustomSounds() {
   try {
-    const { getAllAudioFiles } = await import('/shared/audioStorage.js');
+    const { getAllAudioFiles } = await import("/shared/audioStorage.js");
     return await getAllAudioFiles();
   } catch (error) {
     console.error("Error getting custom sounds:", error);
