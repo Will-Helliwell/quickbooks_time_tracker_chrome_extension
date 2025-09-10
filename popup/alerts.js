@@ -493,17 +493,17 @@ function alertTypesMatch(storedAlertType, formAlertType) {
  * @returns {string|null} - Error message if conflict exists, null if no conflict
  */
 function checkForAlertConflicts(
-  alerts,
+  existingAlerts,
   newAlertType,
   newAlertTimeInSeconds,
   newAlertSelectedClient
 ) {
-  if (!alerts) return null;
+  if (!existingAlerts) return null;
 
   const isNewAlertForAllClients = !newAlertSelectedClient;
 
   // Check if there's already an "all clients" alert with same type and time
-  const existingAllClientsAlert = alerts.find(
+  const existingAllClientsAlert = existingAlerts.find(
     (alert) =>
       alertTypesMatch(alert.type, newAlertType) &&
       alert.time_in_seconds === newAlertTimeInSeconds &&
@@ -516,7 +516,7 @@ function checkForAlertConflicts(
 
   // If new alert is client-specific, check for any alert of the same type and time
   if (!isNewAlertForAllClients) {
-    const clashingAlert = alerts.find(
+    const clashingAlert = existingAlerts.find(
       (alert) =>
         alertTypesMatch(alert.type, newAlertType) &&
         alert.time_in_seconds === newAlertTimeInSeconds
@@ -527,9 +527,9 @@ function checkForAlertConflicts(
     }
   }
 
-  // If new alert is for all clients, check for any alerts of same type and time
+  // If new alert is for all clients, check for any existingAlerts of same type and time
   if (isNewAlertForAllClients) {
-    const existingClientSpecificAlert = alerts.find(
+    const existingClientSpecificAlert = existingAlerts.find(
       (alert) =>
         alertTypesMatch(alert.type, newAlertType) &&
         alert.time_in_seconds === newAlertTimeInSeconds
