@@ -2,22 +2,29 @@ import { overwriteUserProfileInStorage } from "/popup/user.js";
 
 // Function to add a new alert
 export async function addNewAlert(userProfile) {
-  const hours = parseInt(document.getElementById("alert-hours").value) || 0;
-  const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
-  const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
+  const newAlertHours =
+    parseInt(document.getElementById("alert-hours").value) || 0;
+  const newAlerMinutes =
+    parseInt(document.getElementById("alert-minutes").value) || 0;
+  const newAlerSeconds =
+    parseInt(document.getElementById("alert-seconds").value) || 0;
   const newAlertType = document.getElementById("alert-type").value;
   const color = document.getElementById("alert-color").value;
   const sound = document.getElementById("alert-sound").value;
   const selectedClient = document.getElementById("alert-client").value;
 
-  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
+  const newAlertTimeInSeconds = convertToSeconds(
+    newAlertHours,
+    newAlerMinutes,
+    newAlerSeconds
+  );
 
   // Check if user deliberately entered zero (at least one field has a value)
   const hasTimeInput =
     document.getElementById("alert-hours").value !== "" ||
     document.getElementById("alert-minutes").value !== "" ||
     document.getElementById("alert-seconds").value !== "";
-  if (timeInSeconds === 0 && !hasTimeInput) {
+  if (newAlertTimeInSeconds === 0 && !hasTimeInput) {
     alert(
       "Please enter a time for your new alert (set to 0 for an 'overtime' alert."
     );
@@ -28,7 +35,7 @@ export async function addNewAlert(userProfile) {
   const conflictMessage = checkForAlertConflicts(
     userProfile.preferences.alerts,
     newAlertType,
-    timeInSeconds,
+    newAlertTimeInSeconds,
     selectedClient
   );
   if (conflictMessage) {
@@ -72,7 +79,7 @@ export async function addNewAlert(userProfile) {
 
   const newAlert = {
     type: alertTypeToUse,
-    time_in_seconds: timeInSeconds,
+    time_in_seconds: newAlertTimeInSeconds,
     asset_reference: assetReference,
     jobcode_ids: jobcodeIds,
   };
@@ -481,14 +488,14 @@ function alertTypesMatch(storedAlertType, formAlertType) {
  * Checks for conflicting alerts with client-aware logic
  * @param {Array} alerts - Array of existing alerts
  * @param {string} newAlertType - The form alert type (badge, sound, notification)
- * @param {number} timeInSeconds - The alert time in seconds
+ * @param {number} newAlertTimeInSeconds - The alert time in seconds
  * @param {string} selectedClient - The selected client ID (empty string for "All clients")
  * @returns {string|null} - Error message if conflict exists, null if no conflict
  */
 function checkForAlertConflicts(
   alerts,
   newAlertType,
-  timeInSeconds,
+  newAlertTimeInSeconds,
   selectedClient
 ) {
   if (!alerts) return null;
@@ -499,7 +506,7 @@ function checkForAlertConflicts(
   const existingAllClientsAlert = alerts.find(
     (alert) =>
       alertTypesMatch(alert.type, newAlertType) &&
-      alert.time_in_seconds === timeInSeconds &&
+      alert.time_in_seconds === newAlertTimeInSeconds &&
       (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
   );
 
@@ -512,7 +519,7 @@ function checkForAlertConflicts(
     const clashingAlert = alerts.find(
       (alert) =>
         alertTypesMatch(alert.type, newAlertType) &&
-        alert.time_in_seconds === timeInSeconds
+        alert.time_in_seconds === newAlertTimeInSeconds
     );
 
     if (clashingAlert) {
@@ -525,7 +532,7 @@ function checkForAlertConflicts(
     const existingClientSpecificAlert = alerts.find(
       (alert) =>
         alertTypesMatch(alert.type, newAlertType) &&
-        alert.time_in_seconds === timeInSeconds
+        alert.time_in_seconds === newAlertTimeInSeconds
     );
 
     if (existingClientSpecificAlert) {
