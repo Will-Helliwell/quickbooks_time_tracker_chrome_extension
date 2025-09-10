@@ -17,7 +17,6 @@ export async function addNewAlert(userProfile) {
     document.getElementById("alert-hours").value !== "" ||
     document.getElementById("alert-minutes").value !== "" ||
     document.getElementById("alert-seconds").value !== "";
-
   if (timeInSeconds === 0 && !hasTimeInput) {
     alert(
       "Please enter a time for your new alert (set to 0 for an 'overtime' alert."
@@ -32,7 +31,6 @@ export async function addNewAlert(userProfile) {
     timeInSeconds,
     selectedClient
   );
-
   if (conflictMessage) {
     alert(conflictMessage);
     return;
