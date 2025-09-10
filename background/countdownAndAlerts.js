@@ -212,11 +212,14 @@ function checkForChromeNotifcationAlerts(
   const alerts = userProfile.preferences.alerts || [];
 
   // Check for notification alerts
-  const notificationAlert = alerts.find(
-    (alert) =>
-      alert.type === "notification" &&
-      alert.time_in_seconds === seconds_remaining
-  );
+  const notificationAlert = alerts.find((alert) => {
+    const isNotificationType = alert.type === "notification";
+    const isAtRightTime = alert.time_in_seconds === seconds_remaining;
+    const appliesToActiveJobcode =
+      alert.jobcode_ids.length === 0 ||
+      alert.jobcode_ids.includes(currentlyActiveJobcodeId);
+    return isNotificationType && isAtRightTime && appliesToActiveJobcode;
+  });
 
   // If a notification alert is found, create the notification
   if (notificationAlert) {
