@@ -8,6 +8,7 @@ export async function addNewAlert(userProfile) {
   const alertType = document.getElementById("alert-type").value;
   const color = document.getElementById("alert-color").value;
   const sound = document.getElementById("alert-sound").value;
+  const selectedClient = document.getElementById("alert-client").value;
 
   const timeInSeconds = convertToSeconds(hours, minutes, seconds);
 
@@ -79,10 +80,14 @@ export async function addNewAlert(userProfile) {
     }
   }
 
+  // Create jobcodeIds array - empty for "All clients", or array with selected ID
+  const jobcodeIds = selectedClient ? [selectedClient] : [];
+
   const newAlert = {
     type: alertTypeToUse,
     time_in_seconds: timeInSeconds,
     asset_reference: assetReference,
+    jobcode_ids: jobcodeIds,
   };
 
   // Add display_name for sound alerts
@@ -147,6 +152,37 @@ function formatTime(seconds) {
   return `${hours}h ${minutes}m ${secs}s`;
 }
 
+// Function to get client display text for an alert
+function getClientDisplayText(alert, userProfile) {
+  // Handle legacy alerts that don't have jobcode_ids
+  if (!alert.jobcode_ids || !Array.isArray(alert.jobcode_ids)) {
+    return "for all clients";
+  }
+
+  // If empty array, it's "All clients"
+  if (alert.jobcode_ids.length === 0) {
+    return "for all clients";
+  }
+
+  // If single client, show the client name
+  if (alert.jobcode_ids.length === 1) {
+    const jobcodeId = alert.jobcode_ids[0];
+    const jobcode = userProfile.jobcodes && userProfile.jobcodes[jobcodeId];
+
+    if (jobcode) {
+      const clientName = jobcode.parent_path_name
+        ? jobcode.parent_path_name + jobcode.name
+        : jobcode.name;
+      return `for ${clientName}`;
+    } else {
+      return "for an unknown client";
+    }
+  }
+
+  // If multiple clients (future functionality)
+  return `(${alert.jobcode_ids.length} clients)`;
+}
+
 // Function to create an alert element
 function createAlertElement(alert, userProfile) {
   const alertElement = document.createElement("div");
@@ -192,7 +228,9 @@ function createAlertElement(alert, userProfile) {
     displayText = alert.type || "Unknown";
   }
 
-  typeIndicator.textContent = displayText;
+  // Add client information to display text
+  const clientText = getClientDisplayText(alert, userProfile);
+  typeIndicator.textContent = `${displayText} ${clientText}`;
 
   // Delete button
   const deleteButton = document.createElement("button");
@@ -375,27 +413,26 @@ export function populateClientSelector(userProfile) {
 
   try {
     let jobcodes = Object.values(userProfile.jobcodes) || [];
-    
+
     // Filter out jobcodes with children as these cannot have timesheets assigned
     jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
-    
+
     // Sort jobcodes by their full name (parent_path_name + name)
     jobcodes.sort((a, b) => {
-      const nameA = (a.parent_path_name || '') + a.name;
-      const nameB = (b.parent_path_name || '') + b.name;
+      const nameA = (a.parent_path_name || "") + a.name;
+      const nameB = (b.parent_path_name || "") + b.name;
       return nameA.localeCompare(nameB);
     });
-    
+
     // Add each jobcode as an option
     jobcodes.forEach((jobcode) => {
       const option = document.createElement("option");
       option.value = jobcode.id;
-      option.textContent = jobcode.parent_path_name 
+      option.textContent = jobcode.parent_path_name
         ? jobcode.parent_path_name + jobcode.name
         : jobcode.name;
       clientSelector.appendChild(option);
     });
-    
   } catch (error) {
     console.error("Error populating client selector:", error);
   }
