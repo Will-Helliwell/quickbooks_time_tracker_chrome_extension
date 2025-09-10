@@ -32,7 +32,7 @@ export async function addNewAlert(userProfile) {
     timeInSeconds,
     selectedClient
   );
-  
+
   if (conflictMessage) {
     alert(conflictMessage);
     return;
@@ -66,13 +66,6 @@ export async function addNewAlert(userProfile) {
         console.error("Error getting custom sound name:", error);
         displayName = soundParts[1];
       }
-    } else {
-      // Legacy support - assume it's a default sound
-      alertTypeToUse = "sound_default";
-      assetReference = sound;
-      displayName = sound
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (l) => l.toUpperCase());
     }
   }
 
@@ -494,9 +487,14 @@ function alertTypesMatch(storedAlertType, formAlertType) {
  * @param {string} selectedClient - The selected client ID (empty string for "All clients")
  * @returns {string|null} - Error message if conflict exists, null if no conflict
  */
-function checkForAlertConflicts(alerts, alertType, timeInSeconds, selectedClient) {
+function checkForAlertConflicts(
+  alerts,
+  alertType,
+  timeInSeconds,
+  selectedClient
+) {
   if (!alerts) return null;
-  
+
   const isNewAlertForAllClients = !selectedClient;
 
   // Check if there's already an "all clients" alert with same type and time
