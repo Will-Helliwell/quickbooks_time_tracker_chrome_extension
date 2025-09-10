@@ -76,7 +76,7 @@ export async function addNewAlert(userProfile) {
 
   // We make this an array in case we want to support multiple clients per alert in future
   const newAlertJobcodeIds = newAlertSelectedClient
-    ? [newAlertSelectedClient]
+    ? [parseInt(newAlertSelectedClient)]
     : [];
 
   const newAlert = {

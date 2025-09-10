@@ -27,7 +27,11 @@ async function startBackgroundCountdown(
   currentRemainingSeconds = initialSeconds;
 
   // immediately
-  runAllAlertChecks(currentRemainingSeconds, userProfile);
+  runAllAlertChecks(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
 
   // exit early if no limit is assigned
   if (currentRemainingSeconds == null) {
@@ -39,7 +43,11 @@ async function startBackgroundCountdown(
     currentRemainingSeconds--;
 
     // once every second
-    runAllAlertChecks(currentRemainingSeconds, userProfile);
+    runAllAlertChecks(
+      currentlyActiveJobcodeId,
+      currentRemainingSeconds,
+      userProfile
+    );
 
     // Stop the countdown if we've reached 0 or gone negative
     if (currentRemainingSeconds <= 0) {
@@ -49,10 +57,22 @@ async function startBackgroundCountdown(
   }, 1000);
 }
 
-function runAllAlertChecks(currentRemainingSeconds, userProfile) {
-  updateBadge(currentRemainingSeconds, userProfile);
-  checkForSoundAlerts(currentRemainingSeconds, userProfile);
-  checkForChromeNotifcationAlerts(currentRemainingSeconds, userProfile);
+function runAllAlertChecks(
+  currentlyActiveJobcodeId,
+  currentRemainingSeconds,
+  userProfile
+) {
+  updateBadge(currentlyActiveJobcodeId, currentRemainingSeconds, userProfile);
+  checkForSoundAlerts(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
+  checkForChromeNotifcationAlerts(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
 }
 
 /**
@@ -71,7 +91,7 @@ function clearBadge() {
 /**
  * Updates the badge text and color based on the remaining seconds and user preferences
  */
-function updateBadge(seconds_remaining, userProfile) {
+function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
   // if the jobcode has not been assigned a limit, then display infinity
   if (seconds_remaining == null) {
     chrome.action.setBadgeText({ text: "∞" }); // display infinity
@@ -118,16 +138,24 @@ function updateBadge(seconds_remaining, userProfile) {
 /**
  * SOUND MANAGEMENT
  */
-function checkForSoundAlerts(seconds_remaining, userProfile) {
+function checkForSoundAlerts(
+  currentlyActiveJobcodeId,
+  seconds_remaining,
+  userProfile
+) {
   // Check if the user has any alerts set
   const alerts = userProfile.preferences.alerts || [];
 
   // Check for sound alerts
-  const soundAlert = alerts.find(
-    (alert) =>
-      (alert.type === "sound_default" || alert.type === "sound_custom") &&
-      alert.time_in_seconds === seconds_remaining
-  );
+  const soundAlert = alerts.find((alert) => {
+    const isSoundType =
+      alert.type === "sound_default" || alert.type === "sound_custom";
+    const isAtRightTime = alert.time_in_seconds === seconds_remaining;
+    const appliesToActiveJobcode =
+      alert.jobcode_ids.length === 0 ||
+      alert.jobcode_ids.includes(currentlyActiveJobcodeId);
+    return isSoundType && isAtRightTime && appliesToActiveJobcode;
+  });
 
   // If a sound alert is found, play the appropriate sound
   if (soundAlert) {
@@ -175,7 +203,11 @@ async function playCustomAudio(audioId) {
 /**
  * CHROME NOTIFICATION MANAGEMENT
  */
-function checkForChromeNotifcationAlerts(seconds_remaining, userProfile) {
+function checkForChromeNotifcationAlerts(
+  currentlyActiveJobcodeId,
+  seconds_remaining,
+  userProfile
+) {
   // Check if the user has any alerts set
   const alerts = userProfile.preferences.alerts || [];
 
