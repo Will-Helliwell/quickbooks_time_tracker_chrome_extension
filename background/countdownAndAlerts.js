@@ -1,8 +1,8 @@
 /**
- * This script handles the badge countdown for the Chrome extension.
+ * This script handles the countdown timer and triggering of alerts for the extension.
  */
 
-let badgeCountdownInterval = null;
+let backgroundCountdownReference = null;
 let currentRemainingSeconds = null;
 let hasNotificationPermission = false;
 
@@ -14,52 +14,59 @@ let hasNotificationPermission = false;
  *                                      If null, displays infinity symbol.
  * @returns {void}
  */
-async function startBadgeCountdownAndTriggerAlerts(
-  initialSeconds,
-  userProfile
-) {
+async function startBackgroundCountdown(initialSeconds, userProfile) {
   // Clear any existing interval
-  if (badgeCountdownInterval) {
-    clearInterval(badgeCountdownInterval);
+  if (backgroundCountdownReference) {
+    clearInterval(backgroundCountdownReference);
   }
 
   currentRemainingSeconds = initialSeconds;
 
-  // Update badge immediately with initial value
-  updateBadge(currentRemainingSeconds, userProfile);
-  checkForSoundAlerts(currentRemainingSeconds, userProfile); // Check for sound alerts immediately
+  // immediately
+  runAllAlertChecks(currentRemainingSeconds, userProfile);
 
   // exit early if no limit is assigned
   if (currentRemainingSeconds == null) {
     return;
   }
 
-  // start coundown if the user has assigned a limit
-  badgeCountdownInterval = setInterval(() => {
+  // if the user has assigned a limit, start a countdown that runs the below code every second
+  backgroundCountdownReference = setInterval(() => {
     currentRemainingSeconds--;
 
-    // Update the badge text and color every second
-    updateBadge(currentRemainingSeconds, userProfile);
-    checkForSoundAlerts(currentRemainingSeconds, userProfile); // Check for sound alerts every second
+    // once every second
+    runAllAlertChecks(currentRemainingSeconds, userProfile);
 
     // Stop the countdown if we've reached 0 or gone negative
     if (currentRemainingSeconds <= 0) {
-      clearInterval(badgeCountdownInterval);
-      badgeCountdownInterval = null;
+      clearInterval(backgroundCountdownReference);
+      backgroundCountdownReference = null;
     }
   }, 1000);
 }
 
+function runAllAlertChecks(currentRemainingSeconds, userProfile) {
+  updateBadge(currentRemainingSeconds, userProfile);
+  checkForSoundAlerts(currentRemainingSeconds, userProfile);
+  checkForChromeNotifcationAlerts(currentRemainingSeconds, userProfile);
+}
+
+/**
+ * BADGE MANAGEMENT
+ */
 function clearBadge() {
-  if (badgeCountdownInterval) {
-    clearInterval(badgeCountdownInterval);
-    badgeCountdownInterval = null;
+  if (backgroundCountdownReference) {
+    clearInterval(backgroundCountdownReference);
+    backgroundCountdownReference = null;
   }
   currentRemainingSeconds = null;
   chrome.action.setBadgeText({ text: "" });
   chrome.action.setBadgeBackgroundColor({ color: "#FFFFFF" }); // white
 }
 
+/**
+ * Updates the badge text and color based on the remaining seconds and user preferences
+ */
 function updateBadge(seconds_remaining, userProfile) {
   // if the jobcode has not been assigned a limit, then display infinity
   if (seconds_remaining == null) {
@@ -83,7 +90,7 @@ function updateBadge(seconds_remaining, userProfile) {
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
     // otherwise, set the badge to the alert colour
-    const alertColour = nextAlert.alert_string;
+    const alertColour = nextAlert.asset_reference;
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
   }
 
@@ -104,31 +111,30 @@ function updateBadge(seconds_remaining, userProfile) {
   chrome.action.setBadgeText({ text: displayText });
 }
 
+/**
+ * SOUND MANAGEMENT
+ */
 function checkForSoundAlerts(seconds_remaining, userProfile) {
-  // Check if the user has any sound or notification alerts set
+  // Check if the user has any alerts set
   const alerts = userProfile.preferences.alerts || [];
 
   // Check for sound alerts
   const soundAlert = alerts.find(
     (alert) =>
-      alert.type === "sound" && alert.time_in_seconds === seconds_remaining
-  );
-
-  // If a sound alert is found, play the sound
-  if (soundAlert) {
-    playAudio(soundAlert.alert_string);
-  }
-
-  // Check for notification alerts
-  const notificationAlert = alerts.find(
-    (alert) =>
-      alert.type === "notification" &&
+      (alert.type === "sound_default" || alert.type === "sound_custom") &&
       alert.time_in_seconds === seconds_remaining
   );
 
-  // If a notification alert is found, create the notification
-  if (notificationAlert) {
-    createChromeAlert(seconds_remaining);
+  // If a sound alert is found, play the appropriate sound
+  if (soundAlert) {
+    if (soundAlert.type === "sound_default") {
+      // Play pre-packaged sound
+      const soundName = soundAlert.asset_reference;
+      playAudio(soundName);
+    } else if (soundAlert.type === "sound_custom") {
+      // Play custom sound using new playback system
+      playCustomAudio(soundAlert.asset_reference);
+    }
   }
 }
 
@@ -148,6 +154,38 @@ async function playAudio(sound) {
     action: "playSound",
     sound: sound,
   });
+}
+
+/**
+ * Play a custom audio file from IndexedDB using the new playback system
+ * @param {string} audioId - The IndexedDB ID of the custom audio file
+ */
+async function playCustomAudio(audioId) {
+  try {
+    await handleCustomSoundPlaybackById(audioId);
+  } catch (error) {
+    console.error("Error playing custom audio:", error);
+  }
+}
+
+/**
+ * CHROME NOTIFICATION MANAGEMENT
+ */
+function checkForChromeNotifcationAlerts(seconds_remaining, userProfile) {
+  // Check if the user has any alerts set
+  const alerts = userProfile.preferences.alerts || [];
+
+  // Check for notification alerts
+  const notificationAlert = alerts.find(
+    (alert) =>
+      alert.type === "notification" &&
+      alert.time_in_seconds === seconds_remaining
+  );
+
+  // If a notification alert is found, create the notification
+  if (notificationAlert) {
+    createChromeAlert(seconds_remaining);
+  }
 }
 
 async function createChromeAlert(seconds_remaining) {
@@ -176,7 +214,7 @@ async function createChromeAlert(seconds_remaining) {
       requireInteraction: true, // This will make the notification stay until you click it
       silent: false, // This will ensure the notification makes a sound
     },
-    (notificationId) => {
+    (_notificationId) => {
       if (chrome.runtime.lastError) {
         console.error("Error creating notification:", chrome.runtime.lastError);
       }

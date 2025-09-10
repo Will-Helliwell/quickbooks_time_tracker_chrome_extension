@@ -22,6 +22,7 @@ import {
   populateAlerts,
   initializeAlertTypeSelector,
 } from "/popup/alerts.js";
+import { initializeAudioUpload } from "/popup/audioUpload.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
 import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
 
@@ -133,6 +134,9 @@ async function handlePopupOpen() {
   }
   initializeAlertTypeSelector();
 
+  // Initialize audio upload functionality
+  initializeAudioUpload();
+
   // Handle back to clients button click
   document.getElementById("back-to-clients").addEventListener("click", () => {
     hideClientInfoView();
@@ -167,6 +171,7 @@ async function updateUIWithUserProfile(userProfile) {
       button.classList.remove("text-black", "font-bold");
     }
   });
+
 
   populateAlerts(userProfile);
 
@@ -341,8 +346,6 @@ function renderAllClientsTable(userProfile) {
       <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
-    const jobcodeTimesheets = jobcode.timesheets || [];
-
     const secondsCompletedThisMonth =
       calculateSecondsCompletedThisMonth(jobcode);
 
@@ -727,7 +730,7 @@ function setupFavoritesToggle() {
 }
 
 // Add message listener for timer updates
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "onTheClock") {
     updateActiveRecordingUIWithLatestUserProfile();
     sendResponse({ success: true });
@@ -885,8 +888,6 @@ function hideMyClientsView() {
 
 function showClientInfoView(jobcodeId) {
   const userProfile = AppState.getUserProfile();
-  console.log("userProfile = ");
-  console.log(userProfile);
 
   // Get the client name from the jobcode
   const jobcode = userProfile.jobcodes[jobcodeId];
@@ -898,8 +899,6 @@ function showClientInfoView(jobcodeId) {
     userProfile,
     jobcodeId
   );
-  console.log("recentTimesheets = ");
-  console.log(recentTimesheets);
 
   // Show jobcode detail screen
   const jobcodeDetailScreen = document.getElementById("jobcode-detail-screen");
@@ -1080,6 +1079,7 @@ function setupTooltips() {
     });
   });
 }
+
 
 /**
  * Calculates the total duration of timesheets completed in the current month for a given jobcode
