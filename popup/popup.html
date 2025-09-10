@@ -188,11 +188,20 @@
                                 placeholder="S" min="0" max="59">
                         </div>
 
+                        <!-- Client/Jobcode Selector -->
+                        <div class="flex items-center">
+                            <select id="alert-client"
+                                class="border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-24">
+                                <option value="">All clients</option>
+                                <!-- Client options will be populated dynamically -->
+                            </select>
+                        </div>
+
                     </div>
 
                     <!-- Add Alert Button -->
                     <button id="add-alert"
-                        class="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 text-sm">
+                        class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 text-sm">
                         Add Alert
                     </button>
                 </div>

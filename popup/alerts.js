@@ -362,6 +362,45 @@ async function getCustomSounds() {
   }
 }
 
+/**
+ * Populates the client selector dropdown with all available jobcodes
+ * @param {Object} userProfile - The user profile containing jobcodes
+ */
+export function populateClientSelector(userProfile) {
+  const clientSelector = document.getElementById("alert-client");
+  if (!clientSelector) return;
+
+  // Clear existing options except the default "All clients"
+  clientSelector.innerHTML = '<option value="">All clients</option>';
+
+  try {
+    let jobcodes = Object.values(userProfile.jobcodes) || [];
+    
+    // Filter out jobcodes with children as these cannot have timesheets assigned
+    jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
+    
+    // Sort jobcodes by their full name (parent_path_name + name)
+    jobcodes.sort((a, b) => {
+      const nameA = (a.parent_path_name || '') + a.name;
+      const nameB = (b.parent_path_name || '') + b.name;
+      return nameA.localeCompare(nameB);
+    });
+    
+    // Add each jobcode as an option
+    jobcodes.forEach((jobcode) => {
+      const option = document.createElement("option");
+      option.value = jobcode.id;
+      option.textContent = jobcode.parent_path_name 
+        ? jobcode.parent_path_name + jobcode.name
+        : jobcode.name;
+      clientSelector.appendChild(option);
+    });
+    
+  } catch (error) {
+    console.error("Error populating client selector:", error);
+  }
+}
+
 export function initializeAlertTypeSelector() {
   const alertTypeSelect = document.getElementById("alert-type");
   const colorPickerContainer = document.getElementById(
