@@ -26,56 +26,16 @@ export async function addNewAlert(userProfile) {
   }
 
   // Check for conflicting alerts with new client-aware logic
-  if (userProfile.preferences.alerts) {
-    const alerts = userProfile.preferences.alerts;
-    const isNewAlertForAllClients = !selectedClient;
-
-    // Check if there's already an "all clients" alert with same type and time
-    const existingAllClientsAlert = alerts.find(
-      (alert) =>
-        alertTypesMatch(alert.type, alertType) &&
-        alert.time_in_seconds === timeInSeconds &&
-        (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
-    );
-
-    if (existingAllClientsAlert) {
-      alert(
-        `You already have an alert of this type and this time for all clients. Please delete this alert first if you want to add a client-specific one.`
-      );
-      return;
-    }
-
-    // If new alert is client-specific, check for any alert of the same type and time
-    if (!isNewAlertForAllClients) {
-      const clashingAlert = alerts.find(
-        (alert) =>
-          alertTypesMatch(alert.type, alertType) &&
-          alert.time_in_seconds === timeInSeconds
-      );
-
-      if (clashingAlert) {
-        alert(
-          `You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.`
-        );
-        return;
-      }
-    }
-
-    // If new alert is for all clients, check for any alerts of same type and time
-    if (isNewAlertForAllClients) {
-      const existingClientSpecificAlert = alerts.find(
-        (alert) =>
-          alertTypesMatch(alert.type, alertType) &&
-          alert.time_in_seconds === timeInSeconds
-      );
-
-      if (existingClientSpecificAlert) {
-        alert(
-          `You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.`
-        );
-        return;
-      }
-    }
+  const conflictMessage = checkForAlertConflicts(
+    userProfile.preferences.alerts,
+    alertType,
+    timeInSeconds,
+    selectedClient
+  );
+  
+  if (conflictMessage) {
+    alert(conflictMessage);
+    return;
   }
 
   // Parse sound selection to determine type and asset reference
@@ -524,4 +484,58 @@ function alertTypesMatch(storedAlertType, formAlertType) {
   }
   // For other types (badge, notification), they should match exactly
   return storedAlertType === formAlertType;
+}
+
+/**
+ * Checks for conflicting alerts with client-aware logic
+ * @param {Array} alerts - Array of existing alerts
+ * @param {string} alertType - The form alert type (badge, sound, notification)
+ * @param {number} timeInSeconds - The alert time in seconds
+ * @param {string} selectedClient - The selected client ID (empty string for "All clients")
+ * @returns {string|null} - Error message if conflict exists, null if no conflict
+ */
+function checkForAlertConflicts(alerts, alertType, timeInSeconds, selectedClient) {
+  if (!alerts) return null;
+  
+  const isNewAlertForAllClients = !selectedClient;
+
+  // Check if there's already an "all clients" alert with same type and time
+  const existingAllClientsAlert = alerts.find(
+    (alert) =>
+      alertTypesMatch(alert.type, alertType) &&
+      alert.time_in_seconds === timeInSeconds &&
+      (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
+  );
+
+  if (existingAllClientsAlert) {
+    return "You already have an alert of this type and this time for all clients. Please delete this alert first if you want to add a client-specific one.";
+  }
+
+  // If new alert is client-specific, check for any alert of the same type and time
+  if (!isNewAlertForAllClients) {
+    const clashingAlert = alerts.find(
+      (alert) =>
+        alertTypesMatch(alert.type, alertType) &&
+        alert.time_in_seconds === timeInSeconds
+    );
+
+    if (clashingAlert) {
+      return "You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.";
+    }
+  }
+
+  // If new alert is for all clients, check for any alerts of same type and time
+  if (isNewAlertForAllClients) {
+    const existingClientSpecificAlert = alerts.find(
+      (alert) =>
+        alertTypesMatch(alert.type, alertType) &&
+        alert.time_in_seconds === timeInSeconds
+    );
+
+    if (existingClientSpecificAlert) {
+      return "You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.";
+    }
+  }
+
+  return null; // No conflicts found
 }
