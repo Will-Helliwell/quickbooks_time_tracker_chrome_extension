@@ -14,7 +14,11 @@ let hasNotificationPermission = false;
  *                                      If null, displays infinity symbol.
  * @returns {void}
  */
-async function startBackgroundCountdown(initialSeconds, userProfile) {
+async function startBackgroundCountdown(
+  currentlyActiveJobcodeId,
+  initialSeconds,
+  userProfile
+) {
   // Clear any existing interval
   if (backgroundCountdownReference) {
     clearInterval(backgroundCountdownReference);

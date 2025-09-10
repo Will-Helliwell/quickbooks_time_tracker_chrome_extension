@@ -61,10 +61,10 @@ async function pollForActivity() {
   if (onTheClock) {
     // calculate the remaining seconds
     const shiftSeconds = currentTotalsResponse.shift_seconds;
-    const jobcodeId = currentTotalsResponse.jobcode_id;
+    const currentlyActiveJobcodeId = currentTotalsResponse.jobcode_id;
     const jobcodeDetails = await getJobcodeFromStorage(
       currentUserId,
-      jobcodeId
+      currentlyActiveJobcodeId
     );
     const secondsAssigned = jobcodeDetails.seconds_assigned ?? null;
     const secondsCompletedThisMonth =
@@ -76,7 +76,11 @@ async function pollForActivity() {
         : secondsAssigned - secondsCompletedThisMonth - shiftSeconds;
 
     // Start or update the badge countdown
-    startBackgroundCountdown(remainingSeconds, currentUserProfile);
+    startBackgroundCountdown(
+      currentlyActiveJobcodeId,
+      remainingSeconds,
+      currentUserProfile
+    );
 
     // Notify the popup about the timer state
     try {
