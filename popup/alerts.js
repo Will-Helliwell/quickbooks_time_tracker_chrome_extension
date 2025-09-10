@@ -9,9 +9,9 @@ export async function addNewAlert(userProfile) {
   const newAlerSeconds =
     parseInt(document.getElementById("alert-seconds").value) || 0;
   const newAlertType = document.getElementById("alert-type").value;
-  const color = document.getElementById("alert-color").value;
-  const sound = document.getElementById("alert-sound").value;
-  const selectedClient = document.getElementById("alert-client").value;
+  const newAlertColor = document.getElementById("alert-color").value;
+  const newAlertSound = document.getElementById("alert-sound").value;
+  const newAlertSelectedClient = document.getElementById("alert-client").value;
 
   const newAlertTimeInSeconds = convertToSeconds(
     newAlertHours,
@@ -36,7 +36,7 @@ export async function addNewAlert(userProfile) {
     userProfile.preferences.alerts,
     newAlertType,
     newAlertTimeInSeconds,
-    selectedClient
+    newAlertSelectedClient
   );
   if (conflictMessage) {
     alert(conflictMessage);
@@ -49,10 +49,10 @@ export async function addNewAlert(userProfile) {
   let displayName = "";
 
   if (newAlertType === "badge") {
-    assetReference = color;
+    assetReference = newAlertColor;
   } else if (newAlertType === "sound") {
     // Parse the sound selection to determine if it's default or custom
-    const soundParts = sound.split(":");
+    const soundParts = newAlertSound.split(":");
     if (soundParts[0] === "default") {
       alertTypeToUse = "sound_default";
       assetReference = soundParts[1]; // filename
@@ -75,7 +75,7 @@ export async function addNewAlert(userProfile) {
   }
 
   // Create jobcodeIds array - empty for "All clients", or array with selected ID
-  const jobcodeIds = selectedClient ? [selectedClient] : [];
+  const jobcodeIds = newAlertSelectedClient ? [newAlertSelectedClient] : [];
 
   const newAlert = {
     type: alertTypeToUse,
@@ -489,18 +489,18 @@ function alertTypesMatch(storedAlertType, formAlertType) {
  * @param {Array} alerts - Array of existing alerts
  * @param {string} newAlertType - The form alert type (badge, sound, notification)
  * @param {number} newAlertTimeInSeconds - The alert time in seconds
- * @param {string} selectedClient - The selected client ID (empty string for "All clients")
+ * @param {string} newAlertSelectedClient - The selected client ID (empty string for "All clients")
  * @returns {string|null} - Error message if conflict exists, null if no conflict
  */
 function checkForAlertConflicts(
   alerts,
   newAlertType,
   newAlertTimeInSeconds,
-  selectedClient
+  newAlertSelectedClient
 ) {
   if (!alerts) return null;
 
-  const isNewAlertForAllClients = !selectedClient;
+  const isNewAlertForAllClients = !newAlertSelectedClient;
 
   // Check if there's already an "all clients" alert with same type and time
   const existingAllClientsAlert = alerts.find(
