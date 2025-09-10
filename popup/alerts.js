@@ -25,20 +25,71 @@ export async function addNewAlert(userProfile) {
     return;
   }
 
-  // Check for existing alert with same time and type
+  // Check for conflicting alerts with new client-aware logic
   if (userProfile.preferences.alerts) {
-    const existingAlert = userProfile.preferences.alerts.find(
+    const alerts = userProfile.preferences.alerts;
+    const isNewAlertForAllClients = !selectedClient;
+
+    // Check if there's already an "all clients" alert with same type and time
+    const existingAllClientsAlert = alerts.find(
       (alert) =>
-        alert.type === alertType && alert.time_in_seconds === timeInSeconds
+        alert.type === alertType &&
+        alert.time_in_seconds === timeInSeconds &&
+        (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
     );
 
-    if (existingAlert) {
+    if (existingAllClientsAlert) {
       alert(
-        `An alert already exists for ${formatTime(
-          timeInSeconds
-        )}. Please choose a different time.`
+        `You already have an alert of this type and this time for all clients. Please delete this alert first if you want to add a client-specific one.`
       );
       return;
+    }
+
+    console.log(
+      "No clashing all clients alerts, about to check for clashing client-specific alerts"
+    );
+
+    // If new alert is client-specific, check for any alert of the same type and time
+    if (!isNewAlertForAllClients) {
+      console.log("New alert is client-specific, checking for clashes");
+
+      console.log("new alert type = ");
+      console.log(alertType);
+      console.log("new alert timeInSeconds = ");
+      console.log(timeInSeconds);
+
+      console.log("alerts about to check = ");
+      console.log(alerts);
+
+      const clashingAlert = alerts.find(
+        (alert) =>
+          alert.type === alertType && alert.time_in_seconds === timeInSeconds
+      );
+
+      console.log("Clashing alert check result:", clashingAlert);
+
+      if (clashingAlert) {
+        alert(
+          `You already have an alert of this type and this time for this client specifically.`
+        );
+        return;
+      }
+    }
+
+    // If new alert is for all clients, check for any alerts of same type and time
+    if (isNewAlertForAllClients) {
+      console.log("New alert is for all clients, checking for clashes");
+      const existingClientSpecificAlert = alerts.find(
+        (alert) =>
+          alert.type === alertType && alert.time_in_seconds === timeInSeconds
+      );
+
+      if (existingClientSpecificAlert) {
+        alert(
+          `You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.`
+        );
+        return;
+      }
     }
   }
 
