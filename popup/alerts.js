@@ -33,7 +33,7 @@ export async function addNewAlert(userProfile) {
     // Check if there's already an "all clients" alert with same type and time
     const existingAllClientsAlert = alerts.find(
       (alert) =>
-        alert.type === alertType &&
+        alertTypesMatch(alert.type, alertType) &&
         alert.time_in_seconds === timeInSeconds &&
         (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
     );
@@ -45,32 +45,17 @@ export async function addNewAlert(userProfile) {
       return;
     }
 
-    console.log(
-      "No clashing all clients alerts, about to check for clashing client-specific alerts"
-    );
-
     // If new alert is client-specific, check for any alert of the same type and time
     if (!isNewAlertForAllClients) {
-      console.log("New alert is client-specific, checking for clashes");
-
-      console.log("new alert type = ");
-      console.log(alertType);
-      console.log("new alert timeInSeconds = ");
-      console.log(timeInSeconds);
-
-      console.log("alerts about to check = ");
-      console.log(alerts);
-
       const clashingAlert = alerts.find(
         (alert) =>
-          alert.type === alertType && alert.time_in_seconds === timeInSeconds
+          alertTypesMatch(alert.type, alertType) &&
+          alert.time_in_seconds === timeInSeconds
       );
-
-      console.log("Clashing alert check result:", clashingAlert);
 
       if (clashingAlert) {
         alert(
-          `You already have an alert of this type and this time for this client specifically.`
+          `You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.`
         );
         return;
       }
@@ -78,10 +63,10 @@ export async function addNewAlert(userProfile) {
 
     // If new alert is for all clients, check for any alerts of same type and time
     if (isNewAlertForAllClients) {
-      console.log("New alert is for all clients, checking for clashes");
       const existingClientSpecificAlert = alerts.find(
         (alert) =>
-          alert.type === alertType && alert.time_in_seconds === timeInSeconds
+          alertTypesMatch(alert.type, alertType) &&
+          alert.time_in_seconds === timeInSeconds
       );
 
       if (existingClientSpecificAlert) {
@@ -528,4 +513,15 @@ export function initializeAlertTypeSelector() {
       placeholderContainer.style.display = "block";
     }
   });
+}
+
+// Helper function to check if alert types match
+function alertTypesMatch(storedAlertType, formAlertType) {
+  // For sound alerts, stored type could be 'sound_default' or 'sound_custom'
+  // but form type is just 'sound'
+  if (formAlertType === "sound") {
+    return storedAlertType.includes("sound");
+  }
+  // For other types (badge, notification), they should match exactly
+  return storedAlertType === formAlertType;
 }
