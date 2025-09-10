@@ -43,10 +43,10 @@ export async function addNewAlert(userProfile) {
     return;
   }
 
-  // Parse sound selection to determine type and asset reference
-  let alertTypeToUse = newAlertType;
+  // Parse the dropdown selection to determine fields to store for the new alert: type, asset_reference, display_name
+  let newAlertTypeToUse = newAlertType;
   let assetReference = "";
-  let displayName = "";
+  let displayName = ""; // only relevant for sounds
 
   if (newAlertType === "badge") {
     assetReference = newAlertColor;
@@ -54,13 +54,13 @@ export async function addNewAlert(userProfile) {
     // Parse the sound selection to determine if it's default or custom
     const soundParts = newAlertSound.split(":");
     if (soundParts[0] === "default") {
-      alertTypeToUse = "sound_default";
+      newAlertTypeToUse = "sound_default";
       assetReference = soundParts[1]; // filename
       displayName = soundParts[1]
         .replace(/_/g, " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
     } else if (soundParts[0] === "custom") {
-      alertTypeToUse = "sound_custom";
+      newAlertTypeToUse = "sound_custom";
       assetReference = soundParts[1]; // IndexedDB ID
       // Get display name from the custom sound data
       try {
@@ -74,18 +74,21 @@ export async function addNewAlert(userProfile) {
     }
   }
 
-  // Create jobcodeIds array - empty for "All clients", or array with selected ID
-  const jobcodeIds = newAlertSelectedClient ? [newAlertSelectedClient] : [];
+  // We make this an array in case we want to support multiple clients per alert in future
+  const newAlertJobcodeIds = newAlertSelectedClient
+    ? [newAlertSelectedClient]
+    : [];
 
   const newAlert = {
-    type: alertTypeToUse,
+    type: newAlertTypeToUse,
     time_in_seconds: newAlertTimeInSeconds,
     asset_reference: assetReference,
-    jobcode_ids: jobcodeIds,
+    jobcode_ids: newAlertJobcodeIds,
   };
 
-  // Add display_name for sound alerts
-  if (alertTypeToUse.startsWith("sound")) {
+  // We store a display_name only for sound alerts to show in the UI because
+  // the uploaded sound id contains non-user-friendly info (e.g. IDs) in order to make each upload unique
+  if (newAlertTypeToUse.startsWith("sound")) {
     newAlert.display_name = displayName;
   }
 
