@@ -355,9 +355,13 @@ function renderAllClientsTable(userProfile) {
       calculateSecondsCompletedThisMonth(jobcode);
 
     // Display friendly text for null values
-    const assignedValue =
+    const timeAssignedDisplayHms =
       jobcode.seconds_assigned !== null
         ? formatSecondsToTime(jobcode.seconds_assigned)
+        : "No limit";
+    const timeAssignedDisplayHoursDecimal =
+      jobcode.seconds_assigned !== null
+        ? formatSecondsToHoursDecimal(jobcode.seconds_assigned)
         : "No limit";
     const valueClass =
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
@@ -417,13 +421,14 @@ function renderAllClientsTable(userProfile) {
         </div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
-            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
+            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}"
                   data-value="${
                     jobcode.seconds_assigned !== null
                       ? jobcode.seconds_assigned
                       : ""
                   }">
-              ${assignedValue}
+              <span data-time-format-h-m-s>${timeAssignedDisplayHms}</span>
+              <span data-time-format-hours-decimal class="hidden">${timeAssignedDisplayHoursDecimal}</span>
             </span>
             <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none" data-jobcode-id="${
               jobcode.id
@@ -627,11 +632,17 @@ function setupJobcodeTimeAssignmentEditing() {
         // Update the assigned value display
         const assignedSpan = jobRow.querySelector(".job-assigned-value");
         if (newValue !== null) {
-          assignedSpan.textContent = formatSecondsToTime(newValue);
+          const timeAssignedDisplayHmsSpan = assignedSpan.querySelector("[data-time-format-h-m-s]");
+          const timeAssignedDisplayHoursDecimalSpan = assignedSpan.querySelector("[data-time-format-hours-decimal]");
+          timeAssignedDisplayHmsSpan.textContent = formatSecondsToTime(newValue);
+          timeAssignedDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(newValue);
           assignedSpan.classList.remove("text-gray-500", "italic");
           assignedSpan.setAttribute("data-value", newValue);
         } else {
-          assignedSpan.textContent = "No limit";
+          const timeAssignedDisplayHmsSpan = assignedSpan.querySelector("[data-time-format-h-m-s]");
+          const timeAssignedDisplayHoursDecimalSpan = assignedSpan.querySelector("[data-time-format-hours-decimal]");
+          timeAssignedDisplayHmsSpan.textContent = "No limit";
+          timeAssignedDisplayHoursDecimalSpan.textContent = "No limit";
           assignedSpan.classList.add("text-gray-500", "italic");
           assignedSpan.setAttribute("data-value", "");
         }
