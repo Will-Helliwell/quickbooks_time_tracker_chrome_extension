@@ -101,8 +101,6 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
 
   // render badge according to user alert preferences
   const alerts = userProfile.preferences.alerts || [];
-  console.log("All alerts:");
-  console.log(alerts);
 
   const badgeAlerts = alerts.filter((alert) => {
     return (
@@ -112,26 +110,16 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
     );
   });
 
-  console.log("badgeAlerts:");
-  console.log(badgeAlerts);
-
   // find the lowest alert time in seconds_remaining that is greater than the current remaining seconds_remaining
   const nextAlert = badgeAlerts
     .filter((alert) => alert.time_in_seconds >= seconds_remaining)
     .sort((a, b) => a.time_in_seconds - b.time_in_seconds)[0];
 
-  console.log("nextAlert:");
-  console.log(nextAlert);
-
   // if there are no alerts, then set the badge to the default colour
   if (!nextAlert) {
-    console.log("no next alert found, setting badge to default colour");
-
     const defaultBadgeColour = seconds_remaining > 0 ? "#00AA00" : "#FF0000"; // green if > 0, red if <= 0
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
-    console.log("next alert found, setting badge to alert colour");
-
     // otherwise, set the badge to the alert colour
     const alertColour = nextAlert.asset_reference;
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
