@@ -3,9 +3,10 @@ import {
   formatSecondsToTime,
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
+import { AppState } from "/shared/appState.js";
 
 // Function to add a new alert
-export async function addNewAlert(userProfile) {
+export async function addNewAlert() {
   // Common variables used regardless of time format
   const newAlertType = document.getElementById("alert-type").value;
   const newAlertColor = document.getElementById("alert-color").value;
@@ -13,6 +14,7 @@ export async function addNewAlert(userProfile) {
   const newAlertSelectedClient = document.getElementById("alert-client").value;
 
   // Get user's time format preference
+  const userProfile = AppState.getUserProfile();
   const userPreferenceTimeFormat =
     userProfile.preferences.time_display_format || "h:m:s";
 
@@ -252,15 +254,22 @@ function createAlertElement(alert, userProfile) {
   const timeFormats = formatTime(alert.time_in_seconds);
 
   // Read user's time format preference to set correct visibility
-  const timeDisplayFormat = userProfile.preferences.time_display_format || "h:m:s";
+  const timeDisplayFormat =
+    userProfile.preferences.time_display_format || "h:m:s";
 
   const timeDisplayHmsSpan = document.createElement("span");
-  timeDisplayHmsSpan.className = timeDisplayFormat === "h:m:s" ? "text-sm font-medium" : "text-sm font-medium hidden";
+  timeDisplayHmsSpan.className =
+    timeDisplayFormat === "h:m:s"
+      ? "text-sm font-medium"
+      : "text-sm font-medium hidden";
   timeDisplayHmsSpan.setAttribute("data-time-format-h-m-s", "");
   timeDisplayHmsSpan.textContent = timeFormats.hms;
 
   const timeDisplayHoursDecimalSpan = document.createElement("span");
-  timeDisplayHoursDecimalSpan.className = timeDisplayFormat === "hours_decimal" ? "text-sm font-medium" : "text-sm font-medium hidden";
+  timeDisplayHoursDecimalSpan.className =
+    timeDisplayFormat === "hours_decimal"
+      ? "text-sm font-medium"
+      : "text-sm font-medium hidden";
   timeDisplayHoursDecimalSpan.setAttribute(
     "data-time-format-hours-decimal",
     ""

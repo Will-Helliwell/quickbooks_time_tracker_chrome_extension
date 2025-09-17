@@ -30,27 +30,7 @@ import {
   formatStartEndTime,
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
-
-// Global application state
-const AppState = {
-  userProfile: null,
-
-  /**
-   * Sets the user profile in global state
-   * @param {Object} profile - The user profile object
-   */
-  setUserProfile(profile) {
-    this.userProfile = profile;
-  },
-
-  /**
-   * Gets the user profile from global state
-   * @returns {Object|null} The user profile object or null if not set
-   */
-  getUserProfile() {
-    return this.userProfile;
-  },
-};
+import { AppState } from "/shared/appState.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -135,7 +115,7 @@ async function handlePopupOpen() {
   // Handle add alert button click
   const addAlertButton = document.getElementById("add-alert");
   if (addAlertButton) {
-    addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
+    addAlertButton.addEventListener("click", () => addNewAlert());
   }
   initializeAlertTypeSelector();
 
