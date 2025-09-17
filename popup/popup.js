@@ -459,10 +459,11 @@ function renderAllClientsTable(userProfile) {
             <div class="limit-input-container ${
               jobcode.seconds_assigned === null ? "hidden" : ""
             }">
-              <div class="flex space-x-2 mb-2">
+              <!-- H:M:S Format Input -->
+              <div class="flex space-x-2 mb-2" data-time-format-h-m-s>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Hours</label>
-                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(jobcode.seconds_assigned / 3600)
@@ -471,7 +472,7 @@ function renderAllClientsTable(userProfile) {
                 </div>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Minutes</label>
-                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(
@@ -482,7 +483,7 @@ function renderAllClientsTable(userProfile) {
                 </div>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Seconds</label>
-                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? jobcode.seconds_assigned % 60
@@ -490,6 +491,20 @@ function renderAllClientsTable(userProfile) {
                          }">
                 </div>
               </div>
+
+              <!-- Hours Decimal Format Input -->
+              <div class="hidden flex space-x-2 mb-2" data-time-format-hours-decimal>
+                <div class="flex-1">
+                  <label class="text-xs text-gray-600">Hours (Decimal)</label>
+                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border rounded text-sm"
+                         value="${
+                           jobcode.seconds_assigned !== null
+                             ? (jobcode.seconds_assigned / 3600).toFixed(2)
+                             : "0"
+                         }" placeholder="2.5">
+                </div>
+              </div>
+
               <input type="hidden" class="assigned-input" value="${
                 jobcode.seconds_assigned !== null
                   ? jobcode.seconds_assigned
@@ -525,6 +540,23 @@ function renderAllClientsTable(userProfile) {
 
   updateActiveRecordingUIWithLatestUserProfile();
   initializeColourTheme(userProfile);
+}
+
+// Helper function to get time input from H:M:S format in assigned time edit form
+function getTimeAssignedInputHms(editForm) {
+  const hours = parseInt(editForm.querySelector(".hours-input").value) || 0;
+  const minutes = parseInt(editForm.querySelector(".minutes-input").value) || 0;
+  const seconds = parseInt(editForm.querySelector(".seconds-input").value) || 0;
+
+  const timeInSeconds = hours * 3600 + minutes * 60 + seconds;
+  return timeInSeconds;
+}
+
+// Helper function to get time input from hours decimal format in assigned time edit form
+function getTimeAssignedInputHoursDecimal(editForm) {
+  const hoursDecimal = parseFloat(editForm.querySelector(".hours-decimal-input").value) || 0;
+  const timeInSeconds = Math.round(hoursDecimal * 3600);
+  return timeInSeconds;
 }
 
 /**
@@ -583,16 +615,28 @@ function setupJobcodeTimeAssignmentEditing() {
       inputContainer.classList.toggle("hidden", !e.target.checked);
 
       if (e.target.checked) {
-        const input = e.target
-          .closest(".edit-form")
-          .querySelector(".hours-input");
-        input.focus();
-        input.select();
+        const editForm = e.target.closest(".edit-form");
+
+        // Get user's time format preference to focus on the correct input
+        const userProfile = AppState.getUserProfile();
+        const timeDisplayFormat = userProfile.preferences.time_display_format || "h:m:s";
+
+        let input;
+        if (timeDisplayFormat === "h:m:s") {
+          input = editForm.querySelector(".hours-input");
+        } else {
+          input = editForm.querySelector(".hours-decimal-input");
+        }
+
+        if (input) {
+          input.focus();
+          input.select();
+        }
       }
     });
   });
 
-  // Update hidden input when time inputs change
+  // Update hidden input when H:M:S time inputs change
   document
     .querySelectorAll(".hours-input, .minutes-input, .seconds-input")
     .forEach((input) => {
@@ -610,12 +654,25 @@ function setupJobcodeTimeAssignmentEditing() {
         if (parseInt(secondsInput.value) < 0) secondsInput.value = 0;
         if (parseInt(hoursInput.value) < 0) hoursInput.value = 0;
 
-        // Calculate total seconds
-        const hours = parseInt(hoursInput.value) || 0;
-        const minutes = parseInt(minutesInput.value) || 0;
-        const seconds = parseInt(secondsInput.value) || 0;
+        // Calculate total seconds using helper function
+        const totalSeconds = getTimeAssignedInputHms(editForm);
+        assignedInput.value = totalSeconds;
+      });
+    });
 
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+  // Update hidden input when decimal hours input changes
+  document
+    .querySelectorAll(".hours-decimal-input")
+    .forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const editForm = e.target.closest(".edit-form");
+        const assignedInput = editForm.querySelector(".assigned-input");
+
+        // Ensure valid range
+        if (parseFloat(input.value) < 0) input.value = 0;
+
+        // Calculate total seconds using helper function
+        const totalSeconds = getTimeAssignedInputHoursDecimal(editForm);
         assignedInput.value = totalSeconds;
       });
     });
