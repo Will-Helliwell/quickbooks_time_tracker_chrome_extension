@@ -1,4 +1,5 @@
 import { overwriteUserProfileInStorage } from "/popup/user.js";
+import { formatSecondsToTime, formatSecondsToHoursDecimal } from "/shared/formatting.js";
 
 // Function to add a new alert
 export async function addNewAlert(userProfile) {
@@ -138,15 +139,23 @@ function convertToSeconds(hours, minutes, seconds) {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
-// Function to format time for display
+// Function to format time for display - returns both formats
 function formatTime(seconds) {
-  if (seconds === 0) {
-    return "0h 0m 0s (Overtime)";
-  }
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${hours}h ${minutes}m ${secs}s`;
+  const hmsFormat = formatAlertTimeHms(seconds);
+  const hoursDecimalFormat = formatAlertTimeHoursDecimal(seconds);
+  return { hms: hmsFormat, hoursDecimal: hoursDecimalFormat };
+}
+
+// Helper function for H:M:S format with overtime suffix
+function formatAlertTimeHms(seconds) {
+  const baseFormat = formatSecondsToTime(seconds);
+  return seconds === 0 ? `${baseFormat} (Overtime)` : baseFormat;
+}
+
+// Helper function for hours decimal format with overtime suffix
+function formatAlertTimeHoursDecimal(seconds) {
+  const baseFormat = formatSecondsToHoursDecimal(seconds);
+  return seconds === 0 ? `${baseFormat} (Overtime)` : baseFormat;
 }
 
 // Function to get client display text for an alert
@@ -198,11 +207,20 @@ function createAlertElement(alert, userProfile) {
   timeSection.className =
     "bg-white dark:bg-gray-700 px-3 py-2 flex items-center w-[17%]";
 
-  const timeText = document.createElement("span");
-  timeText.className = "text-sm font-medium";
-  timeText.textContent = formatTime(alert.time_in_seconds);
+  const timeFormats = formatTime(alert.time_in_seconds);
 
-  timeSection.appendChild(timeText);
+  const timeDisplayHmsSpan = document.createElement("span");
+  timeDisplayHmsSpan.className = "text-sm font-medium";
+  timeDisplayHmsSpan.setAttribute("data-time-format-h-m-s", "");
+  timeDisplayHmsSpan.textContent = timeFormats.hms;
+
+  const timeDisplayHoursDecimalSpan = document.createElement("span");
+  timeDisplayHoursDecimalSpan.className = "text-sm font-medium hidden";
+  timeDisplayHoursDecimalSpan.setAttribute("data-time-format-hours-decimal", "");
+  timeDisplayHoursDecimalSpan.textContent = timeFormats.hoursDecimal;
+
+  timeSection.appendChild(timeDisplayHmsSpan);
+  timeSection.appendChild(timeDisplayHoursDecimalSpan);
 
   // Alert type indicator
   const typeIndicator = document.createElement("span");
