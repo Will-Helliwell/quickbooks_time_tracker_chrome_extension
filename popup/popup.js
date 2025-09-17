@@ -25,7 +25,11 @@ import {
 } from "/popup/alerts.js";
 import { initializeAudioUpload } from "/popup/audioUpload.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
-import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
+import {
+  formatSecondsToTime,
+  formatStartEndTime,
+  formatSecondsToHoursDecimal,
+} from "/shared/formatting.js";
 
 // Global application state
 const AppState = {
@@ -172,7 +176,6 @@ async function updateUIWithUserProfile(userProfile) {
       button.classList.remove("text-black", "font-bold");
     }
   });
-
 
   populateAlerts(userProfile);
   populateClientSelector(userProfile);
@@ -404,9 +407,14 @@ function renderAllClientsTable(userProfile) {
         <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
-        <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">${formatSecondsToTime(
-      secondsCompletedThisMonth
-    )}</div>
+        <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">
+          <span data-time-format-h-m-s>${formatSecondsToTime(
+            secondsCompletedThisMonth
+          )}</span>
+          <span data-time-format-hours-decimal class="hidden">${formatSecondsToHoursDecimal(
+            secondsCompletedThisMonth
+          )}</span>
+        </div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
             <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
@@ -801,6 +809,39 @@ async function initializeColourTheme(userProfile) {
     overwriteUserProfileInStorage(updatedUserProfile);
     applyTheme(newThemeChoice);
   });
+
+  // Initialize time display format toggle
+  initializeTimeDisplayFormat(userProfile);
+}
+
+/**
+ * Initializes the time display format toggle and applies the preference stored locally
+ * @param {Object} userProfile - The user profile containing preferences
+ */
+async function initializeTimeDisplayFormat(userProfile) {
+  const timeFormatToggle = document.getElementById("time-format-toggle");
+  const userPreferences = userProfile.preferences;
+  const timeDisplayFormat = userPreferences.time_display_format || "h:m:s";
+
+  // Set initial toggle state (checked = hours_decimal, unchecked = h:m:s)
+  timeFormatToggle.checked = timeDisplayFormat === "hours_decimal";
+
+  // Apply the current format
+  toggleTimeDisplayFormat(timeDisplayFormat);
+
+  // Add event listener for toggle
+  timeFormatToggle.addEventListener("change", async () => {
+    const newFormat = timeFormatToggle.checked ? "hours_decimal" : "h:m:s";
+    const updatedUserProfile = {
+      ...userProfile,
+      preferences: {
+        ...userPreferences,
+        time_display_format: newFormat,
+      },
+    };
+    overwriteUserProfileInStorage(updatedUserProfile);
+    toggleTimeDisplayFormat(newFormat);
+  });
 }
 
 /**
@@ -821,6 +862,30 @@ function applyTheme(themeName) {
   } else {
     html.classList.remove("dark");
   }
+}
+
+/**
+ * Toggles all time displays between h:m:s and hours_decimal formats
+ * @param {string} newFormat - Either 'h:m:s' or 'hours_decimal'
+ */
+function toggleTimeDisplayFormat(newFormat) {
+  // Hide all current format displays
+  const currentElements = document.querySelectorAll(
+    "[data-time-format-h-m-s], [data-time-format-hours-decimal]"
+  );
+  currentElements.forEach((element) => {
+    element.classList.add("hidden");
+  });
+
+  // Show elements matching the new format
+  const targetAttribute =
+    newFormat === "h:m:s"
+      ? "data-time-format-h-m-s"
+      : "data-time-format-hours-decimal";
+  const targetElements = document.querySelectorAll(`[${targetAttribute}]`);
+  targetElements.forEach((element) => {
+    element.classList.remove("hidden");
+  });
 }
 
 // **
@@ -1081,7 +1146,6 @@ function setupTooltips() {
     });
   });
 }
-
 
 /**
  * Calculates the total duration of timesheets completed in the current month for a given jobcode
