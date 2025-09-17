@@ -247,8 +247,13 @@ async function updateUIWithActiveRecording(userProfile) {
       const activeJobcodeSecondsRemaining =
         activeJobcodeSecondsAssigned - activeJobcodeSecondsCompletedThisMonth;
 
+      // grab the relevant elements
       const remainingElement = jobRow.querySelector(".job-remaining");
       const completedElement = jobRow.querySelector(".job-completed");
+      const timeRemainingDisplayHmsSpan = remainingElement.querySelector("[data-time-format-h-m-s]");
+      const timeRemainingDisplayHoursDecimalSpan = remainingElement.querySelector("[data-time-format-hours-decimal]");
+      const timeCompletedDisplayHmsSpan = completedElement.querySelector("[data-time-format-h-m-s]");
+      const timeCompletedDisplayHoursDecimalSpan = completedElement.querySelector("[data-time-format-hours-decimal]");
 
       // highlight the row
       jobRow.classList.add("bg-blue-100");
@@ -272,13 +277,16 @@ async function updateUIWithActiveRecording(userProfile) {
       const newCompletedSeconds =
         activeJobcodeSecondsCompletedThisMonth + totalCurrentSessionSeconds;
 
-      // Update the displays
-      remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
-      completedElement.textContent = formatSecondsToTime(newCompletedSeconds);
+      // Update the time displays
+      timeRemainingDisplayHmsSpan.textContent = formatSecondsToTime(newRemainingSeconds);
+      timeRemainingDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(newRemainingSeconds);
+      timeCompletedDisplayHmsSpan.textContent = formatSecondsToTime(newCompletedSeconds);
+      timeCompletedDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(newCompletedSeconds);
 
       // start counting down the remaining time
       startLiveCountdown(newRemainingSeconds, (remainingSeconds) => {
-        remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+        timeRemainingDisplayHmsSpan.textContent = formatSecondsToTime(remainingSeconds);
+        timeRemainingDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(remainingSeconds);
         updateRemainingTimeStyle(
           remainingElement,
           remainingSeconds,
@@ -288,7 +296,8 @@ async function updateUIWithActiveRecording(userProfile) {
 
       // start counting up the completed time
       startLiveCountup(newCompletedSeconds, (completedSeconds) => {
-        completedElement.textContent = formatSecondsToTime(completedSeconds);
+        timeCompletedDisplayHmsSpan.textContent = formatSecondsToTime(completedSeconds);
+        timeCompletedDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(completedSeconds);
       });
 
       // Update styling
@@ -367,13 +376,14 @@ function renderAllClientsTable(userProfile) {
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
 
     // Calculate remaining time (only if there's an assigned limit)
-    let remainingFormatted, remainingClass, remainingSeconds;
+    let timeRemainingDisplayHms, timeRemainingDisplayHoursDecimal, remainingClass, remainingSeconds;
     if (jobcode.seconds_assigned !== null) {
       remainingSeconds = Math.max(
         0,
         jobcode.seconds_assigned - secondsCompletedThisMonth
       );
-      remainingFormatted = formatSecondsToTime(remainingSeconds);
+      timeRemainingDisplayHms = formatSecondsToTime(remainingSeconds);
+      timeRemainingDisplayHoursDecimal = formatSecondsToHoursDecimal(remainingSeconds);
 
       // Add warning classes if getting low on time
       if (remainingSeconds === 0) {
@@ -389,7 +399,8 @@ function renderAllClientsTable(userProfile) {
       }
     } else {
       remainingSeconds = null;
-      remainingFormatted = "∞"; // Infinity symbol for unlimited
+      timeRemainingDisplayHms = "∞"; // Infinity symbol for unlimited
+      timeRemainingDisplayHoursDecimal = "∞"; // Infinity symbol for unlimited
       remainingClass = "text-gray-500 italic";
     }
 
@@ -495,7 +506,10 @@ function renderAllClientsTable(userProfile) {
             </div>
           </div>
         </div>
-        <div class="job-remaining p-2 w-28 text-left ${remainingClass}" data-remaining="${remainingSeconds}">${remainingFormatted}</div>
+        <div class="job-remaining p-2 w-28 text-left ${remainingClass}" data-remaining="${remainingSeconds}">
+          <span data-time-format-h-m-s>${timeRemainingDisplayHms}</span>
+          <span data-time-format-hours-decimal class="hidden">${timeRemainingDisplayHoursDecimal}</span>
+        </div>
       </div>`;
   });
 
@@ -656,7 +670,10 @@ function setupJobcodeTimeAssignmentEditing() {
 
         if (newValue !== null) {
           const remainingSeconds = Math.max(0, newValue - completedSeconds);
-          remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+          const timeRemainingDisplayHmsSpan = remainingElement.querySelector("[data-time-format-h-m-s]");
+          const timeRemainingDisplayHoursDecimalSpan = remainingElement.querySelector("[data-time-format-hours-decimal]");
+          timeRemainingDisplayHmsSpan.textContent = formatSecondsToTime(remainingSeconds);
+          timeRemainingDisplayHoursDecimalSpan.textContent = formatSecondsToHoursDecimal(remainingSeconds);
 
           // Update styling based on remaining time
           updateRemainingTimeStyle(
@@ -665,7 +682,10 @@ function setupJobcodeTimeAssignmentEditing() {
             completedSeconds
           );
         } else {
-          remainingElement.textContent = "∞";
+          const timeRemainingDisplayHmsSpan = remainingElement.querySelector("[data-time-format-h-m-s]");
+          const timeRemainingDisplayHoursDecimalSpan = remainingElement.querySelector("[data-time-format-hours-decimal]");
+          timeRemainingDisplayHmsSpan.textContent = "∞";
+          timeRemainingDisplayHoursDecimalSpan.textContent = "∞";
           remainingElement.className =
             "job-remaining p-2 w-28 text-left text-gray-500 italic";
         }
