@@ -14,7 +14,11 @@ let hasNotificationPermission = false;
  *                                      If null, displays infinity symbol.
  * @returns {void}
  */
-async function startBackgroundCountdown(initialSeconds, userProfile) {
+async function startBackgroundCountdown(
+  currentlyActiveJobcodeId,
+  initialSeconds,
+  userProfile
+) {
   // Clear any existing interval
   if (backgroundCountdownReference) {
     clearInterval(backgroundCountdownReference);
@@ -23,7 +27,11 @@ async function startBackgroundCountdown(initialSeconds, userProfile) {
   currentRemainingSeconds = initialSeconds;
 
   // immediately
-  runAllAlertChecks(currentRemainingSeconds, userProfile);
+  runAllAlertChecks(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
 
   // exit early if no limit is assigned
   if (currentRemainingSeconds == null) {
@@ -35,7 +43,11 @@ async function startBackgroundCountdown(initialSeconds, userProfile) {
     currentRemainingSeconds--;
 
     // once every second
-    runAllAlertChecks(currentRemainingSeconds, userProfile);
+    runAllAlertChecks(
+      currentlyActiveJobcodeId,
+      currentRemainingSeconds,
+      userProfile
+    );
 
     // Stop the countdown if we've reached 0 or gone negative
     if (currentRemainingSeconds <= 0) {
@@ -45,10 +57,22 @@ async function startBackgroundCountdown(initialSeconds, userProfile) {
   }, 1000);
 }
 
-function runAllAlertChecks(currentRemainingSeconds, userProfile) {
-  updateBadge(currentRemainingSeconds, userProfile);
-  checkForSoundAlerts(currentRemainingSeconds, userProfile);
-  checkForChromeNotifcationAlerts(currentRemainingSeconds, userProfile);
+function runAllAlertChecks(
+  currentlyActiveJobcodeId,
+  currentRemainingSeconds,
+  userProfile
+) {
+  updateBadge(currentlyActiveJobcodeId, currentRemainingSeconds, userProfile);
+  checkForSoundAlerts(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
+  checkForChromeNotifcationAlerts(
+    currentlyActiveJobcodeId,
+    currentRemainingSeconds,
+    userProfile
+  );
 }
 
 /**
@@ -67,7 +91,7 @@ function clearBadge() {
 /**
  * Updates the badge text and color based on the remaining seconds and user preferences
  */
-function updateBadge(seconds_remaining, userProfile) {
+function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
   // if the jobcode has not been assigned a limit, then display infinity
   if (seconds_remaining == null) {
     chrome.action.setBadgeText({ text: "∞" }); // display infinity
@@ -77,18 +101,37 @@ function updateBadge(seconds_remaining, userProfile) {
 
   // render badge according to user alert preferences
   const alerts = userProfile.preferences.alerts || [];
-  const badgeAlerts = alerts.filter((alert) => alert.type === "badge");
+  console.log("All alerts:");
+  console.log(alerts);
+
+  const badgeAlerts = alerts.filter((alert) => {
+    return (
+      alert.type === "badge" &&
+      (alert.jobcode_ids.length === 0 ||
+        alert.jobcode_ids.includes(currentlyActiveJobcodeId))
+    );
+  });
+
+  console.log("badgeAlerts:");
+  console.log(badgeAlerts);
 
   // find the lowest alert time in seconds_remaining that is greater than the current remaining seconds_remaining
   const nextAlert = badgeAlerts
     .filter((alert) => alert.time_in_seconds >= seconds_remaining)
     .sort((a, b) => a.time_in_seconds - b.time_in_seconds)[0];
 
+  console.log("nextAlert:");
+  console.log(nextAlert);
+
   // if there are no alerts, then set the badge to the default colour
   if (!nextAlert) {
+    console.log("no next alert found, setting badge to default colour");
+
     const defaultBadgeColour = seconds_remaining > 0 ? "#00AA00" : "#FF0000"; // green if > 0, red if <= 0
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
+    console.log("next alert found, setting badge to alert colour");
+
     // otherwise, set the badge to the alert colour
     const alertColour = nextAlert.asset_reference;
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
@@ -114,16 +157,24 @@ function updateBadge(seconds_remaining, userProfile) {
 /**
  * SOUND MANAGEMENT
  */
-function checkForSoundAlerts(seconds_remaining, userProfile) {
+function checkForSoundAlerts(
+  currentlyActiveJobcodeId,
+  seconds_remaining,
+  userProfile
+) {
   // Check if the user has any alerts set
   const alerts = userProfile.preferences.alerts || [];
 
   // Check for sound alerts
-  const soundAlert = alerts.find(
-    (alert) =>
-      (alert.type === "sound_default" || alert.type === "sound_custom") &&
-      alert.time_in_seconds === seconds_remaining
-  );
+  const soundAlert = alerts.find((alert) => {
+    const isSoundType =
+      alert.type === "sound_default" || alert.type === "sound_custom";
+    const isAtRightTime = alert.time_in_seconds === seconds_remaining;
+    const appliesToActiveJobcode =
+      alert.jobcode_ids.length === 0 ||
+      alert.jobcode_ids.includes(currentlyActiveJobcodeId);
+    return isSoundType && isAtRightTime && appliesToActiveJobcode;
+  });
 
   // If a sound alert is found, play the appropriate sound
   if (soundAlert) {
@@ -171,16 +222,23 @@ async function playCustomAudio(audioId) {
 /**
  * CHROME NOTIFICATION MANAGEMENT
  */
-function checkForChromeNotifcationAlerts(seconds_remaining, userProfile) {
+function checkForChromeNotifcationAlerts(
+  currentlyActiveJobcodeId,
+  seconds_remaining,
+  userProfile
+) {
   // Check if the user has any alerts set
   const alerts = userProfile.preferences.alerts || [];
 
   // Check for notification alerts
-  const notificationAlert = alerts.find(
-    (alert) =>
-      alert.type === "notification" &&
-      alert.time_in_seconds === seconds_remaining
-  );
+  const notificationAlert = alerts.find((alert) => {
+    const isNotificationType = alert.type === "notification";
+    const isAtRightTime = alert.time_in_seconds === seconds_remaining;
+    const appliesToActiveJobcode =
+      alert.jobcode_ids.length === 0 ||
+      alert.jobcode_ids.includes(currentlyActiveJobcodeId);
+    return isNotificationType && isAtRightTime && appliesToActiveJobcode;
+  });
 
   // If a notification alert is found, create the notification
   if (notificationAlert) {

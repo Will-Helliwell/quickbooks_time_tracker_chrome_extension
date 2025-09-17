@@ -2,86 +2,93 @@ import { overwriteUserProfileInStorage } from "/popup/user.js";
 
 // Function to add a new alert
 export async function addNewAlert(userProfile) {
-  const isOvertimeAlert = document.getElementById("overtime-alert").checked;
-  const hours = parseInt(document.getElementById("alert-hours").value) || 0;
-  const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
-  const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
-  const alertType = document.getElementById("alert-type").value;
-  const color = document.getElementById("alert-color").value;
-  const sound = document.getElementById("alert-sound").value;
+  const newAlertHours =
+    parseInt(document.getElementById("alert-hours").value) || 0;
+  const newAlerMinutes =
+    parseInt(document.getElementById("alert-minutes").value) || 0;
+  const newAlerSeconds =
+    parseInt(document.getElementById("alert-seconds").value) || 0;
+  const newAlertType = document.getElementById("alert-type").value;
+  const newAlertColor = document.getElementById("alert-color").value;
+  const newAlertSound = document.getElementById("alert-sound").value;
+  const newAlertSelectedClient = document.getElementById("alert-client").value;
 
-  const timeInSeconds = isOvertimeAlert
-    ? 0
-    : convertToSeconds(hours, minutes, seconds);
+  const newAlertTimeInSeconds = convertToSeconds(
+    newAlertHours,
+    newAlerMinutes,
+    newAlerSeconds
+  );
 
-  if (!isOvertimeAlert && timeInSeconds === 0) {
-    alert("Please enter a valid time for your new alert.");
+  // Check if user deliberately entered zero (at least one field has a value)
+  const hasTimeInput =
+    document.getElementById("alert-hours").value !== "" ||
+    document.getElementById("alert-minutes").value !== "" ||
+    document.getElementById("alert-seconds").value !== "";
+  if (newAlertTimeInSeconds === 0 && !hasTimeInput) {
+    alert(
+      "Please enter a time for your new alert (set to 0 for an 'overtime' alert)."
+    );
     return;
   }
 
-  // Check for existing alert with same time and type
-  if (userProfile.preferences.alerts) {
-    const existingAlert = userProfile.preferences.alerts.find(
-      (alert) =>
-        alert.type === alertType && alert.time_in_seconds === timeInSeconds
-    );
-
-    if (existingAlert) {
-      if (isOvertimeAlert) {
-        alert("An overtime alert already exists. Please remove it first.");
-      } else {
-        alert(
-          `An alert already exists for ${formatTime(
-            timeInSeconds
-          )}. Please choose a different time.`
-        );
-      }
-      return;
-    }
+  // Check for conflicting alerts with new client-aware logic
+  const conflictMessage = checkForAlertConflicts(
+    userProfile.preferences.alerts,
+    newAlertType,
+    newAlertTimeInSeconds,
+    newAlertSelectedClient
+  );
+  if (conflictMessage) {
+    alert(conflictMessage);
+    return;
   }
 
-  // Parse sound selection to determine type and asset reference
-  let alertTypeToUse = alertType;
+  // Parse the dropdown selection to determine fields to store for the new alert: type, asset_reference, display_name
+  let newAlertTypeToUse = newAlertType;
   let assetReference = "";
-  let displayName = "";
-  
-  if (alertType === "badge") {
-    assetReference = color;
-  } else if (alertType === "sound") {
+  let displayName = ""; // only relevant for sounds
+
+  if (newAlertType === "badge") {
+    assetReference = newAlertColor;
+  } else if (newAlertType === "sound") {
     // Parse the sound selection to determine if it's default or custom
-    const soundParts = sound.split(":");
+    const soundParts = newAlertSound.split(":");
     if (soundParts[0] === "default") {
-      alertTypeToUse = "sound_default";
+      newAlertTypeToUse = "sound_default";
       assetReference = soundParts[1]; // filename
-      displayName = soundParts[1].replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      displayName = soundParts[1]
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
     } else if (soundParts[0] === "custom") {
-      alertTypeToUse = "sound_custom";
+      newAlertTypeToUse = "sound_custom";
       assetReference = soundParts[1]; // IndexedDB ID
       // Get display name from the custom sound data
       try {
-        const { getAudioFile } = await import('/shared/audioStorage.js');
+        const { getAudioFile } = await import("/shared/audioStorage.js");
         const audioRecord = await getAudioFile(soundParts[1]);
         displayName = audioRecord ? audioRecord.name : soundParts[1];
       } catch (error) {
         console.error("Error getting custom sound name:", error);
         displayName = soundParts[1];
       }
-    } else {
-      // Legacy support - assume it's a default sound
-      alertTypeToUse = "sound_default";
-      assetReference = sound;
-      displayName = sound.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
     }
   }
 
+  // We make this an array in case we want to support multiple clients per alert in future
+  const newAlertJobcodeIds = newAlertSelectedClient
+    ? [parseInt(newAlertSelectedClient)]
+    : [];
+
   const newAlert = {
-    type: alertTypeToUse,
-    time_in_seconds: timeInSeconds,
+    type: newAlertTypeToUse,
+    time_in_seconds: newAlertTimeInSeconds,
     asset_reference: assetReference,
+    jobcode_ids: newAlertJobcodeIds,
   };
 
-  // Add display_name for sound alerts
-  if (alertTypeToUse.startsWith("sound")) {
+  // We store a display_name only for sound alerts to show in the UI because
+  // the uploaded sound id contains non-user-friendly info (e.g. IDs) in order to make each upload unique
+  if (newAlertTypeToUse.startsWith("sound")) {
     newAlert.display_name = displayName;
   }
 
@@ -133,10 +140,44 @@ function convertToSeconds(hours, minutes, seconds) {
 
 // Function to format time for display
 function formatTime(seconds) {
+  if (seconds === 0) {
+    return "0h 0m 0s (Overtime)";
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   return `${hours}h ${minutes}m ${secs}s`;
+}
+
+// Function to get client display text for an alert
+function getClientDisplayText(alert, userProfile) {
+  // Handle legacy alerts that don't have jobcode_ids
+  if (!alert.jobcode_ids || !Array.isArray(alert.jobcode_ids)) {
+    return "for all clients";
+  }
+
+  // If empty array, it's "All clients"
+  if (alert.jobcode_ids.length === 0) {
+    return "for all clients";
+  }
+
+  // If single client, show the client name
+  if (alert.jobcode_ids.length === 1) {
+    const jobcodeId = alert.jobcode_ids[0];
+    const jobcode = userProfile.jobcodes && userProfile.jobcodes[jobcodeId];
+
+    if (jobcode) {
+      const clientName = jobcode.parent_path_name
+        ? jobcode.parent_path_name + jobcode.name
+        : jobcode.name;
+      return `for ${clientName}`;
+    } else {
+      return "for an unknown client";
+    }
+  }
+
+  // If multiple clients (future functionality)
+  return `(${alert.jobcode_ids.length} clients)`;
 }
 
 // Function to create an alert element
@@ -159,23 +200,21 @@ function createAlertElement(alert, userProfile) {
 
   const timeText = document.createElement("span");
   timeText.className = "text-sm font-medium";
-  timeText.textContent =
-    alert.time_in_seconds === 0
-      ? "Overtime"
-      : formatTime(alert.time_in_seconds);
+  timeText.textContent = formatTime(alert.time_in_seconds);
 
   timeSection.appendChild(timeText);
 
   // Alert type indicator
   const typeIndicator = document.createElement("span");
   typeIndicator.className = "text-sm font-medium ml-2";
-  
+
   let displayText = "";
   if (alert.type === "badge") {
     displayText = "Badge";
   } else if (alert.type === "sound_default" || alert.type === "sound_custom") {
     // Use display_name if available, otherwise fallback to formatted asset_reference
-    const soundName = alert.display_name || 
+    const soundName =
+      alert.display_name ||
       (alert.asset_reference || "Unknown")
         .replace(/_/g, " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
@@ -185,8 +224,10 @@ function createAlertElement(alert, userProfile) {
   } else {
     displayText = alert.type || "Unknown";
   }
-  
-  typeIndicator.textContent = displayText;
+
+  // Add client information to display text
+  const clientText = getClientDisplayText(alert, userProfile);
+  typeIndicator.textContent = `${displayText} ${clientText}`;
 
   // Delete button
   const deleteButton = document.createElement("button");
@@ -234,10 +275,9 @@ export async function populateSoundSelector() {
   try {
     // Add pre-packaged sounds
     await addPrePackagedSounds(soundSelector);
-    
+
     // Add custom sounds
     await addCustomSounds(soundSelector);
-    
   } catch (error) {
     console.error("Error populating sound selector:", error);
     // Fallback to a default sound if there's an error
@@ -305,7 +345,6 @@ async function addPrePackagedSounds(soundSelector) {
         .replace(/\b\w/g, (l) => l.toUpperCase());
       soundSelector.appendChild(option);
     });
-    
   } catch (error) {
     console.error("Error reading pre-packaged sounds:", error);
   }
@@ -318,7 +357,7 @@ async function addPrePackagedSounds(soundSelector) {
 async function addCustomSounds(soundSelector) {
   try {
     const customSounds = await getCustomSounds();
-    
+
     if (customSounds.length > 0) {
       // Add header for custom sounds
       const headerOption = document.createElement("option");
@@ -339,7 +378,6 @@ async function addCustomSounds(soundSelector) {
         soundSelector.appendChild(option);
       });
     }
-    
   } catch (error) {
     console.error("Error reading custom sounds:", error);
   }
@@ -351,11 +389,49 @@ async function addCustomSounds(soundSelector) {
  */
 async function getCustomSounds() {
   try {
-    const { getAllAudioFiles } = await import('/shared/audioStorage.js');
+    const { getAllAudioFiles } = await import("/shared/audioStorage.js");
     return await getAllAudioFiles();
   } catch (error) {
     console.error("Error getting custom sounds:", error);
     return [];
+  }
+}
+
+/**
+ * Populates the client selector dropdown with all available jobcodes
+ * @param {Object} userProfile - The user profile containing jobcodes
+ */
+export function populateClientSelector(userProfile) {
+  const clientSelector = document.getElementById("alert-client");
+  if (!clientSelector) return;
+
+  // Clear existing options except the default "All clients"
+  clientSelector.innerHTML = '<option value="">All clients</option>';
+
+  try {
+    let jobcodes = Object.values(userProfile.jobcodes) || [];
+
+    // Filter out jobcodes with children as these cannot have timesheets assigned
+    jobcodes = jobcodes.filter((jobcode) => !jobcode.has_children);
+
+    // Sort jobcodes by their full name (parent_path_name + name)
+    jobcodes.sort((a, b) => {
+      const nameA = (a.parent_path_name || "") + a.name;
+      const nameB = (b.parent_path_name || "") + b.name;
+      return nameA.localeCompare(nameB);
+    });
+
+    // Add each jobcode as an option
+    jobcodes.forEach((jobcode) => {
+      const option = document.createElement("option");
+      option.value = jobcode.id;
+      option.textContent = jobcode.parent_path_name
+        ? jobcode.parent_path_name + jobcode.name
+        : jobcode.name;
+      clientSelector.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error populating client selector:", error);
   }
 }
 
@@ -398,4 +474,74 @@ export function initializeAlertTypeSelector() {
       placeholderContainer.style.display = "block";
     }
   });
+}
+
+// Helper function to check if alert types match
+function alertTypesMatch(storedAlertType, formAlertType) {
+  // For sound alerts, stored type could be 'sound_default' or 'sound_custom'
+  // but form type is just 'sound'
+  if (formAlertType === "sound") {
+    return storedAlertType.includes("sound");
+  }
+  // For other types (badge, notification), they should match exactly
+  return storedAlertType === formAlertType;
+}
+
+/**
+ * Checks for conflicting alerts with client-aware logic
+ * @param {Array} alerts - Array of existing alerts
+ * @param {string} newAlertType - The form alert type (badge, sound, notification)
+ * @param {number} newAlertTimeInSeconds - The alert time in seconds
+ * @param {string} newAlertSelectedClient - The selected client ID (empty string for "All clients")
+ * @returns {string|null} - Error message if conflict exists, null if no conflict
+ */
+function checkForAlertConflicts(
+  existingAlerts,
+  newAlertType,
+  newAlertTimeInSeconds,
+  newAlertSelectedClient
+) {
+  if (!existingAlerts) return null;
+
+  const isNewAlertForAllClients = !newAlertSelectedClient;
+
+  // Check if there's already an "all clients" alert with same type and time
+  const existingAllClientsAlert = existingAlerts.find(
+    (alert) =>
+      alertTypesMatch(alert.type, newAlertType) &&
+      alert.time_in_seconds === newAlertTimeInSeconds &&
+      (!alert.jobcode_ids || alert.jobcode_ids.length === 0)
+  );
+
+  if (existingAllClientsAlert) {
+    return "You already have an alert of this type and this time for all clients. Please delete this alert first if you want to add a client-specific one.";
+  }
+
+  // If new alert is client-specific, check for any alert of the same type and time
+  if (!isNewAlertForAllClients) {
+    const clashingAlert = existingAlerts.find(
+      (alert) =>
+        alertTypesMatch(alert.type, newAlertType) &&
+        alert.time_in_seconds === newAlertTimeInSeconds
+    );
+
+    if (clashingAlert) {
+      return "You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.";
+    }
+  }
+
+  // If new alert is for all clients, check for any existingAlerts of same type and time
+  if (isNewAlertForAllClients) {
+    const existingClientSpecificAlert = existingAlerts.find(
+      (alert) =>
+        alertTypesMatch(alert.type, newAlertType) &&
+        alert.time_in_seconds === newAlertTimeInSeconds
+    );
+
+    if (existingClientSpecificAlert) {
+      return "You already have a client-specific alert of this type and this time. Please delete this alert first before adding a new one.";
+    }
+  }
+
+  return null; // No conflicts found
 }

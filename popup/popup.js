@@ -21,6 +21,7 @@ import {
   addNewAlert,
   populateAlerts,
   initializeAlertTypeSelector,
+  populateClientSelector,
 } from "/popup/alerts.js";
 import { initializeAudioUpload } from "/popup/audioUpload.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
@@ -174,6 +175,7 @@ async function updateUIWithUserProfile(userProfile) {
 
 
   populateAlerts(userProfile);
+  populateClientSelector(userProfile);
 
   renderAllClientsTable(userProfile);
 }
