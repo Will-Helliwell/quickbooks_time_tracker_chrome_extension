@@ -190,8 +190,8 @@
                             </select>
                         </div>
 
-                        <!-- Time Input -->
-                        <div class="flex gap-2">
+                        <!-- Time Input H:M:S Format -->
+                        <div class="flex gap-2" data-time-format-h-m-s>
                             <input type="number" id="alert-hours"
                                 class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="H" min="0">
@@ -201,6 +201,14 @@
                             <input type="number" id="alert-seconds"
                                 class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="S" min="0" max="59">
+                        </div>
+
+                        <!-- Time Input Hours Decimal Format -->
+                        <div class="flex gap-2 hidden" data-time-format-hours-decimal>
+                            <input type="number" id="alert-hours-decimal"
+                                class="w-20 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                placeholder="2.5" min="0" step="0.01">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 flex items-center">hours</span>
                         </div>
 
                         <!-- Client/Jobcode Selector -->
