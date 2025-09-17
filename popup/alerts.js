@@ -29,7 +29,9 @@ export async function addNewAlert(userProfile) {
     newAlertTimeInSeconds = timeInputData.timeInSeconds;
     hasTimeInput = timeInputData.hasInput;
   } else {
-    alert("Unknown time format in user preferences. Please check your settings.");
+    alert(
+      "Unknown time format in user preferences. Please check your settings."
+    );
     return;
   }
 
@@ -163,7 +165,8 @@ function getTimeInputHms() {
 
 // Helper function to get time input from hours decimal format
 function getTimeInputHoursDecimal() {
-  const hoursDecimal = parseFloat(document.getElementById("alert-hours-decimal").value) || 0;
+  const hoursDecimal =
+    parseFloat(document.getElementById("alert-hours-decimal").value) || 0;
 
   const timeInSeconds = Math.round(hoursDecimal * 3600); // Convert to seconds
 
@@ -248,13 +251,16 @@ function createAlertElement(alert, userProfile) {
 
   const timeFormats = formatTime(alert.time_in_seconds);
 
+  // Read user's time format preference to set correct visibility
+  const timeDisplayFormat = userProfile.preferences.time_display_format || "h:m:s";
+
   const timeDisplayHmsSpan = document.createElement("span");
-  timeDisplayHmsSpan.className = "text-sm font-medium";
+  timeDisplayHmsSpan.className = timeDisplayFormat === "h:m:s" ? "text-sm font-medium" : "text-sm font-medium hidden";
   timeDisplayHmsSpan.setAttribute("data-time-format-h-m-s", "");
   timeDisplayHmsSpan.textContent = timeFormats.hms;
 
   const timeDisplayHoursDecimalSpan = document.createElement("span");
-  timeDisplayHoursDecimalSpan.className = "text-sm font-medium hidden";
+  timeDisplayHoursDecimalSpan.className = timeDisplayFormat === "hours_decimal" ? "text-sm font-medium" : "text-sm font-medium hidden";
   timeDisplayHoursDecimalSpan.setAttribute(
     "data-time-format-hours-decimal",
     ""
