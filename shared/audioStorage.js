@@ -12,36 +12,7 @@
  * - Atomic operations for consistency
  */
 
-const DB_NAME = "AudioStorage";
-const DB_VERSION = 1;
-const STORE_NAME = "userAudio";
-
-/**
- * Initialize the IndexedDB database
- * @returns {Promise<IDBDatabase>} The database instance
- */
-async function initDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-
-      // Create object store if it doesn't exist
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-        // Index by userId for efficient user-scoped queries
-        store.createIndex("userId", "userId", { unique: false });
-        // Index by userId + name combination for duplicate checking
-        store.createIndex("userIdName", ["userId", "name"], { unique: true });
-        store.createIndex("uploadDate", "uploadDate", { unique: false });
-      }
-    };
-  });
-}
+import { getDB, STORES } from "./indexedDBManager.js";
 
 /**
  * Get current user ID from Chrome storage
@@ -68,11 +39,11 @@ export async function storeAudioFile(name, audioData, mimeType = "audio/mpeg") {
     throw new Error("No user logged in - cannot store audio file");
   }
 
-  const db = await initDB();
+  const db = await getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([STORES.USER_AUDIO], "readwrite");
+    const store = transaction.objectStore(STORES.USER_AUDIO);
 
     const audioRecord = {
       id: `${userId}_${name}_${Date.now()}`, // User-scoped unique ID
@@ -98,7 +69,6 @@ export async function storeAudioFile(name, audioData, mimeType = "audio/mpeg") {
       reject(request.error);
     };
 
-    transaction.oncomplete = () => db.close();
   });
 }
 
@@ -108,17 +78,16 @@ export async function storeAudioFile(name, audioData, mimeType = "audio/mpeg") {
  * @returns {Promise<Object|null>} The audio record or null if not found
  */
 export async function getAudioFile(id) {
-  const db = await initDB();
+  const db = await getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([STORES.USER_AUDIO], "readonly");
+    const store = transaction.objectStore(STORES.USER_AUDIO);
     const request = store.get(id);
 
     request.onsuccess = () => resolve(request.result || null);
     request.onerror = () => reject(request.error);
 
-    transaction.oncomplete = () => db.close();
   });
 }
 
@@ -132,18 +101,17 @@ export async function getAllAudioFiles() {
     return []; // Return empty array if no user logged in
   }
 
-  const db = await initDB();
+  const db = await getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([STORES.USER_AUDIO], "readonly");
+    const store = transaction.objectStore(STORES.USER_AUDIO);
     const index = store.index("userId");
     const request = index.getAll(userId);
 
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
 
-    transaction.oncomplete = () => db.close();
   });
 }
 
@@ -159,11 +127,11 @@ export async function deleteAudioFile(id) {
     throw new Error("No user logged in - cannot delete audio file");
   }
 
-  const db = await initDB();
+  const db = await getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([STORES.USER_AUDIO], "readwrite");
+    const store = transaction.objectStore(STORES.USER_AUDIO);
 
     // First verify the file belongs to current user
     const getRequest = store.get(id);
@@ -197,7 +165,6 @@ export async function deleteAudioFile(id) {
     };
 
     getRequest.onerror = () => reject(getRequest.error);
-    transaction.oncomplete = () => db.close();
   });
 }
 
@@ -212,18 +179,17 @@ export async function audioFileExists(name) {
     return false; // No user logged in, so no files exist for "current user"
   }
 
-  const db = await initDB();
+  const db = await getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([STORES.USER_AUDIO], "readonly");
+    const store = transaction.objectStore(STORES.USER_AUDIO);
     const index = store.index("userIdName");
     const request = index.get([userId, name]);
 
     request.onsuccess = () => resolve(request.result !== undefined);
     request.onerror = () => reject(request.error);
 
-    transaction.oncomplete = () => db.close();
   });
 }
 
