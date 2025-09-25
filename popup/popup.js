@@ -626,9 +626,9 @@ function setupJobcodeTimeAssignmentEditing() {
 
           // Check if edit form extends below the visible table area
           if (editFormRect.bottom > tableBodyRect.bottom) {
-            // Calculate how much to scroll down
+            // Calculate how much to scroll down - extra padding for when limit inputs expand
             const scrollAmount =
-              editFormRect.bottom - tableBodyRect.bottom + 20; // 20px padding
+              editFormRect.bottom - tableBodyRect.bottom + 60; // 120px padding for expanded inputs
             tableBody.scrollTop += scrollAmount;
           }
 
