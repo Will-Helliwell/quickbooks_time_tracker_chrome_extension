@@ -763,6 +763,13 @@ function setupJobcodeTimeAssignmentEditing() {
 
         // Hide the edit form
         editForm.classList.add("hidden");
+
+        // Trigger background polling to update badge display immediately
+        try {
+          await chrome.runtime.sendMessage({ action: "pollForActivity" });
+        } catch (error) {
+          console.error("Error sending pollForActivity message:", error);
+        }
       } catch (error) {
         console.error("Error updating assigned value:", error);
         // You could show an error message here
