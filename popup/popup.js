@@ -351,7 +351,7 @@ function renderAllClientsTable(userProfile) {
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto min-h-64 max-h-96 bg-white dark:bg-gray-700">`;
+      <div id="all-clients-table-body" class="overflow-y-auto min-h-40 max-h-96 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
     const secondsCompletedThisMonth =
@@ -527,6 +527,8 @@ function renderAllClientsTable(userProfile) {
   });
 
   allClientsTableHtml += `
+        <!-- Invisible spacer to ensure scroll room for edit forms -->
+        <div style="height: 120px;"></div>
       </div>
     </div>`;
 
@@ -626,16 +628,22 @@ function setupJobcodeTimeAssignmentEditing() {
 
           // Check if edit form extends below the visible table area
           if (editFormRect.bottom > tableBodyRect.bottom) {
+            console.log("Scrolling down to reveal edit form");
+
             // Calculate how much to scroll down - extra padding for when limit inputs expand
             const scrollAmount =
-              editFormRect.bottom - tableBodyRect.bottom + 60; // 120px padding for expanded inputs
+              editFormRect.bottom - tableBodyRect.bottom + 60;
+            console.log("Scroll amount:", scrollAmount);
+
             tableBody.scrollTop += scrollAmount;
           }
 
           // Check if edit form is above the visible table area
           if (editFormRect.top < tableBodyRect.top) {
+            console.log("Scrolling up to reveal edit form");
+
             // Calculate how much to scroll up
-            const scrollAmount = tableBodyRect.top - editFormRect.top + 20; // 20px padding
+            const scrollAmount = tableBodyRect.top - editFormRect.top + 20;
             tableBody.scrollTop -= scrollAmount;
           }
         }, 10); // Small delay to ensure form is fully rendered
