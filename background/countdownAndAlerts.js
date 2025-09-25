@@ -128,10 +128,6 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
   // render the badge text
   const userProfilePreferenceTimeDisplayFormat =
     userProfile.preferences.time_display_format;
-  console.log(
-    "userProfilePreferenceTimeDisplayFormat",
-    userProfilePreferenceTimeDisplayFormat
-  );
 
   const badgeDisplayText = returnBadgeDisplayText(
     seconds_remaining,

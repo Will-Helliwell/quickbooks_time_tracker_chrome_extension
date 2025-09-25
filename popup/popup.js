@@ -554,7 +554,8 @@ function getTimeAssignedInputHms(editForm) {
 
 // Helper function to get time input from hours decimal format in assigned time edit form
 function getTimeAssignedInputHoursDecimal(editForm) {
-  const hoursDecimal = parseFloat(editForm.querySelector(".hours-decimal-input").value) || 0;
+  const hoursDecimal =
+    parseFloat(editForm.querySelector(".hours-decimal-input").value) || 0;
   const timeInSeconds = Math.round(hoursDecimal * 3600);
   return timeInSeconds;
 }
@@ -619,7 +620,8 @@ function setupJobcodeTimeAssignmentEditing() {
 
         // Get user's time format preference to focus on the correct input
         const userProfile = AppState.getUserProfile();
-        const timeDisplayFormat = userProfile.preferences.time_display_format || "h:m:s";
+        const timeDisplayFormat =
+          userProfile.preferences.time_display_format || "h:m:s";
 
         let input;
         if (timeDisplayFormat === "h:m:s") {
@@ -661,21 +663,19 @@ function setupJobcodeTimeAssignmentEditing() {
     });
 
   // Update hidden input when decimal hours input changes
-  document
-    .querySelectorAll(".hours-decimal-input")
-    .forEach((input) => {
-      input.addEventListener("input", (e) => {
-        const editForm = e.target.closest(".edit-form");
-        const assignedInput = editForm.querySelector(".assigned-input");
+  document.querySelectorAll(".hours-decimal-input").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const editForm = e.target.closest(".edit-form");
+      const assignedInput = editForm.querySelector(".assigned-input");
 
-        // Ensure valid range
-        if (parseFloat(input.value) < 0) input.value = 0;
+      // Ensure valid range
+      if (parseFloat(input.value) < 0) input.value = 0;
 
-        // Calculate total seconds using helper function
-        const totalSeconds = getTimeAssignedInputHoursDecimal(editForm);
-        assignedInput.value = totalSeconds;
-      });
+      // Calculate total seconds using helper function
+      const totalSeconds = getTimeAssignedInputHoursDecimal(editForm);
+      assignedInput.value = totalSeconds;
     });
+  });
 
   // Save button click
   document.querySelectorAll(".save-assigned-btn").forEach((button) => {
@@ -941,9 +941,16 @@ async function initializeTimeDisplayFormat(userProfile) {
         time_display_format: newFormat,
       },
     };
-    overwriteUserProfileInStorage(updatedUserProfile);
+
     AppState.setUserProfile(updatedUserProfile);
     toggleTimeDisplayFormat(newFormat);
+    await overwriteUserProfileInStorage(updatedUserProfile);
+    // Trigger background polling to update badge display format
+    try {
+      await chrome.runtime.sendMessage({ action: "pollForActivity" });
+    } catch (error) {
+      console.error("Error sending pollForActivity message:", error);
+    }
   });
 }
 

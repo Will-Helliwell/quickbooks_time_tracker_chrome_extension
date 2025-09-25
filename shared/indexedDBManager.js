@@ -39,7 +39,6 @@ export async function getDB() {
 
     // Handle connection close/error events
     dbConnection.onclose = () => {
-      console.log("IndexedDB connection closed");
       dbConnection = null;
     };
 

@@ -88,14 +88,17 @@ export async function overwriteUserProfileInStorage(user) {
     return;
   }
 
-  chrome.storage.local.get("userProfiles", (data) => {
-    let userProfiles = data.userProfiles || {}; // Ensure it’s an object
+  return new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      let userProfiles = data.userProfiles || {}; // Ensure it's an object
 
-    // Overwrite the user profile with the same ID
-    userProfiles[user.id] = user;
+      // Overwrite the user profile with the same ID
+      userProfiles[user.id] = user;
 
-    chrome.storage.local.set({ userProfiles }, () => {
-      // console.log(`User profile saved for ID: ${user.id}`);
+      chrome.storage.local.set({ userProfiles }, () => {
+        // console.log(`User profile saved for ID: ${user.id}`);
+        resolve();
+      });
     });
   });
 }
