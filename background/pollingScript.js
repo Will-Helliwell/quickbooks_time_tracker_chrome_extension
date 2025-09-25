@@ -9,6 +9,7 @@ if (inTestMode) {
     }, 2000);
   });
 } else {
+  pollForActivity(); // Initial poll on startup
   chrome.runtime.onInstalled.addListener(() => {
     chrome.alarms.create("pollForActivity", {
       periodInMinutes: pollFrequencyMinutes,
