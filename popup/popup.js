@@ -351,7 +351,7 @@ function renderAllClientsTable(userProfile) {
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto min-h-40 max-h-96 bg-white dark:bg-gray-700">`;
+      <div id="all-clients-table-body" class="overflow-y-auto min-h-64 max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
     const secondsCompletedThisMonth =
