@@ -351,7 +351,7 @@ function renderAllClientsTable(userProfile) {
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto min-h-48 max-h-96 bg-white dark:bg-gray-700">`;
+      <div id="all-clients-table-body" class="overflow-y-auto min-h-64 max-h-96 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
     const secondsCompletedThisMonth =
@@ -542,6 +542,23 @@ function renderAllClientsTable(userProfile) {
   initializeColourTheme(userProfile);
 }
 
+// Dynamic popup expansion functions
+function expandPopupForEditForm() {
+  const body = document.body;
+  body.style.minHeight = "600px"; // Expand to accommodate edit forms
+  body.style.transition = "min-height 0.3s ease";
+}
+
+function contractPopupFromEditForm() {
+  const body = document.body;
+  // Check if any edit forms are still open
+  const openEditForms = document.querySelectorAll(".edit-form:not(.hidden)");
+  if (openEditForms.length === 0) {
+    body.style.minHeight = ""; // Return to natural height
+    body.style.transition = "min-height 0.3s ease";
+  }
+}
+
 // Helper function to get time input from H:M:S format in assigned time edit form
 function getTimeAssignedInputHms(editForm) {
   const hours = parseInt(editForm.querySelector(".hours-input").value) || 0;
@@ -596,7 +613,33 @@ function setupJobcodeTimeAssignmentEditing() {
       const editForm = e.target
         .closest(".job-assigned-container")
         .querySelector(".edit-form");
+      const wasHidden = editForm.classList.contains("hidden");
       editForm.classList.toggle("hidden");
+
+      // Auto-scroll to ensure edit form is visible
+      if (!editForm.classList.contains("hidden")) {
+        // Form is now visible, scroll it into view
+        setTimeout(() => {
+          const tableBody = document.getElementById("all-clients-table-body");
+          const editFormRect = editForm.getBoundingClientRect();
+          const tableBodyRect = tableBody.getBoundingClientRect();
+
+          // Check if edit form extends below the visible table area
+          if (editFormRect.bottom > tableBodyRect.bottom) {
+            // Calculate how much to scroll down
+            const scrollAmount =
+              editFormRect.bottom - tableBodyRect.bottom + 20; // 20px padding
+            tableBody.scrollTop += scrollAmount;
+          }
+
+          // Check if edit form is above the visible table area
+          if (editFormRect.top < tableBodyRect.top) {
+            // Calculate how much to scroll up
+            const scrollAmount = tableBodyRect.top - editFormRect.top + 20; // 20px padding
+            tableBody.scrollTop -= scrollAmount;
+          }
+        }, 10); // Small delay to ensure form is fully rendered
+      }
 
       // Focus on checkbox or input based on current state
       if (editForm.querySelector(".limit-checkbox").checked) {
@@ -764,6 +807,9 @@ function setupJobcodeTimeAssignmentEditing() {
         // Hide the edit form
         editForm.classList.add("hidden");
 
+        // Contract popup when edit form closes
+        contractPopupFromEditForm();
+
         // Trigger background polling to update badge display immediately
         try {
           await chrome.runtime.sendMessage({ action: "pollForActivity" });
@@ -783,6 +829,9 @@ function setupJobcodeTimeAssignmentEditing() {
       e.stopPropagation();
       const editForm = button.closest(".edit-form");
       editForm.classList.add("hidden");
+
+      // Contract popup when edit form closes
+      contractPopupFromEditForm();
     });
   });
 
@@ -795,6 +844,9 @@ function setupJobcodeTimeAssignmentEditing() {
       document.querySelectorAll(".edit-form").forEach((form) => {
         form.classList.add("hidden");
       });
+
+      // Contract popup when all edit forms close
+      contractPopupFromEditForm();
     }
   });
 }
