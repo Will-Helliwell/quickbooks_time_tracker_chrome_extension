@@ -126,20 +126,56 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
   }
 
   // render the badge text
+  const userProfilePreferenceTimeDisplayFormat =
+    userProfile.preferences.time_display_format;
+  console.log(
+    "userProfilePreferenceTimeDisplayFormat",
+    userProfilePreferenceTimeDisplayFormat
+  );
+
+  const badgeDisplayText = returnBadgeDisplayText(
+    seconds_remaining,
+    userProfilePreferenceTimeDisplayFormat
+  );
+
+  chrome.action.setBadgeText({ text: badgeDisplayText });
+}
+
+function returnBadgeDisplayText(seconds_remaining, time_format) {
   let displayText;
-  if (seconds_remaining >= 3600) {
-    const hours = (seconds_remaining / 3600).toFixed(1);
-    displayText = `${hours}h`;
-  } else if (seconds_remaining >= 60) {
-    const minutes = Math.ceil(seconds_remaining / 60);
-    displayText = `${minutes}m`;
-  } else if (seconds_remaining > 0) {
-    displayText = `${seconds_remaining}s`;
-  } else {
-    displayText = "over";
+
+  if (seconds_remaining <= 0) {
+    return "over";
   }
 
-  chrome.action.setBadgeText({ text: displayText });
+  if (time_format == "h:m:s") {
+    // greater than 1 hour
+    if (seconds_remaining >= 3600) {
+      const hours = (seconds_remaining / 3600).toFixed(1);
+      displayText = `${hours}h`;
+      // greater than 1 minute
+    } else if (seconds_remaining >= 60) {
+      const minutes = Math.ceil(seconds_remaining / 60);
+      displayText = `${minutes}m`;
+      // less than 1 minute
+    } else if (seconds_remaining > 0) {
+      displayText = `${seconds_remaining}s`;
+    }
+  }
+
+  if (time_format == "hours_decimal") {
+    // greater than 1 hour, display 'x.xh'
+    if (seconds_remaining >= 3600) {
+      const hoursDecimal = (seconds_remaining / 3600).toFixed(1);
+      displayText = `${hoursDecimal}h`;
+      // less than 1 hour, display '.xxh'
+    } else {
+      const hoursDecimal = (seconds_remaining / 3600).toFixed(2);
+      displayText = `${hoursDecimal.substring(1)}h`;
+    }
+  }
+
+  return displayText;
 }
 
 /**
