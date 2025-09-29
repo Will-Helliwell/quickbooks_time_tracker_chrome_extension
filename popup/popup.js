@@ -323,7 +323,7 @@ function updateUserUI(user) {
  * @param {Object} userProfile - The user profile object containing user and jobcode information
  * @returns {void}
  */
-function renderAllClientsTable(userProfile) {
+function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
   let jobcodes = Object.values(userProfile.jobcodes) || [];
 
   // filter out any jobcodes with children as these cannot have timesheets assigned
@@ -335,6 +335,16 @@ function renderAllClientsTable(userProfile) {
   // Filter jobcodes if showing favorites only
   if (showFavoritesOnly) {
     jobcodes = jobcodes.filter((jobcode) => jobcode.is_favourite);
+  }
+
+  // Filter jobcodes based on search term (case-insensitive)
+  if (allClientsTableSearchTerm.trim() !== "") {
+    const searchTermLower = allClientsTableSearchTerm.toLowerCase();
+    jobcodes = jobcodes.filter((jobcode) =>
+      (jobcode.parent_path_name + jobcode.name)
+        .toLowerCase()
+        .includes(searchTermLower)
+    );
   }
 
   let allClientsTableHtml = `
