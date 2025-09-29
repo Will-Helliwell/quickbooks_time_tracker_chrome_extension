@@ -920,18 +920,14 @@ function setupFavoriteButtons() {
 
 function setupFavoritesToggle() {
   const toggle = document.getElementById("favorites-toggle");
-  toggle.addEventListener("change", async () => {
-    const currentLoginDetails = await getLoginDetailsFromLocalStorage();
-    const currentUserId = currentLoginDetails.currentUserId;
+  toggle.addEventListener("change", () => {
+    const userProfile = AppState.getUserProfile();
 
-    chrome.storage.local.get("userProfiles", (data) => {
-      const allCLientsTableSearchTerm =
-        document.getElementById("client-search").value;
-      renderAllClientsTable(
-        data.userProfiles[currentUserId] || {},
-        allCLientsTableSearchTerm
-      );
-    });
+    if (!userProfile) return;
+
+    const allCLientsTableSearchTerm =
+      document.getElementById("client-search").value;
+    renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
   });
 }
 
