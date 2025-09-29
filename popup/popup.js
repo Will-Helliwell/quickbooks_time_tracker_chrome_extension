@@ -873,17 +873,28 @@ function setupFavoriteButtons() {
     button.addEventListener("click", async (e) => {
       e.stopPropagation();
       const jobcodeId = button.getAttribute("data-jobcode-id");
-      const currentLoginDetails = await getLoginDetailsFromLocalStorage();
-      const currentUserId = currentLoginDetails.currentUserId;
+      const userProfile = AppState.getUserProfile();
 
-      chrome.storage.local.get("userProfiles", (data) => {
-        const userProfiles = data.userProfiles || {};
-        const userProfile = userProfiles[currentUserId] || {};
-        const jobcodes = userProfile.jobcodes || {};
+      if (!userProfile) return;
 
-        if (jobcodes[jobcodeId]) {
-          jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
+      const jobcodes = userProfile.jobcodes || {};
 
+      if (jobcodes[jobcodeId]) {
+        jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
+
+        // Update AppState
+        const updatedUserProfile = {
+          ...userProfile,
+          jobcodes,
+        };
+        AppState.setUserProfile(updatedUserProfile);
+
+        // Update local storage
+        const currentLoginDetails = await getLoginDetailsFromLocalStorage();
+        const currentUserId = currentLoginDetails.currentUserId;
+
+        chrome.storage.local.get("userProfiles", (data) => {
+          const userProfiles = data.userProfiles || {};
           chrome.storage.local.set(
             {
               userProfiles: {
@@ -898,11 +909,11 @@ function setupFavoriteButtons() {
               // Re-render the table to reflect changes
               const allCLientsTableSearchTerm =
                 document.getElementById("client-search").value;
-              renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
+              renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
             }
           );
-        }
-      });
+        });
+      }
     });
   });
 }
