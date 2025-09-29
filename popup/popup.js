@@ -1003,6 +1003,7 @@ async function initializeColourTheme(userProfile) {
         theme_choice: newThemeChoice,
       },
     };
+    AppState.setUserProfile(updatedUserProfile);
     overwriteUserProfileInStorage(updatedUserProfile);
     applyTheme(newThemeChoice);
   });
