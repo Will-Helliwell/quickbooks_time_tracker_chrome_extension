@@ -50,6 +50,7 @@ export async function updateUserProfileFromAPI() {
     userProfileAPI.jobcodes = {}; // add jobcodes to the user profile
     userProfileAPI.preferences = {}; // initialize preferences
     userProfileAPI.preferences.theme_choice = "light"; // add theme_choice to the user profile
+    userProfileAPI.preferences.time_display_format = "h:m:s"; // default time format
     userProfileAPI.preferences.alerts = []; // initialize alerts as an array
     overwriteUserProfileInStorage(userProfileAPI);
     return userProfileAPI;
@@ -87,14 +88,17 @@ export async function overwriteUserProfileInStorage(user) {
     return;
   }
 
-  chrome.storage.local.get("userProfiles", (data) => {
-    let userProfiles = data.userProfiles || {}; // Ensure it’s an object
+  return new Promise((resolve) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      let userProfiles = data.userProfiles || {}; // Ensure it's an object
 
-    // Overwrite the user profile with the same ID
-    userProfiles[user.id] = user;
+      // Overwrite the user profile with the same ID
+      userProfiles[user.id] = user;
 
-    chrome.storage.local.set({ userProfiles }, () => {
-      // console.log(`User profile saved for ID: ${user.id}`);
+      chrome.storage.local.set({ userProfiles }, () => {
+        // console.log(`User profile saved for ID: ${user.id}`);
+        resolve();
+      });
     });
   });
 }

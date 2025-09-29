@@ -9,6 +9,7 @@ if (inTestMode) {
     }, 2000);
   });
 } else {
+  pollForActivity(); // Initial poll on startup
   chrome.runtime.onInstalled.addListener(() => {
     chrome.alarms.create("pollForActivity", {
       periodInMinutes: pollFrequencyMinutes,
@@ -22,9 +23,16 @@ if (inTestMode) {
   });
 }
 
-async function pollForActivity() {
-  // console.log("Polling for activity...");
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === "pollForActivity") {
+    pollForActivity();
+    sendResponse({ success: true });
+  }
+  return false; // Don't keep the message channel open
+});
 
+async function pollForActivity() {
   const currentUserId = await getCurrentUserIdFromLoginDetails();
 
   // exit early if no user is logged in

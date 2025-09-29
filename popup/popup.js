@@ -25,28 +25,12 @@ import {
 } from "/popup/alerts.js";
 import { initializeAudioUpload } from "/popup/audioUpload.js";
 import { getCurrentDate, isDateInCurrentMonth } from "/shared/dateUtils.js";
-import { formatSecondsToTime, formatStartEndTime } from "/shared/formatting.js";
-
-// Global application state
-const AppState = {
-  userProfile: null,
-
-  /**
-   * Sets the user profile in global state
-   * @param {Object} profile - The user profile object
-   */
-  setUserProfile(profile) {
-    this.userProfile = profile;
-  },
-
-  /**
-   * Gets the user profile from global state
-   * @returns {Object|null} The user profile object or null if not set
-   */
-  getUserProfile() {
-    return this.userProfile;
-  },
-};
+import {
+  formatSecondsToTime,
+  formatStartEndTime,
+  formatSecondsToHoursDecimal,
+} from "/shared/formatting.js";
+import { AppState } from "/shared/appState.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -131,7 +115,7 @@ async function handlePopupOpen() {
   // Handle add alert button click
   const addAlertButton = document.getElementById("add-alert");
   if (addAlertButton) {
-    addAlertButton.addEventListener("click", () => addNewAlert(userProfile));
+    addAlertButton.addEventListener("click", () => addNewAlert());
   }
   initializeAlertTypeSelector();
 
@@ -172,7 +156,6 @@ async function updateUIWithUserProfile(userProfile) {
       button.classList.remove("text-black", "font-bold");
     }
   });
-
 
   populateAlerts(userProfile);
   populateClientSelector(userProfile);
@@ -244,8 +227,19 @@ async function updateUIWithActiveRecording(userProfile) {
       const activeJobcodeSecondsRemaining =
         activeJobcodeSecondsAssigned - activeJobcodeSecondsCompletedThisMonth;
 
+      // grab the relevant elements
       const remainingElement = jobRow.querySelector(".job-remaining");
       const completedElement = jobRow.querySelector(".job-completed");
+      const timeRemainingDisplayHmsSpan = remainingElement.querySelector(
+        "[data-time-format-h-m-s]"
+      );
+      const timeRemainingDisplayHoursDecimalSpan =
+        remainingElement.querySelector("[data-time-format-hours-decimal]");
+      const timeCompletedDisplayHmsSpan = completedElement.querySelector(
+        "[data-time-format-h-m-s]"
+      );
+      const timeCompletedDisplayHoursDecimalSpan =
+        completedElement.querySelector("[data-time-format-hours-decimal]");
 
       // highlight the row
       jobRow.classList.add("bg-blue-100");
@@ -269,13 +263,22 @@ async function updateUIWithActiveRecording(userProfile) {
       const newCompletedSeconds =
         activeJobcodeSecondsCompletedThisMonth + totalCurrentSessionSeconds;
 
-      // Update the displays
-      remainingElement.textContent = formatSecondsToTime(newRemainingSeconds);
-      completedElement.textContent = formatSecondsToTime(newCompletedSeconds);
+      // Update the time displays
+      timeRemainingDisplayHmsSpan.textContent =
+        formatSecondsToTime(newRemainingSeconds);
+      timeRemainingDisplayHoursDecimalSpan.textContent =
+        formatSecondsToHoursDecimal(newRemainingSeconds);
+      timeCompletedDisplayHmsSpan.textContent =
+        formatSecondsToTime(newCompletedSeconds);
+      timeCompletedDisplayHoursDecimalSpan.textContent =
+        formatSecondsToHoursDecimal(newCompletedSeconds);
 
       // start counting down the remaining time
       startLiveCountdown(newRemainingSeconds, (remainingSeconds) => {
-        remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+        timeRemainingDisplayHmsSpan.textContent =
+          formatSecondsToTime(remainingSeconds);
+        timeRemainingDisplayHoursDecimalSpan.textContent =
+          formatSecondsToHoursDecimal(remainingSeconds);
         updateRemainingTimeStyle(
           remainingElement,
           remainingSeconds,
@@ -285,7 +288,10 @@ async function updateUIWithActiveRecording(userProfile) {
 
       // start counting up the completed time
       startLiveCountup(newCompletedSeconds, (completedSeconds) => {
-        completedElement.textContent = formatSecondsToTime(completedSeconds);
+        timeCompletedDisplayHmsSpan.textContent =
+          formatSecondsToTime(completedSeconds);
+        timeCompletedDisplayHoursDecimalSpan.textContent =
+          formatSecondsToHoursDecimal(completedSeconds);
       });
 
       // Update styling
@@ -345,28 +351,37 @@ function renderAllClientsTable(userProfile) {
       </div>
       
       <!-- Scrollable body -->
-      <div id="all-clients-table-body" class="overflow-y-auto max-h-64 bg-white dark:bg-gray-700">`;
+      <div id="all-clients-table-body" class="overflow-y-auto min-h-64 max-h-64 bg-white dark:bg-gray-700">`;
 
   jobcodes.forEach((jobcode) => {
     const secondsCompletedThisMonth =
       calculateSecondsCompletedThisMonth(jobcode);
 
     // Display friendly text for null values
-    const assignedValue =
+    const timeAssignedDisplayHms =
       jobcode.seconds_assigned !== null
         ? formatSecondsToTime(jobcode.seconds_assigned)
+        : "No limit";
+    const timeAssignedDisplayHoursDecimal =
+      jobcode.seconds_assigned !== null
+        ? formatSecondsToHoursDecimal(jobcode.seconds_assigned)
         : "No limit";
     const valueClass =
       jobcode.seconds_assigned !== null ? "" : "text-gray-500 italic";
 
     // Calculate remaining time (only if there's an assigned limit)
-    let remainingFormatted, remainingClass, remainingSeconds;
+    let timeRemainingDisplayHms,
+      timeRemainingDisplayHoursDecimal,
+      remainingClass,
+      remainingSeconds;
     if (jobcode.seconds_assigned !== null) {
       remainingSeconds = Math.max(
         0,
         jobcode.seconds_assigned - secondsCompletedThisMonth
       );
-      remainingFormatted = formatSecondsToTime(remainingSeconds);
+      timeRemainingDisplayHms = formatSecondsToTime(remainingSeconds);
+      timeRemainingDisplayHoursDecimal =
+        formatSecondsToHoursDecimal(remainingSeconds);
 
       // Add warning classes if getting low on time
       if (remainingSeconds === 0) {
@@ -382,7 +397,8 @@ function renderAllClientsTable(userProfile) {
       }
     } else {
       remainingSeconds = null;
-      remainingFormatted = "∞"; // Infinity symbol for unlimited
+      timeRemainingDisplayHms = "∞"; // Infinity symbol for unlimited
+      timeRemainingDisplayHoursDecimal = "∞"; // Infinity symbol for unlimited
       remainingClass = "text-gray-500 italic";
     }
 
@@ -404,18 +420,24 @@ function renderAllClientsTable(userProfile) {
         <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
-        <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">${formatSecondsToTime(
-      secondsCompletedThisMonth
-    )}</div>
+        <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">
+          <span data-time-format-h-m-s>${formatSecondsToTime(
+            secondsCompletedThisMonth
+          )}</span>
+          <span data-time-format-hours-decimal class="hidden">${formatSecondsToHoursDecimal(
+            secondsCompletedThisMonth
+          )}</span>
+        </div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
-            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}" 
+            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}"
                   data-value="${
                     jobcode.seconds_assigned !== null
                       ? jobcode.seconds_assigned
                       : ""
                   }">
-              ${assignedValue}
+              <span data-time-format-h-m-s>${timeAssignedDisplayHms}</span>
+              <span data-time-format-hours-decimal class="hidden">${timeAssignedDisplayHoursDecimal}</span>
             </span>
             <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none" data-jobcode-id="${
               jobcode.id
@@ -437,10 +459,11 @@ function renderAllClientsTable(userProfile) {
             <div class="limit-input-container ${
               jobcode.seconds_assigned === null ? "hidden" : ""
             }">
-              <div class="flex space-x-2 mb-2">
+              <!-- H:M:S Format Input -->
+              <div class="flex space-x-2 mb-2" data-time-format-h-m-s>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Hours</label>
-                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(jobcode.seconds_assigned / 3600)
@@ -449,7 +472,7 @@ function renderAllClientsTable(userProfile) {
                 </div>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Minutes</label>
-                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(
@@ -460,7 +483,7 @@ function renderAllClientsTable(userProfile) {
                 </div>
                 <div class="flex-1">
                   <label class="text-xs text-gray-600">Seconds</label>
-                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm" 
+                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? jobcode.seconds_assigned % 60
@@ -468,6 +491,20 @@ function renderAllClientsTable(userProfile) {
                          }">
                 </div>
               </div>
+
+              <!-- Hours Decimal Format Input -->
+              <div class="hidden flex space-x-2 mb-2" data-time-format-hours-decimal>
+                <div class="flex-1">
+                  <label class="text-xs text-gray-600">Hours (Decimal)</label>
+                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border rounded text-sm"
+                         value="${
+                           jobcode.seconds_assigned !== null
+                             ? (jobcode.seconds_assigned / 3600).toFixed(2)
+                             : "0"
+                         }" placeholder="2.5">
+                </div>
+              </div>
+
               <input type="hidden" class="assigned-input" value="${
                 jobcode.seconds_assigned !== null
                   ? jobcode.seconds_assigned
@@ -482,11 +519,16 @@ function renderAllClientsTable(userProfile) {
             </div>
           </div>
         </div>
-        <div class="job-remaining p-2 w-28 text-left ${remainingClass}" data-remaining="${remainingSeconds}">${remainingFormatted}</div>
+        <div class="job-remaining p-2 w-28 text-left ${remainingClass}" data-remaining="${remainingSeconds}">
+          <span data-time-format-h-m-s>${timeRemainingDisplayHms}</span>
+          <span data-time-format-hours-decimal class="hidden">${timeRemainingDisplayHoursDecimal}</span>
+        </div>
       </div>`;
   });
 
   allClientsTableHtml += `
+        <!-- Invisible spacer to ensure scroll room for edit forms -->
+        <div style="height: 120px;"></div>
       </div>
     </div>`;
 
@@ -500,6 +542,41 @@ function renderAllClientsTable(userProfile) {
 
   updateActiveRecordingUIWithLatestUserProfile();
   initializeColourTheme(userProfile);
+}
+
+// Dynamic popup expansion functions
+function expandPopupForEditForm() {
+  const body = document.body;
+  body.style.minHeight = "600px"; // Expand to accommodate edit forms
+  body.style.transition = "min-height 0.3s ease";
+}
+
+function contractPopupFromEditForm() {
+  const body = document.body;
+  // Check if any edit forms are still open
+  const openEditForms = document.querySelectorAll(".edit-form:not(.hidden)");
+  if (openEditForms.length === 0) {
+    body.style.minHeight = ""; // Return to natural height
+    body.style.transition = "min-height 0.3s ease";
+  }
+}
+
+// Helper function to get time input from H:M:S format in assigned time edit form
+function getTimeAssignedInputHms(editForm) {
+  const hours = parseInt(editForm.querySelector(".hours-input").value) || 0;
+  const minutes = parseInt(editForm.querySelector(".minutes-input").value) || 0;
+  const seconds = parseInt(editForm.querySelector(".seconds-input").value) || 0;
+
+  const timeInSeconds = hours * 3600 + minutes * 60 + seconds;
+  return timeInSeconds;
+}
+
+// Helper function to get time input from hours decimal format in assigned time edit form
+function getTimeAssignedInputHoursDecimal(editForm) {
+  const hoursDecimal =
+    parseFloat(editForm.querySelector(".hours-decimal-input").value) || 0;
+  const timeInSeconds = Math.round(hoursDecimal * 3600);
+  return timeInSeconds;
 }
 
 /**
@@ -538,7 +615,39 @@ function setupJobcodeTimeAssignmentEditing() {
       const editForm = e.target
         .closest(".job-assigned-container")
         .querySelector(".edit-form");
+      const wasHidden = editForm.classList.contains("hidden");
       editForm.classList.toggle("hidden");
+
+      // Auto-scroll to ensure edit form is visible
+      if (!editForm.classList.contains("hidden")) {
+        // Form is now visible, scroll it into view
+        setTimeout(() => {
+          const tableBody = document.getElementById("all-clients-table-body");
+          const editFormRect = editForm.getBoundingClientRect();
+          const tableBodyRect = tableBody.getBoundingClientRect();
+
+          // Check if edit form extends below the visible table area
+          if (editFormRect.bottom > tableBodyRect.bottom) {
+            console.log("Scrolling down to reveal edit form");
+
+            // Calculate how much to scroll down - extra padding for when limit inputs expand
+            const scrollAmount =
+              editFormRect.bottom - tableBodyRect.bottom + 60;
+            console.log("Scroll amount:", scrollAmount);
+
+            tableBody.scrollTop += scrollAmount;
+          }
+
+          // Check if edit form is above the visible table area
+          if (editFormRect.top < tableBodyRect.top) {
+            console.log("Scrolling up to reveal edit form");
+
+            // Calculate how much to scroll up
+            const scrollAmount = tableBodyRect.top - editFormRect.top + 20;
+            tableBody.scrollTop -= scrollAmount;
+          }
+        }, 10); // Small delay to ensure form is fully rendered
+      }
 
       // Focus on checkbox or input based on current state
       if (editForm.querySelector(".limit-checkbox").checked) {
@@ -558,16 +667,29 @@ function setupJobcodeTimeAssignmentEditing() {
       inputContainer.classList.toggle("hidden", !e.target.checked);
 
       if (e.target.checked) {
-        const input = e.target
-          .closest(".edit-form")
-          .querySelector(".hours-input");
-        input.focus();
-        input.select();
+        const editForm = e.target.closest(".edit-form");
+
+        // Get user's time format preference to focus on the correct input
+        const userProfile = AppState.getUserProfile();
+        const timeDisplayFormat =
+          userProfile.preferences.time_display_format || "h:m:s";
+
+        let input;
+        if (timeDisplayFormat === "h:m:s") {
+          input = editForm.querySelector(".hours-input");
+        } else {
+          input = editForm.querySelector(".hours-decimal-input");
+        }
+
+        if (input) {
+          input.focus();
+          input.select();
+        }
       }
     });
   });
 
-  // Update hidden input when time inputs change
+  // Update hidden input when H:M:S time inputs change
   document
     .querySelectorAll(".hours-input, .minutes-input, .seconds-input")
     .forEach((input) => {
@@ -585,15 +707,26 @@ function setupJobcodeTimeAssignmentEditing() {
         if (parseInt(secondsInput.value) < 0) secondsInput.value = 0;
         if (parseInt(hoursInput.value) < 0) hoursInput.value = 0;
 
-        // Calculate total seconds
-        const hours = parseInt(hoursInput.value) || 0;
-        const minutes = parseInt(minutesInput.value) || 0;
-        const seconds = parseInt(secondsInput.value) || 0;
-
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        // Calculate total seconds using helper function
+        const totalSeconds = getTimeAssignedInputHms(editForm);
         assignedInput.value = totalSeconds;
       });
     });
+
+  // Update hidden input when decimal hours input changes
+  document.querySelectorAll(".hours-decimal-input").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const editForm = e.target.closest(".edit-form");
+      const assignedInput = editForm.querySelector(".assigned-input");
+
+      // Ensure valid range
+      if (parseFloat(input.value) < 0) input.value = 0;
+
+      // Calculate total seconds using helper function
+      const totalSeconds = getTimeAssignedInputHoursDecimal(editForm);
+      assignedInput.value = totalSeconds;
+    });
+  });
 
   // Save button click
   document.querySelectorAll(".save-assigned-btn").forEach((button) => {
@@ -619,11 +752,25 @@ function setupJobcodeTimeAssignmentEditing() {
         // Update the assigned value display
         const assignedSpan = jobRow.querySelector(".job-assigned-value");
         if (newValue !== null) {
-          assignedSpan.textContent = formatSecondsToTime(newValue);
+          const timeAssignedDisplayHmsSpan = assignedSpan.querySelector(
+            "[data-time-format-h-m-s]"
+          );
+          const timeAssignedDisplayHoursDecimalSpan =
+            assignedSpan.querySelector("[data-time-format-hours-decimal]");
+          timeAssignedDisplayHmsSpan.textContent =
+            formatSecondsToTime(newValue);
+          timeAssignedDisplayHoursDecimalSpan.textContent =
+            formatSecondsToHoursDecimal(newValue);
           assignedSpan.classList.remove("text-gray-500", "italic");
           assignedSpan.setAttribute("data-value", newValue);
         } else {
-          assignedSpan.textContent = "No limit";
+          const timeAssignedDisplayHmsSpan = assignedSpan.querySelector(
+            "[data-time-format-h-m-s]"
+          );
+          const timeAssignedDisplayHoursDecimalSpan =
+            assignedSpan.querySelector("[data-time-format-hours-decimal]");
+          timeAssignedDisplayHmsSpan.textContent = "No limit";
+          timeAssignedDisplayHoursDecimalSpan.textContent = "No limit";
           assignedSpan.classList.add("text-gray-500", "italic");
           assignedSpan.setAttribute("data-value", "");
         }
@@ -637,7 +784,15 @@ function setupJobcodeTimeAssignmentEditing() {
 
         if (newValue !== null) {
           const remainingSeconds = Math.max(0, newValue - completedSeconds);
-          remainingElement.textContent = formatSecondsToTime(remainingSeconds);
+          const timeRemainingDisplayHmsSpan = remainingElement.querySelector(
+            "[data-time-format-h-m-s]"
+          );
+          const timeRemainingDisplayHoursDecimalSpan =
+            remainingElement.querySelector("[data-time-format-hours-decimal]");
+          timeRemainingDisplayHmsSpan.textContent =
+            formatSecondsToTime(remainingSeconds);
+          timeRemainingDisplayHoursDecimalSpan.textContent =
+            formatSecondsToHoursDecimal(remainingSeconds);
 
           // Update styling based on remaining time
           updateRemainingTimeStyle(
@@ -646,13 +801,29 @@ function setupJobcodeTimeAssignmentEditing() {
             completedSeconds
           );
         } else {
-          remainingElement.textContent = "∞";
+          const timeRemainingDisplayHmsSpan = remainingElement.querySelector(
+            "[data-time-format-h-m-s]"
+          );
+          const timeRemainingDisplayHoursDecimalSpan =
+            remainingElement.querySelector("[data-time-format-hours-decimal]");
+          timeRemainingDisplayHmsSpan.textContent = "∞";
+          timeRemainingDisplayHoursDecimalSpan.textContent = "∞";
           remainingElement.className =
             "job-remaining p-2 w-28 text-left text-gray-500 italic";
         }
 
         // Hide the edit form
         editForm.classList.add("hidden");
+
+        // Contract popup when edit form closes
+        contractPopupFromEditForm();
+
+        // Trigger background polling to update badge display immediately
+        try {
+          await chrome.runtime.sendMessage({ action: "pollForActivity" });
+        } catch (error) {
+          console.error("Error sending pollForActivity message:", error);
+        }
       } catch (error) {
         console.error("Error updating assigned value:", error);
         // You could show an error message here
@@ -666,6 +837,9 @@ function setupJobcodeTimeAssignmentEditing() {
       e.stopPropagation();
       const editForm = button.closest(".edit-form");
       editForm.classList.add("hidden");
+
+      // Contract popup when edit form closes
+      contractPopupFromEditForm();
     });
   });
 
@@ -678,6 +852,9 @@ function setupJobcodeTimeAssignmentEditing() {
       document.querySelectorAll(".edit-form").forEach((form) => {
         form.classList.add("hidden");
       });
+
+      // Contract popup when all edit forms close
+      contractPopupFromEditForm();
     }
   });
 }
@@ -801,6 +978,47 @@ async function initializeColourTheme(userProfile) {
     overwriteUserProfileInStorage(updatedUserProfile);
     applyTheme(newThemeChoice);
   });
+
+  // Initialize time display format toggle
+  initializeTimeDisplayFormat(userProfile);
+}
+
+/**
+ * Initializes the time display format toggle and applies the preference stored locally
+ * @param {Object} userProfile - The user profile containing preferences
+ */
+async function initializeTimeDisplayFormat(userProfile) {
+  const timeFormatToggle = document.getElementById("time-format-toggle");
+  const userPreferences = userProfile.preferences;
+  const timeDisplayFormat = userPreferences.time_display_format || "h:m:s";
+
+  // Set initial toggle state (checked = hours_decimal, unchecked = h:m:s)
+  timeFormatToggle.checked = timeDisplayFormat === "hours_decimal";
+
+  // Apply the current format
+  toggleTimeDisplayFormat(timeDisplayFormat);
+
+  // Add event listener for toggle
+  timeFormatToggle.addEventListener("change", async () => {
+    const newFormat = timeFormatToggle.checked ? "hours_decimal" : "h:m:s";
+    const updatedUserProfile = {
+      ...userProfile,
+      preferences: {
+        ...userPreferences,
+        time_display_format: newFormat,
+      },
+    };
+
+    AppState.setUserProfile(updatedUserProfile);
+    toggleTimeDisplayFormat(newFormat);
+    await overwriteUserProfileInStorage(updatedUserProfile);
+    // Trigger background polling to update badge display format
+    try {
+      await chrome.runtime.sendMessage({ action: "pollForActivity" });
+    } catch (error) {
+      console.error("Error sending pollForActivity message:", error);
+    }
+  });
 }
 
 /**
@@ -821,6 +1039,30 @@ function applyTheme(themeName) {
   } else {
     html.classList.remove("dark");
   }
+}
+
+/**
+ * Toggles all time displays between h:m:s and hours_decimal formats
+ * @param {string} newFormat - Either 'h:m:s' or 'hours_decimal'
+ */
+function toggleTimeDisplayFormat(newFormat) {
+  // Hide all current format displays
+  const currentElements = document.querySelectorAll(
+    "[data-time-format-h-m-s], [data-time-format-hours-decimal]"
+  );
+  currentElements.forEach((element) => {
+    element.classList.add("hidden");
+  });
+
+  // Show elements matching the new format
+  const targetAttribute =
+    newFormat === "h:m:s"
+      ? "data-time-format-h-m-s"
+      : "data-time-format-hours-decimal";
+  const targetElements = document.querySelectorAll(`[${targetAttribute}]`);
+  targetElements.forEach((element) => {
+    element.classList.remove("hidden");
+  });
 }
 
 // **
@@ -912,6 +1154,9 @@ function showClientInfoView(jobcodeId) {
 
   // Render the timesheets table
   renderTimesheetsTable(recentTimesheets);
+  toggleTimeDisplayFormat(
+    userProfile.preferences.time_display_format || "h:m:s"
+  );
 }
 
 function hideClientInfoView() {
@@ -994,7 +1239,10 @@ function renderTimesheetsTable(timesheets) {
   timesheets.forEach((timesheet) => {
     const formattedStart = formatStartEndTime(timesheet.start);
     const formattedEnd = formatStartEndTime(timesheet.end);
-    const formattedDuration = formatSecondsToTime(timesheet.duration);
+    const timeDurationDisplayHms = formatSecondsToTime(timesheet.duration);
+    const timeDurationDisplayHoursDecimal = formatSecondsToHoursDecimal(
+      timesheet.duration
+    );
     const notes = timesheet.notes || "No notes";
 
     // Cap notes at 25 characters and add ellipsis if needed
@@ -1006,7 +1254,10 @@ function renderTimesheetsTable(timesheets) {
       <div class="flex w-full hover:bg-gray-50 dark:hover:bg-gray-600 group text-gray-900 dark:text-white">
         <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
         <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
-        <div class="p-3 text-sm" style="width: 15%;">${formattedDuration}</div>
+        <div class="p-3 text-sm" style="width: 15%;">
+          <span data-time-format-h-m-s>${timeDurationDisplayHms}</span>
+          <span data-time-format-hours-decimal class="hidden">${timeDurationDisplayHoursDecimal}</span>
+        </div>
                 <div class="p-3 text-sm style="width: 35%;">
           <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
       isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
@@ -1081,7 +1332,6 @@ function setupTooltips() {
     });
   });
 }
-
 
 /**
  * Calculates the total duration of timesheets completed in the current month for a given jobcode

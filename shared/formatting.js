@@ -24,6 +24,25 @@ export function formatSecondsToTime(seconds) {
 }
 
 /**
+ * Formats seconds into decimal hours format (e.g., "2.5 hours")
+ * @param {number} seconds - Number of seconds to format
+ * @returns {string} Formatted decimal hours string
+ */
+export function formatSecondsToHoursDecimal(seconds) {
+  if (seconds === 0) return "0 hours";
+
+  const hours = seconds / 3600;
+
+  // Round to 2 decimal places and remove trailing zeros
+  const formattedHours = parseFloat(hours.toFixed(2));
+
+  // Use singular "hour" for exactly 1 hour, plural "hours" otherwise
+  const unit = formattedHours === 1 ? "hour" : "hours";
+
+  return `${formattedHours} ${unit}`;
+}
+
+/**
  * Formats a datetime string to readable start/end time format
  * Example: "2025-02-11T00:13:00-07:00" → "Tue 11th Feb, 07:15"
  * @param {string} datetimeString - ISO datetime string with timezone

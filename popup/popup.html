@@ -145,6 +145,21 @@
                 </label>
             </div>
 
+            <!-- Time Display Format Toggle -->
+            <div class="mb-4 flex items-center">
+                <label class="text-sm font-medium mr-3">Time Format</label>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-gray-600 dark:text-gray-400">H:M:S</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="time-format-toggle" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                        </div>
+                    </label>
+                    <span class="text-xs text-gray-600 dark:text-gray-400">Decimal</span>
+                </div>
+            </div>
+
             <!-- Alerts Section -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-2">Alerts</h3>
@@ -175,17 +190,28 @@
                             </select>
                         </div>
 
-                        <!-- Time Input -->
-                        <div class="flex gap-2">
-                            <input type="number" id="alert-hours"
-                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="H" min="0">
-                            <input type="number" id="alert-minutes"
-                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="M" min="0" max="59">
-                            <input type="number" id="alert-seconds"
-                                class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="S" min="0" max="59">
+                        <!-- Time Input Container (Fixed Width) -->
+                        <div class="w-52">
+                            <!-- Time Input H:M:S Format -->
+                            <div class="flex gap-2" data-time-format-h-m-s>
+                                <input type="number" id="alert-hours"
+                                    class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="H" min="0">
+                                <input type="number" id="alert-minutes"
+                                    class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="M" min="0" max="59">
+                                <input type="number" id="alert-seconds"
+                                    class="w-16 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="S" min="0" max="59">
+                            </div>
+
+                            <!-- Time Input Hours Decimal Format -->
+                            <div class="hidden flex gap-2" data-time-format-hours-decimal>
+                                <input type="number" id="alert-hours-decimal"
+                                    class="w-20 border border-gray-300 dark:border-gray-600 rounded-md p-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="2.5" min="0" step="0.01">
+                                <span class="text-sm text-gray-600 dark:text-gray-400 flex items-center">hours</span>
+                            </div>
                         </div>
 
                         <!-- Client/Jobcode Selector -->

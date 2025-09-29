@@ -101,8 +101,6 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
 
   // render badge according to user alert preferences
   const alerts = userProfile.preferences.alerts || [];
-  console.log("All alerts:");
-  console.log(alerts);
 
   const badgeAlerts = alerts.filter((alert) => {
     return (
@@ -112,46 +110,68 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
     );
   });
 
-  console.log("badgeAlerts:");
-  console.log(badgeAlerts);
-
   // find the lowest alert time in seconds_remaining that is greater than the current remaining seconds_remaining
   const nextAlert = badgeAlerts
     .filter((alert) => alert.time_in_seconds >= seconds_remaining)
     .sort((a, b) => a.time_in_seconds - b.time_in_seconds)[0];
 
-  console.log("nextAlert:");
-  console.log(nextAlert);
-
   // if there are no alerts, then set the badge to the default colour
   if (!nextAlert) {
-    console.log("no next alert found, setting badge to default colour");
-
     const defaultBadgeColour = seconds_remaining > 0 ? "#00AA00" : "#FF0000"; // green if > 0, red if <= 0
     chrome.action.setBadgeBackgroundColor({ color: defaultBadgeColour });
   } else {
-    console.log("next alert found, setting badge to alert colour");
-
     // otherwise, set the badge to the alert colour
     const alertColour = nextAlert.asset_reference;
     chrome.action.setBadgeBackgroundColor({ color: alertColour });
   }
 
   // render the badge text
+  const userProfilePreferenceTimeDisplayFormat =
+    userProfile.preferences.time_display_format;
+
+  const badgeDisplayText = returnBadgeDisplayText(
+    seconds_remaining,
+    userProfilePreferenceTimeDisplayFormat
+  );
+
+  chrome.action.setBadgeText({ text: badgeDisplayText });
+}
+
+function returnBadgeDisplayText(seconds_remaining, time_format) {
   let displayText;
-  if (seconds_remaining >= 3600) {
-    const hours = (seconds_remaining / 3600).toFixed(1);
-    displayText = `${hours}h`;
-  } else if (seconds_remaining >= 60) {
-    const minutes = Math.ceil(seconds_remaining / 60);
-    displayText = `${minutes}m`;
-  } else if (seconds_remaining > 0) {
-    displayText = `${seconds_remaining}s`;
-  } else {
-    displayText = "over";
+
+  if (seconds_remaining <= 0) {
+    return "over";
   }
 
-  chrome.action.setBadgeText({ text: displayText });
+  if (time_format == "h:m:s") {
+    // greater than 1 hour
+    if (seconds_remaining >= 3600) {
+      const hours = (seconds_remaining / 3600).toFixed(1);
+      displayText = `${hours}h`;
+      // greater than 1 minute
+    } else if (seconds_remaining >= 60) {
+      const minutes = Math.ceil(seconds_remaining / 60);
+      displayText = `${minutes}m`;
+      // less than 1 minute
+    } else if (seconds_remaining > 0) {
+      displayText = `${seconds_remaining}s`;
+    }
+  }
+
+  if (time_format == "hours_decimal") {
+    // greater than 1 hour, display 'x.xh'
+    if (seconds_remaining >= 3600) {
+      const hoursDecimal = (seconds_remaining / 3600).toFixed(1);
+      displayText = `${hoursDecimal}h`;
+      // less than 1 hour, display '.xxh'
+    } else {
+      const hoursDecimal = (seconds_remaining / 3600).toFixed(2);
+      displayText = `${hoursDecimal.substring(1)}h`;
+    }
+  }
+
+  return displayText;
 }
 
 /**

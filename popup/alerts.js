@@ -1,29 +1,43 @@
 import { overwriteUserProfileInStorage } from "/popup/user.js";
+import {
+  formatSecondsToTime,
+  formatSecondsToHoursDecimal,
+} from "/shared/formatting.js";
+import { AppState } from "/shared/appState.js";
 
 // Function to add a new alert
-export async function addNewAlert(userProfile) {
-  const newAlertHours =
-    parseInt(document.getElementById("alert-hours").value) || 0;
-  const newAlerMinutes =
-    parseInt(document.getElementById("alert-minutes").value) || 0;
-  const newAlerSeconds =
-    parseInt(document.getElementById("alert-seconds").value) || 0;
+export async function addNewAlert() {
+  // Common variables used regardless of time format
   const newAlertType = document.getElementById("alert-type").value;
   const newAlertColor = document.getElementById("alert-color").value;
   const newAlertSound = document.getElementById("alert-sound").value;
   const newAlertSelectedClient = document.getElementById("alert-client").value;
 
-  const newAlertTimeInSeconds = convertToSeconds(
-    newAlertHours,
-    newAlerMinutes,
-    newAlerSeconds
-  );
+  // Get user's time format preference
+  const userProfile = AppState.getUserProfile();
+  const userPreferenceTimeFormat =
+    userProfile.preferences.time_display_format || "h:m:s";
 
-  // Check if user deliberately entered zero (at least one field has a value)
-  const hasTimeInput =
-    document.getElementById("alert-hours").value !== "" ||
-    document.getElementById("alert-minutes").value !== "" ||
-    document.getElementById("alert-seconds").value !== "";
+  // Branch based on time format preference
+  let newAlertTimeInSeconds;
+  let hasTimeInput;
+
+  if (userPreferenceTimeFormat === "h:m:s") {
+    const timeInputData = getTimeInputHms();
+    newAlertTimeInSeconds = timeInputData.timeInSeconds;
+    hasTimeInput = timeInputData.hasInput;
+  } else if (userPreferenceTimeFormat === "hours_decimal") {
+    const timeInputData = getTimeInputHoursDecimal();
+    newAlertTimeInSeconds = timeInputData.timeInSeconds;
+    hasTimeInput = timeInputData.hasInput;
+  } else {
+    alert(
+      "Unknown time format in user preferences. Please check your settings."
+    );
+    return;
+  }
+
+  // Validate that user provided some time input
   if (newAlertTimeInSeconds === 0 && !hasTimeInput) {
     alert(
       "Please enter a time for your new alert (set to 0 for an 'overtime' alert)."
@@ -109,10 +123,11 @@ export async function addNewAlert(userProfile) {
   // Re-populate alerts to maintain sorted order
   populateAlerts(userProfile);
 
-  // Clear inputs
+  // Clear inputs for both formats
   document.getElementById("alert-hours").value = "";
   document.getElementById("alert-minutes").value = "";
   document.getElementById("alert-seconds").value = "";
+  document.getElementById("alert-hours-decimal").value = "";
 }
 
 export function populateAlerts(userProfile) {
@@ -133,20 +148,58 @@ export function populateAlerts(userProfile) {
   });
 }
 
+// Helper function to get time input from H:M:S format
+function getTimeInputHms() {
+  const hours = parseInt(document.getElementById("alert-hours").value) || 0;
+  const minutes = parseInt(document.getElementById("alert-minutes").value) || 0;
+  const seconds = parseInt(document.getElementById("alert-seconds").value) || 0;
+
+  const timeInSeconds = convertToSeconds(hours, minutes, seconds);
+
+  // Check if user deliberately entered zero (at least one field has a value)
+  const hasInput =
+    document.getElementById("alert-hours").value !== "" ||
+    document.getElementById("alert-minutes").value !== "" ||
+    document.getElementById("alert-seconds").value !== "";
+
+  return { timeInSeconds, hasInput };
+}
+
+// Helper function to get time input from hours decimal format
+function getTimeInputHoursDecimal() {
+  const hoursDecimal =
+    parseFloat(document.getElementById("alert-hours-decimal").value) || 0;
+
+  const timeInSeconds = Math.round(hoursDecimal * 3600); // Convert to seconds
+
+  // Check if user provided input
+  const hasInput = document.getElementById("alert-hours-decimal").value !== "";
+
+  return { timeInSeconds, hasInput };
+}
+
 // Function to convert hours, minutes, and seconds to total seconds
 function convertToSeconds(hours, minutes, seconds) {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
-// Function to format time for display
+// Function to format time for display - returns both formats
 function formatTime(seconds) {
-  if (seconds === 0) {
-    return "0h 0m 0s (Overtime)";
-  }
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${hours}h ${minutes}m ${secs}s`;
+  const hmsFormat = formatAlertTimeHms(seconds);
+  const hoursDecimalFormat = formatAlertTimeHoursDecimal(seconds);
+  return { hms: hmsFormat, hoursDecimal: hoursDecimalFormat };
+}
+
+// Helper function for H:M:S format with overtime suffix
+function formatAlertTimeHms(seconds) {
+  const baseFormat = formatSecondsToTime(seconds);
+  return seconds === 0 ? `${baseFormat} (Overtime)` : baseFormat;
+}
+
+// Helper function for hours decimal format with overtime suffix
+function formatAlertTimeHoursDecimal(seconds) {
+  const baseFormat = formatSecondsToHoursDecimal(seconds);
+  return seconds === 0 ? `${baseFormat} (Overtime)` : baseFormat;
 }
 
 // Function to get client display text for an alert
@@ -198,11 +251,33 @@ function createAlertElement(alert, userProfile) {
   timeSection.className =
     "bg-white dark:bg-gray-700 px-3 py-2 flex items-center w-[17%]";
 
-  const timeText = document.createElement("span");
-  timeText.className = "text-sm font-medium";
-  timeText.textContent = formatTime(alert.time_in_seconds);
+  const timeFormats = formatTime(alert.time_in_seconds);
 
-  timeSection.appendChild(timeText);
+  // Read user's time format preference to set correct visibility
+  const timeDisplayFormat =
+    userProfile.preferences.time_display_format || "h:m:s";
+
+  const timeDisplayHmsSpan = document.createElement("span");
+  timeDisplayHmsSpan.className =
+    timeDisplayFormat === "h:m:s"
+      ? "text-sm font-medium"
+      : "text-sm font-medium hidden";
+  timeDisplayHmsSpan.setAttribute("data-time-format-h-m-s", "");
+  timeDisplayHmsSpan.textContent = timeFormats.hms;
+
+  const timeDisplayHoursDecimalSpan = document.createElement("span");
+  timeDisplayHoursDecimalSpan.className =
+    timeDisplayFormat === "hours_decimal"
+      ? "text-sm font-medium"
+      : "text-sm font-medium hidden";
+  timeDisplayHoursDecimalSpan.setAttribute(
+    "data-time-format-hours-decimal",
+    ""
+  );
+  timeDisplayHoursDecimalSpan.textContent = timeFormats.hoursDecimal;
+
+  timeSection.appendChild(timeDisplayHmsSpan);
+  timeSection.appendChild(timeDisplayHoursDecimalSpan);
 
   // Alert type indicator
   const typeIndicator = document.createElement("span");
