@@ -254,10 +254,8 @@ async function updateUIWithActiveRecording(userProfile) {
         activeRecordingShiftSeconds + elapsedSeconds;
 
       // Calculate new remaining time by subtracting current session time
-      const newRemainingSeconds = Math.max(
-        0,
-        activeJobcodeSecondsRemaining - totalCurrentSessionSeconds
-      );
+      const newRemainingSeconds =
+        activeJobcodeSecondsRemaining - totalCurrentSessionSeconds;
 
       // Calculate new completed time by adding current session time
       const newCompletedSeconds =
@@ -783,7 +781,7 @@ function setupJobcodeTimeAssignmentEditing() {
         );
 
         if (newValue !== null) {
-          const remainingSeconds = Math.max(0, newValue - completedSeconds);
+          const remainingSeconds = newValue - completedSeconds;
           const timeRemainingDisplayHmsSpan = remainingElement.querySelector(
             "[data-time-format-h-m-s]"
           );
