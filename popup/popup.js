@@ -161,6 +161,8 @@ async function updateUIWithUserProfile(userProfile) {
   populateClientSelector(userProfile);
 
   renderAllClientsTable(userProfile);
+  setupFavoritesToggle();
+  setupClientSearch();
 }
 
 /**
@@ -545,7 +547,6 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
 
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
-  setupFavoritesToggle();
   setupJobNameClickListeners();
 
   updateActiveRecordingUIWithLatestUserProfile();
@@ -895,7 +896,9 @@ function setupFavoriteButtons() {
             },
             () => {
               // Re-render the table to reflect changes
-              renderAllClientsTable(userProfile);
+              const allCLientsTableSearchTerm =
+                document.getElementById("client-search").value;
+              renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
             }
           );
         }
@@ -911,8 +914,25 @@ function setupFavoritesToggle() {
     const currentUserId = currentLoginDetails.currentUserId;
 
     chrome.storage.local.get("userProfiles", (data) => {
-      renderAllClientsTable(data.userProfiles[currentUserId] || {});
+      const allCLientsTableSearchTerm =
+        document.getElementById("client-search").value;
+      renderAllClientsTable(
+        data.userProfiles[currentUserId] || {},
+        allCLientsTableSearchTerm
+      );
     });
+  });
+}
+
+function setupClientSearch() {
+  const searchInput = document.getElementById("client-search");
+  searchInput.addEventListener("input", () => {
+    const userProfile = AppState.getUserProfile();
+    const searchTerm = searchInput.value;
+
+    if (userProfile) {
+      renderAllClientsTable(userProfile, searchTerm);
+    }
   });
 }
 
