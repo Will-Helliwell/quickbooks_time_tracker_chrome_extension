@@ -127,7 +127,7 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
 
   // render the badge text
   const userProfilePreferenceTimeDisplayFormat =
-    userProfile.preferences.time_display_format;
+    userProfile.preferences.time_display_format || "h:m:s";
 
   const badgeDisplayText = returnBadgeDisplayText(
     seconds_remaining,
