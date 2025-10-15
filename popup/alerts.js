@@ -308,7 +308,7 @@ function createAlertElement(alert, userProfile) {
 
   // Delete button
   const deleteButton = document.createElement("button");
-  deleteButton.className = "text-white hover:text-gray-200 px-3 py-2";
+  deleteButton.className = "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 px-3 py-2";
   deleteButton.innerHTML = "&times;";
   deleteButton.onclick = async () => {
     // Remove from DOM
