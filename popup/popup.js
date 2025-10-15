@@ -94,7 +94,9 @@ async function handlePopupOpen() {
 
   // Handle logout
   document.getElementById("logout-button").addEventListener("click", () => {
-    logout();
+    if (confirm("Are you sure you want to log out?")) {
+      logout();
+    }
   });
 
   // Handle tab switching
@@ -146,8 +148,10 @@ async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
 
   // Set the favorites toggle from user preferences (default to false)
-  const userPreferenceShowFavoritesOnly = userProfile.preferences.show_favorites_only || false;
-  document.getElementById("favorites-toggle").checked = userPreferenceShowFavoritesOnly;
+  const userPreferenceShowFavoritesOnly =
+    userProfile.preferences.show_favorites_only || false;
+  document.getElementById("favorites-toggle").checked =
+    userPreferenceShowFavoritesOnly;
 
   // Set the correct tab styling
   document.querySelectorAll(".tab-button").forEach((button) => {
