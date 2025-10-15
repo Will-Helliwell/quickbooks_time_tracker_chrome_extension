@@ -145,8 +145,9 @@ async function handlePopupOpen() {
 async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
 
-  // Set the favorites toggle to checked by default
-  document.getElementById("favorites-toggle").checked = true;
+  // Set the favorites toggle from user preferences (default to false)
+  const userPreferenceShowFavoritesOnly = userProfile.preferences.show_favorites_only || false;
+  document.getElementById("favorites-toggle").checked = userPreferenceShowFavoritesOnly;
 
   // Set the correct tab styling
   document.querySelectorAll(".tab-button").forEach((button) => {
@@ -923,14 +924,26 @@ function setupFavoriteButtons() {
 
 function setupFavoritesToggle() {
   const toggle = document.getElementById("favorites-toggle");
-  toggle.addEventListener("change", () => {
+  toggle.addEventListener("change", async () => {
     const userProfile = AppState.getUserProfile();
 
     if (!userProfile) return;
 
+    // Save the new preference
+    const userPreferenceShowFavoritesOnly = toggle.checked;
+    const updatedUserProfile = {
+      ...userProfile,
+      preferences: {
+        ...userProfile.preferences,
+        show_favorites_only: userPreferenceShowFavoritesOnly,
+      },
+    };
+    AppState.setUserProfile(updatedUserProfile);
+    await overwriteUserProfileInStorage(updatedUserProfile);
+
     const allCLientsTableSearchTerm =
       document.getElementById("client-search").value;
-    renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
+    renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
   });
 }
 
