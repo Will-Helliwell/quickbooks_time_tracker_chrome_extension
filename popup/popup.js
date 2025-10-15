@@ -909,7 +909,10 @@ function setupFavoriteButtons() {
               // Re-render the table to reflect changes
               const allCLientsTableSearchTerm =
                 document.getElementById("client-search").value;
-              renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
+              renderAllClientsTable(
+                updatedUserProfile,
+                allCLientsTableSearchTerm
+              );
             }
           );
         });
@@ -1257,17 +1260,17 @@ function renderTimesheetsTable(timesheets) {
 
   let tableHtml = `
     <div class="mb-4">
-      <h3 class="text-lg font-semibold">${clientName} - completed timesheets this month (${count})</h3>
+      <h3 class="text-lg font-semibold">${clientName} <span class="text-sm font-normal">- completed timesheets this month (${count})</span></h3>
     </div>
     <div class="overflow-hidden bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Table Header -->
       <div class="bg-gray-200 dark:bg-gray-600 flex w-full">
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
       </div>
-      
+
       <!-- Table Body -->
       <div class="divide-y divide-gray-200 dark:divide-gray-600 bg-white dark:bg-gray-700">
   `;
@@ -1288,13 +1291,13 @@ function renderTimesheetsTable(timesheets) {
 
     tableHtml += `
       <div class="flex w-full hover:bg-gray-50 dark:hover:bg-gray-600 group text-gray-900 dark:text-white">
-        <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
-        <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
-        <div class="p-3 text-sm" style="width: 15%;">
+        <div class="p-2" style="width: 25%;">${formattedStart}</div>
+        <div class="p-2" style="width: 25%;">${formattedEnd}</div>
+        <div class="p-2" style="width: 15%;">
           <span data-time-format-h-m-s>${timeDurationDisplayHms}</span>
           <span data-time-format-hours-decimal class="hidden">${timeDurationDisplayHoursDecimal}</span>
         </div>
-                <div class="p-3 text-sm style="width: 35%;">
+                <div class="p-2 style="width: 35%;">
           <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
       isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
     }>${displayNotes}</span>
