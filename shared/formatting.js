@@ -5,22 +5,27 @@
 
 /**
  * Formats seconds into human-readable time format (e.g., "2h 30m 15s")
+ * Positive and negative values are formatted identically (with/without a minus sign)
  * @param {number} seconds - Number of seconds to format
  * @returns {string} Formatted time string
  */
 export function formatSecondsToTime(seconds) {
-  if (seconds === 0) return "0h 0m";
+  // if (seconds === 0) return "0h 0m";
 
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
+  const isNegative = seconds < 0;
+  const absSeconds = Math.abs(seconds);
+
+  const hours = Math.floor(absSeconds / 3600);
+  const minutes = Math.floor((absSeconds % 3600) / 60);
+  const remainingSeconds = absSeconds % 60;
 
   let result = "";
   if (hours > 0) result += `${hours}h `;
   if (minutes > 0 || hours > 0) result += `${minutes}m`;
   if (remainingSeconds > 0 && hours === 0) result += ` ${remainingSeconds}s`;
 
-  return result.trim();
+  result = result.trim();
+  return isNegative ? `-${result}` : result;
 }
 
 /**
@@ -29,7 +34,7 @@ export function formatSecondsToTime(seconds) {
  * @returns {string} Formatted decimal hours string
  */
 export function formatSecondsToHoursDecimal(seconds) {
-  if (seconds === 0) return "0 hours";
+  // if (seconds === 0) return "0 hours";
 
   const hours = seconds / 3600;
 

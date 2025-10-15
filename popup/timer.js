@@ -36,11 +36,6 @@ export function startLiveCountdown(remainingSeconds, updateCallback) {
 
   countdownInterval = setInterval(() => {
     remainingSeconds--;
-    if (remainingSeconds < 0) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-      return;
-    }
     updateCallback(remainingSeconds);
   }, 1000);
 }

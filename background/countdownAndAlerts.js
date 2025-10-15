@@ -127,7 +127,7 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
 
   // render the badge text
   const userProfilePreferenceTimeDisplayFormat =
-    userProfile.preferences.time_display_format;
+    userProfile.preferences.time_display_format || "h:m:s";
 
   const badgeDisplayText = returnBadgeDisplayText(
     seconds_remaining,
@@ -137,41 +137,47 @@ function updateBadge(currentlyActiveJobcodeId, seconds_remaining, userProfile) {
   chrome.action.setBadgeText({ text: badgeDisplayText });
 }
 
+/**
+ * Returns formatted badge display text based on remaining seconds and time format
+ * Handles both positive and negative values (negative values show with minus prefix)
+ * @param {number} seconds_remaining - Number of seconds remaining (can be negative)
+ * @param {string} time_format - Format preference: "h:m:s" or "hours_decimal"
+ * @returns {string} Formatted display text for badge
+ */
 function returnBadgeDisplayText(seconds_remaining, time_format) {
   let displayText;
 
-  if (seconds_remaining <= 0) {
-    return "over";
-  }
+  const isNegative = seconds_remaining < 0;
+  const absSeconds = Math.abs(seconds_remaining);
 
   if (time_format == "h:m:s") {
     // greater than 1 hour
-    if (seconds_remaining >= 3600) {
-      const hours = (seconds_remaining / 3600).toFixed(1);
+    if (absSeconds >= 3600) {
+      const hours = (absSeconds / 3600).toFixed(1);
       displayText = `${hours}h`;
       // greater than 1 minute
-    } else if (seconds_remaining >= 60) {
-      const minutes = Math.ceil(seconds_remaining / 60);
+    } else if (absSeconds >= 60) {
+      const minutes = Math.ceil(absSeconds / 60);
       displayText = `${minutes}m`;
       // less than 1 minute
-    } else if (seconds_remaining > 0) {
-      displayText = `${seconds_remaining}s`;
+    } else if (absSeconds > 0) {
+      displayText = `${absSeconds}s`;
     }
   }
 
   if (time_format == "hours_decimal") {
     // greater than 1 hour, display 'x.xh'
-    if (seconds_remaining >= 3600) {
-      const hoursDecimal = (seconds_remaining / 3600).toFixed(1);
+    if (absSeconds >= 3600) {
+      const hoursDecimal = (absSeconds / 3600).toFixed(1);
       displayText = `${hoursDecimal}h`;
       // less than 1 hour, display '.xxh'
     } else {
-      const hoursDecimal = (seconds_remaining / 3600).toFixed(2);
+      const hoursDecimal = (absSeconds / 3600).toFixed(2);
       displayText = `${hoursDecimal.substring(1)}h`;
     }
   }
 
-  return displayText;
+  return isNegative ? `-${displayText}` : displayText;
 }
 
 /**

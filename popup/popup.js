@@ -161,6 +161,8 @@ async function updateUIWithUserProfile(userProfile) {
   populateClientSelector(userProfile);
 
   renderAllClientsTable(userProfile);
+  setupFavoritesToggle();
+  setupClientSearch();
 }
 
 /**
@@ -254,10 +256,8 @@ async function updateUIWithActiveRecording(userProfile) {
         activeRecordingShiftSeconds + elapsedSeconds;
 
       // Calculate new remaining time by subtracting current session time
-      const newRemainingSeconds = Math.max(
-        0,
-        activeJobcodeSecondsRemaining - totalCurrentSessionSeconds
-      );
+      const newRemainingSeconds =
+        activeJobcodeSecondsRemaining - totalCurrentSessionSeconds;
 
       // Calculate new completed time by adding current session time
       const newCompletedSeconds =
@@ -325,7 +325,7 @@ function updateUserUI(user) {
  * @param {Object} userProfile - The user profile object containing user and jobcode information
  * @returns {void}
  */
-function renderAllClientsTable(userProfile) {
+function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
   let jobcodes = Object.values(userProfile.jobcodes) || [];
 
   // filter out any jobcodes with children as these cannot have timesheets assigned
@@ -337,6 +337,16 @@ function renderAllClientsTable(userProfile) {
   // Filter jobcodes if showing favorites only
   if (showFavoritesOnly) {
     jobcodes = jobcodes.filter((jobcode) => jobcode.is_favourite);
+  }
+
+  // Filter jobcodes based on search term (case-insensitive)
+  if (allClientsTableSearchTerm.trim() !== "") {
+    const searchTermLower = allClientsTableSearchTerm.toLowerCase();
+    jobcodes = jobcodes.filter((jobcode) =>
+      (jobcode.parent_path_name + jobcode.name)
+        .toLowerCase()
+        .includes(searchTermLower)
+    );
   }
 
   let allClientsTableHtml = `
@@ -537,7 +547,6 @@ function renderAllClientsTable(userProfile) {
 
   setupJobcodeTimeAssignmentEditing();
   setupFavoriteButtons();
-  setupFavoritesToggle();
   setupJobNameClickListeners();
 
   updateActiveRecordingUIWithLatestUserProfile();
@@ -783,7 +792,7 @@ function setupJobcodeTimeAssignmentEditing() {
         );
 
         if (newValue !== null) {
-          const remainingSeconds = Math.max(0, newValue - completedSeconds);
+          const remainingSeconds = newValue - completedSeconds;
           const timeRemainingDisplayHmsSpan = remainingElement.querySelector(
             "[data-time-format-h-m-s]"
           );
@@ -864,17 +873,28 @@ function setupFavoriteButtons() {
     button.addEventListener("click", async (e) => {
       e.stopPropagation();
       const jobcodeId = button.getAttribute("data-jobcode-id");
-      const currentLoginDetails = await getLoginDetailsFromLocalStorage();
-      const currentUserId = currentLoginDetails.currentUserId;
+      const userProfile = AppState.getUserProfile();
 
-      chrome.storage.local.get("userProfiles", (data) => {
-        const userProfiles = data.userProfiles || {};
-        const userProfile = userProfiles[currentUserId] || {};
-        const jobcodes = userProfile.jobcodes || {};
+      if (!userProfile) return;
 
-        if (jobcodes[jobcodeId]) {
-          jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
+      const jobcodes = userProfile.jobcodes || {};
 
+      if (jobcodes[jobcodeId]) {
+        jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
+
+        // Update AppState
+        const updatedUserProfile = {
+          ...userProfile,
+          jobcodes,
+        };
+        AppState.setUserProfile(updatedUserProfile);
+
+        // Update local storage
+        const currentLoginDetails = await getLoginDetailsFromLocalStorage();
+        const currentUserId = currentLoginDetails.currentUserId;
+
+        chrome.storage.local.get("userProfiles", (data) => {
+          const userProfiles = data.userProfiles || {};
           chrome.storage.local.set(
             {
               userProfiles: {
@@ -887,24 +907,39 @@ function setupFavoriteButtons() {
             },
             () => {
               // Re-render the table to reflect changes
-              renderAllClientsTable(userProfile);
+              const allCLientsTableSearchTerm =
+                document.getElementById("client-search").value;
+              renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
             }
           );
-        }
-      });
+        });
+      }
     });
   });
 }
 
 function setupFavoritesToggle() {
   const toggle = document.getElementById("favorites-toggle");
-  toggle.addEventListener("change", async () => {
-    const currentLoginDetails = await getLoginDetailsFromLocalStorage();
-    const currentUserId = currentLoginDetails.currentUserId;
+  toggle.addEventListener("change", () => {
+    const userProfile = AppState.getUserProfile();
 
-    chrome.storage.local.get("userProfiles", (data) => {
-      renderAllClientsTable(data.userProfiles[currentUserId] || {});
-    });
+    if (!userProfile) return;
+
+    const allCLientsTableSearchTerm =
+      document.getElementById("client-search").value;
+    renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
+  });
+}
+
+function setupClientSearch() {
+  const searchInput = document.getElementById("client-search");
+  searchInput.addEventListener("input", () => {
+    const userProfile = AppState.getUserProfile();
+    const searchTerm = searchInput.value;
+
+    if (userProfile) {
+      renderAllClientsTable(userProfile, searchTerm);
+    }
   });
 }
 
@@ -975,6 +1010,7 @@ async function initializeColourTheme(userProfile) {
         theme_choice: newThemeChoice,
       },
     };
+    AppState.setUserProfile(updatedUserProfile);
     overwriteUserProfileInStorage(updatedUserProfile);
     applyTheme(newThemeChoice);
   });

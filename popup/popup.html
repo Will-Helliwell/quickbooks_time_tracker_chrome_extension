@@ -99,7 +99,12 @@
         <!-- Clients Page -->
         <div id="clients-screen" class="tab-content p-4">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold">My Clients</h2>
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-semibold">My Clients</h2>
+                    <input type="text" id="client-search"
+                        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ml-2"
+                        placeholder="Search clients...">
+                </div>
                 <div class="flex items-center">
                     <span class="text-sm text-gray-600 mr-2">Show Favorites Only</span>
                     <label class="relative inline-flex items-center cursor-pointer">
