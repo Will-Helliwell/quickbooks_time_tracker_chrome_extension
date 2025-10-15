@@ -237,13 +237,15 @@ function getClientDisplayText(alert, userProfile) {
 function createAlertElement(alert, userProfile) {
   const alertElement = document.createElement("div");
   alertElement.className =
-    "flex items-center justify-between rounded-md overflow-hidden border border-black/10";
+    "flex items-center justify-between rounded-md overflow-hidden border";
 
-  // Set background color
+  // Set background color and border
   if (alert.type === "badge") {
     alertElement.style.backgroundColor = alert.asset_reference;
+    alertElement.className += " border-black/10";
   } else {
-    alertElement.style.backgroundColor = "#FFFFFF"; // white
+    alertElement.className +=
+      " bg-gray-100 dark:bg-gray-800 border-black/10 dark:border-gray-600";
   }
 
   // Time section with white background
