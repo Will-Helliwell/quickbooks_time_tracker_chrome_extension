@@ -472,8 +472,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <!-- H:M:S Format Input -->
               <div class="flex space-x-2 mb-2" data-time-format-h-m-s>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Hours</label>
-                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Hours</label>
+                  <input type="number" min="0" class="hours-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(jobcode.seconds_assigned / 3600)
@@ -481,8 +481,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
                          }">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Minutes</label>
-                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Minutes</label>
+                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(
@@ -492,8 +492,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
                          }">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Seconds</label>
-                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Seconds</label>
+                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? jobcode.seconds_assigned % 60
@@ -505,8 +505,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <!-- Hours Decimal Format Input -->
               <div class="hidden flex space-x-2 mb-2" data-time-format-hours-decimal>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Hours (Decimal)</label>
-                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Hours (Decimal)</label>
+                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? (jobcode.seconds_assigned / 3600).toFixed(2)
