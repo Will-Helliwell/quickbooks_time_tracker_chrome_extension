@@ -1,12 +1,12 @@
 {
   "name": "quickbooks_time_tracker_chrome_extension",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "offscreen.js",
   "scripts": {
     "build": "tailwindcss -i ./src/input.css -o ./popup/styles.css --watch",
     "build:prod": "tailwindcss -i ./src/input.css -o ./popup/styles.css --minify",
-    "package": "npm run build:prod && rm -rf dist && mkdir dist && cp -r manifest.json popup background images sounds offscreen.html offscreen.js src dist/ && cd dist && zip -r ../quickbooks-time-tracker.zip ."
+    "package": "npm run build:prod && rm -rf dist && mkdir dist && cp -r manifest.json background images popup shared sounds src offscreen.html offscreen.js dist/ && VERSION=$(node -p \"require('./package.json').version\") && cd dist && zip -r ../hourglass_chrome_extension_v$VERSION.zip ."
   },
   "keywords": [],
   "author": "",
