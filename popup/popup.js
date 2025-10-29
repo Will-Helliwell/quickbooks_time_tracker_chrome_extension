@@ -354,6 +354,13 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
     );
   }
 
+  // sort jobcodes alphabetically by full name (parent path + name)
+  jobcodes.sort((a, b) => {
+    const nameA = a.parent_path_name + a.name;
+    const nameB = b.parent_path_name + b.name;
+    return nameA.localeCompare(nameB);
+  });
+
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Fixed header -->
