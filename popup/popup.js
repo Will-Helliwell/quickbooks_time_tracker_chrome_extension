@@ -43,7 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
  * @function
  */
 async function handlePopupOpen() {
+  // initialise app state
   let userProfile = {};
+
+  // Get references to key DOM elements
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
   const clientSecretInput = document.getElementById("client-secret");
@@ -84,9 +87,16 @@ async function handlePopupOpen() {
     if (isAuthenticated) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
+
       userProfile = await updateUserProfileFromAPI();
+      console.log("user profile from api");
+      console.log(userProfile);
+
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
+      console.log("user profile from storage after jobcode update");
+      console.log(userProfile);
+
       AppState.setUserProfile(userProfile);
       await updateUIWithUserProfile(userProfile);
     }

@@ -163,24 +163,38 @@ function getJobcodesFromStorage(currentUserId) {
  *
  * @param {string} currentUserId - The ID of the currently logged-in user.
  * @param {object} updatedJobcodes - The updated jobcodes object to store.
+ * @returns {Promise<boolean>} A promise that resolves to true when the operation is complete.
  */
-async function overwriteJobcodesInStorage(
+function overwriteJobcodesInStorage(
   updatedJobcodes,
   currentUserId,
   lastFetchedTimesheets
 ) {
-  chrome.storage.local.get("userProfiles", (data) => {
-    chrome.storage.local.set({
-      userProfiles: {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get("userProfiles", (data) => {
+      if (chrome.runtime.lastError) {
+        console.error("Storage get error:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
+
+      const updatedProfiles = {
         ...data.userProfiles,
         [currentUserId]: {
           ...data.userProfiles?.[currentUserId],
           jobcodes: updatedJobcodes,
           last_fetched_timesheets: lastFetchedTimesheets,
         },
-      },
+      };
+
+      chrome.storage.local.set({ userProfiles: updatedProfiles }, () => {
+        if (chrome.runtime.lastError) {
+          console.error("Storage set error:", chrome.runtime.lastError);
+          reject(chrome.runtime.lastError);
+        } else {
+          resolve(true);
+        }
+      });
     });
   });
 }
-
-// TIMESHEETS
