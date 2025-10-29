@@ -94,7 +94,9 @@ async function handlePopupOpen() {
 
   // Handle logout
   document.getElementById("logout-button").addEventListener("click", () => {
-    logout();
+    if (confirm("Are you sure you want to log out?")) {
+      logout();
+    }
   });
 
   // Handle tab switching
@@ -145,8 +147,11 @@ async function handlePopupOpen() {
 async function updateUIWithUserProfile(userProfile) {
   updateUserUI(userProfile);
 
-  // Set the favorites toggle to checked by default
-  document.getElementById("favorites-toggle").checked = true;
+  // Set the favorites toggle from user preferences (default to false)
+  const userPreferenceShowFavoritesOnly =
+    userProfile.preferences.show_favorites_only || false;
+  document.getElementById("favorites-toggle").checked =
+    userPreferenceShowFavoritesOnly;
 
   // Set the correct tab styling
   document.querySelectorAll(".tab-button").forEach((button) => {
@@ -472,8 +477,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <!-- H:M:S Format Input -->
               <div class="flex space-x-2 mb-2" data-time-format-h-m-s>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Hours</label>
-                  <input type="number" min="0" class="hours-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Hours</label>
+                  <input type="number" min="0" class="hours-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(jobcode.seconds_assigned / 3600)
@@ -481,8 +486,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
                          }">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Minutes</label>
-                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Minutes</label>
+                  <input type="number" min="0" max="59" class="minutes-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? Math.floor(
@@ -492,8 +497,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
                          }">
                 </div>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Seconds</label>
-                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Seconds</label>
+                  <input type="number" min="0" max="59" class="seconds-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? jobcode.seconds_assigned % 60
@@ -505,8 +510,8 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <!-- Hours Decimal Format Input -->
               <div class="hidden flex space-x-2 mb-2" data-time-format-hours-decimal>
                 <div class="flex-1">
-                  <label class="text-xs text-gray-600">Hours (Decimal)</label>
-                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border rounded text-sm"
+                  <label class="text-xs text-gray-600 dark:text-gray-300">Hours (Decimal)</label>
+                  <input type="number" min="0" step="0.01" class="hours-decimal-input w-full p-1 border border-gray-300 dark:border-gray-500 rounded text-sm dark:bg-gray-600 dark:text-white"
                          value="${
                            jobcode.seconds_assigned !== null
                              ? (jobcode.seconds_assigned / 3600).toFixed(2)
@@ -909,7 +914,10 @@ function setupFavoriteButtons() {
               // Re-render the table to reflect changes
               const allCLientsTableSearchTerm =
                 document.getElementById("client-search").value;
-              renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
+              renderAllClientsTable(
+                updatedUserProfile,
+                allCLientsTableSearchTerm
+              );
             }
           );
         });
@@ -920,14 +928,26 @@ function setupFavoriteButtons() {
 
 function setupFavoritesToggle() {
   const toggle = document.getElementById("favorites-toggle");
-  toggle.addEventListener("change", () => {
+  toggle.addEventListener("change", async () => {
     const userProfile = AppState.getUserProfile();
 
     if (!userProfile) return;
 
+    // Save the new preference
+    const userPreferenceShowFavoritesOnly = toggle.checked;
+    const updatedUserProfile = {
+      ...userProfile,
+      preferences: {
+        ...userProfile.preferences,
+        show_favorites_only: userPreferenceShowFavoritesOnly,
+      },
+    };
+    AppState.setUserProfile(updatedUserProfile);
+    await overwriteUserProfileInStorage(updatedUserProfile);
+
     const allCLientsTableSearchTerm =
       document.getElementById("client-search").value;
-    renderAllClientsTable(userProfile, allCLientsTableSearchTerm);
+    renderAllClientsTable(updatedUserProfile, allCLientsTableSearchTerm);
   });
 }
 
@@ -1257,17 +1277,17 @@ function renderTimesheetsTable(timesheets) {
 
   let tableHtml = `
     <div class="mb-4">
-      <h3 class="text-lg font-semibold">${clientName} - completed timesheets this month (${count})</h3>
+      <h3 class="text-lg font-semibold">${clientName} <span class="text-sm font-normal">- completed timesheets this month (${count})</span></h3>
     </div>
     <div class="overflow-hidden bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Table Header -->
       <div class="bg-gray-200 dark:bg-gray-600 flex w-full">
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
-        <div class="p-3 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">Start</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 25%;">End</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 15%;">Duration</div>
+        <div class="p-2 text-left font-semibold text-gray-800 dark:text-white" style="width: 35%;">Notes</div>
       </div>
-      
+
       <!-- Table Body -->
       <div class="divide-y divide-gray-200 dark:divide-gray-600 bg-white dark:bg-gray-700">
   `;
@@ -1288,13 +1308,13 @@ function renderTimesheetsTable(timesheets) {
 
     tableHtml += `
       <div class="flex w-full hover:bg-gray-50 dark:hover:bg-gray-600 group text-gray-900 dark:text-white">
-        <div class="p-3 text-sm" style="width: 25%;">${formattedStart}</div>
-        <div class="p-3 text-sm" style="width: 25%;">${formattedEnd}</div>
-        <div class="p-3 text-sm" style="width: 15%;">
+        <div class="p-2" style="width: 25%;">${formattedStart}</div>
+        <div class="p-2" style="width: 25%;">${formattedEnd}</div>
+        <div class="p-2" style="width: 15%;">
           <span data-time-format-h-m-s>${timeDurationDisplayHms}</span>
           <span data-time-format-hours-decimal class="hidden">${timeDurationDisplayHoursDecimal}</span>
         </div>
-                <div class="p-3 text-sm style="width: 35%;">
+                <div class="p-2 style="width: 35%;">
           <span class="${isLongNote ? "cursor-help tooltip-trigger" : ""}" ${
       isLongNote ? `data-tooltip="${notes.replace(/"/g, "&quot;")}"` : ""
     }>${displayNotes}</span>

@@ -1,4 +1,4 @@
-const pollFrequencyMinutes = 0.15; // 0.15 minutes = 9 seconds
+const pollFrequencyMinutes = 0.25; // 15 seconds in minutes
 const inTestMode = false; // Test mode only polls once, then stops
 
 if (inTestMode) {
