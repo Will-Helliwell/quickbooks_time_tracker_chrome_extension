@@ -49,6 +49,7 @@ async function handlePopupOpen() {
   // Get references to key DOM elements
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
+  const clientIdInput = document.getElementById("client-id");
   const clientSecretInput = document.getElementById("client-secret");
   const redirectUrlContainer = document.getElementById(
     "redirect-url-container"
@@ -76,11 +77,13 @@ async function handlePopupOpen() {
   // Handle login button click
   loginButton.addEventListener("click", async () => {
     loginButton.classList.add("hidden");
+    clientIdInput.classList.add("hidden");
     clientSecretInput.classList.add("hidden");
     redirectUrlContainer.classList.add("hidden");
     loadingSpinner.classList.remove("hidden");
     const isAuthenticated = await authenticateUser();
     loginButton.classList.remove("hidden");
+    clientIdInput.classList.remove("hidden");
     clientSecretInput.classList.remove("hidden");
     redirectUrlContainer.classList.remove("hidden");
     loadingSpinner.classList.add("hidden");
