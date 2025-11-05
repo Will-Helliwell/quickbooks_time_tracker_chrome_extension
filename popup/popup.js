@@ -87,16 +87,9 @@ async function handlePopupOpen() {
     if (isAuthenticated) {
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
-
       userProfile = await updateUserProfileFromAPI();
-      console.log("user profile from api");
-      console.log(userProfile);
-
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
-      console.log("user profile from storage after jobcode update");
-      console.log(userProfile);
-
       AppState.setUserProfile(userProfile);
       await updateUIWithUserProfile(userProfile);
     }
@@ -659,20 +652,14 @@ function setupJobcodeTimeAssignmentEditing() {
 
           // Check if edit form extends below the visible table area
           if (editFormRect.bottom > tableBodyRect.bottom) {
-            console.log("Scrolling down to reveal edit form");
-
             // Calculate how much to scroll down - extra padding for when limit inputs expand
             const scrollAmount =
               editFormRect.bottom - tableBodyRect.bottom + 60;
-            console.log("Scroll amount:", scrollAmount);
-
             tableBody.scrollTop += scrollAmount;
           }
 
           // Check if edit form is above the visible table area
           if (editFormRect.top < tableBodyRect.top) {
-            console.log("Scrolling up to reveal edit form");
-
             // Calculate how much to scroll up
             const scrollAmount = tableBodyRect.top - editFormRect.top + 20;
             tableBody.scrollTop -= scrollAmount;
