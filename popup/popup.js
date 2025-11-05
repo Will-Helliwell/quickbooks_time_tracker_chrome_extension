@@ -31,6 +31,11 @@ import {
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
 import { AppState } from "/shared/appState.js";
+import {
+  loadLastTypedClientId,
+  setupClientIdSessionStorage,
+  clearLastTypedClientId,
+} from "/popup/sessionStorage.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -58,6 +63,10 @@ async function handlePopupOpen() {
   const mainContent = document.getElementById("main-content");
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
+
+  // Load and setup session storage for client ID (allows it to persist across popup opens)
+  loadLastTypedClientId(clientIdInput);
+  setupClientIdSessionStorage(clientIdInput);
 
   // If the user is already logged in, hide the login section and load their profile
   const loginDetails = await getLoginDetailsFromLocalStorage();
@@ -88,6 +97,8 @@ async function handlePopupOpen() {
     redirectUrlContainer.classList.remove("hidden");
     loadingSpinner.classList.add("hidden");
     if (isAuthenticated) {
+      // Clear session storage after successful login
+      clearLastTypedClientId();
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
       userProfile = await updateUserProfileFromAPI();
