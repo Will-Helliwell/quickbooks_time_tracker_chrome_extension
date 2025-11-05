@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "QuickBooks Time Manager",
-  "version": "1.0",
+  "version": "2.0.1",
+  "_comment_version": "DO NOT UPDATE VERSION HERE - Update version in package.json instead. It syncs automatically via 'npm run sync-version'",
   "description": "Manage QuickBooks Time data from a Chrome extension",
   "icons": {
     "16": "images/hourglass_icon_16.png",
