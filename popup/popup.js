@@ -230,7 +230,7 @@ async function updateUIWithActiveRecording(userProfile) {
   // return all rows to default
   const allJobRows = document.querySelectorAll(".job-row");
   allJobRows.forEach((row) => {
-    row.classList.remove("bg-blue-100");
+    row.classList.remove("bg-blue-800");
     const nameField = row.querySelector(".job-name");
     nameField.classList.remove("text-blue-600", "font-bold");
   });
@@ -266,7 +266,7 @@ async function updateUIWithActiveRecording(userProfile) {
         completedElement.querySelector("[data-time-format-hours-decimal]");
 
       // highlight the row
-      jobRow.classList.add("bg-blue-100");
+      jobRow.classList.add("bg-blue-100", "dark:bg-blue-800");
       const nameField = jobRow.querySelector(".job-name");
       nameField.classList.add("text-blue-600", "font-bold");
 
@@ -456,7 +456,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
             </svg>
           </button>
         </div>
-        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
+        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:text-white hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
         <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">
@@ -469,7 +469,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
         </div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
-            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}"
+            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 dark:group-hover:text-white ${valueClass}"
                   data-value="${
                     jobcode.seconds_assigned !== null
                       ? jobcode.seconds_assigned
@@ -478,7 +478,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <span data-time-format-h-m-s>${timeAssignedDisplayHms}</span>
               <span data-time-format-hours-decimal class="hidden">${timeAssignedDisplayHoursDecimal}</span>
             </span>
-            <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none" data-jobcode-id="${
+            <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none dark:group-hover:text-white" data-jobcode-id="${
               jobcode.id
             }">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
