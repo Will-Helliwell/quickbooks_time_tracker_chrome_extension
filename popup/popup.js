@@ -43,7 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
  * @function
  */
 async function handlePopupOpen() {
+  // initialise app state
   let userProfile = {};
+
+  // Get references to key DOM elements
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
   const clientSecretInput = document.getElementById("client-secret");
@@ -354,6 +357,13 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
     );
   }
 
+  // sort jobcodes alphabetically by full name (parent path + name)
+  jobcodes.sort((a, b) => {
+    const nameA = a.parent_path_name + a.name;
+    const nameB = b.parent_path_name + b.name;
+    return nameA.localeCompare(nameB);
+  });
+
   let allClientsTableHtml = `
     <div class="table-container overflow-hidden flex flex-col bg-white dark:bg-gray-700 shadow-md rounded-lg">
       <!-- Fixed header -->
@@ -642,20 +652,14 @@ function setupJobcodeTimeAssignmentEditing() {
 
           // Check if edit form extends below the visible table area
           if (editFormRect.bottom > tableBodyRect.bottom) {
-            console.log("Scrolling down to reveal edit form");
-
             // Calculate how much to scroll down - extra padding for when limit inputs expand
             const scrollAmount =
               editFormRect.bottom - tableBodyRect.bottom + 60;
-            console.log("Scroll amount:", scrollAmount);
-
             tableBody.scrollTop += scrollAmount;
           }
 
           // Check if edit form is above the visible table area
           if (editFormRect.top < tableBodyRect.top) {
-            console.log("Scrolling up to reveal edit form");
-
             // Calculate how much to scroll up
             const scrollAmount = tableBodyRect.top - editFormRect.top + 20;
             tableBody.scrollTop -= scrollAmount;

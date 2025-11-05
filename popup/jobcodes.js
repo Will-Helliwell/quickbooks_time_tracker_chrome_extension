@@ -7,8 +7,10 @@
  */
 export async function updateJobcodesAndTimesheets() {
   try {
-    await chrome.runtime.sendMessage({ action: "updateJobcodesAndTimesheets" });
-    return true;
+    const messageResponse = await chrome.runtime.sendMessage({
+      action: "updateJobcodesAndTimesheets",
+    });
+    return messageResponse;
   } catch (error) {
     console.error("Error updating jobcodes and timesheets:", error);
     return false;

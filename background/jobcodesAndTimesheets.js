@@ -35,7 +35,7 @@ async function updateJobcodesAndTimesheetsFromAPI() {
   );
   const lastFetchedTimesheets = new Date().toISOString();
 
-  overwriteJobcodesInStorage(
+  await overwriteJobcodesInStorage(
     updatedJobcodes,
     currentUserId,
     lastFetchedTimesheets
