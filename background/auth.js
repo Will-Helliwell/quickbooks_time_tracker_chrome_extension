@@ -22,7 +22,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
-        client_id: CLIENT_ID,
+        client_id: request.clientId,
         client_secret: request.clientSecret,
         code: request.code,
         redirect_uri: REDIRECT_URL,

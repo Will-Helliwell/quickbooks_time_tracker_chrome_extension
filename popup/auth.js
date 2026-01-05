@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", displayRedirectUrl);
  * @returns {void}
  */
 export async function authenticateUser() {
-  const CLIENT_ID = await getClientId();
+  const CLIENT_ID = document.getElementById("client-id").value;
   return new Promise((resolve) => {
     chrome.identity.launchWebAuthFlow(
       {
@@ -65,6 +65,7 @@ export async function authenticateUser() {
               action: "exchangeToken",
               code: authCode,
               clientSecret: CLIENT_SECRET,
+              clientId: CLIENT_ID,
             },
             (response) => {
               if (response && response.success) {
@@ -89,13 +90,4 @@ export function logout() {
   chrome.storage.local.remove("loginDetails");
   chrome.storage.local.remove("activeRecording");
   window.location.reload();
-}
-
-/**
- * Retrieves the client ID from local storage.
- *
- */
-async function getClientId() {
-  const result = await chrome.storage.local.get("client_id");
-  return result.client_id;
 }

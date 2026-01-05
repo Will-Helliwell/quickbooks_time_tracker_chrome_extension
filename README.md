@@ -68,6 +68,15 @@ This will:
 └── postcss.config.js   # PostCSS configuration
 ```
 
+## Version Management
+
+**IMPORTANT:** The version number is managed in `package.json` only.
+
+- To update the version, manually edit in `package.json`
+- The version in `manifest.json` is automatically synced when you run `npm run package`
+- You can manually sync versions at any time with: `npm run sync-version`
+- **DO NOT** manually edit the version in `manifest.json` - it will be overwritten
+
 ## Important Notes
 
 - Never edit the generated `popup/styles.css` file directly
@@ -75,6 +84,7 @@ This will:
 - Keep the `npm run build` process running during development
 - The `dist` directory is automatically cleaned and recreated during packaging
 - The production build includes only the necessary files for distribution
+- Version numbers are automatically synced from `package.json` to `manifest.json`
 
 ## Troubleshooting
 

@@ -31,6 +31,11 @@ import {
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
 import { AppState } from "/shared/appState.js";
+import {
+  loadLastTypedClientId,
+  setupClientIdSessionStorage,
+  clearLastTypedClientId,
+} from "/popup/sessionStorage.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   handlePopupOpen();
@@ -49,6 +54,7 @@ async function handlePopupOpen() {
   // Get references to key DOM elements
   const loginScreen = document.getElementById("login-screen");
   const loginButton = document.getElementById("login-button");
+  const clientIdInput = document.getElementById("client-id");
   const clientSecretInput = document.getElementById("client-secret");
   const redirectUrlContainer = document.getElementById(
     "redirect-url-container"
@@ -57,6 +63,10 @@ async function handlePopupOpen() {
   const mainContent = document.getElementById("main-content");
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
+
+  // Load and setup session storage for client ID (allows it to persist across popup opens)
+  loadLastTypedClientId(clientIdInput);
+  setupClientIdSessionStorage(clientIdInput);
 
   // If the user is already logged in, hide the login section and load their profile
   const loginDetails = await getLoginDetailsFromLocalStorage();
@@ -76,15 +86,19 @@ async function handlePopupOpen() {
   // Handle login button click
   loginButton.addEventListener("click", async () => {
     loginButton.classList.add("hidden");
+    clientIdInput.classList.add("hidden");
     clientSecretInput.classList.add("hidden");
     redirectUrlContainer.classList.add("hidden");
     loadingSpinner.classList.remove("hidden");
     const isAuthenticated = await authenticateUser();
     loginButton.classList.remove("hidden");
+    clientIdInput.classList.remove("hidden");
     clientSecretInput.classList.remove("hidden");
     redirectUrlContainer.classList.remove("hidden");
     loadingSpinner.classList.add("hidden");
     if (isAuthenticated) {
+      // Clear session storage after successful login
+      clearLastTypedClientId();
       loginScreen.classList.add("hidden");
       mainContent.classList.remove("hidden");
       userProfile = await updateUserProfileFromAPI();
@@ -216,7 +230,7 @@ async function updateUIWithActiveRecording(userProfile) {
   // return all rows to default
   const allJobRows = document.querySelectorAll(".job-row");
   allJobRows.forEach((row) => {
-    row.classList.remove("bg-blue-100");
+    row.classList.remove("bg-blue-800");
     const nameField = row.querySelector(".job-name");
     nameField.classList.remove("text-blue-600", "font-bold");
   });
@@ -252,7 +266,7 @@ async function updateUIWithActiveRecording(userProfile) {
         completedElement.querySelector("[data-time-format-hours-decimal]");
 
       // highlight the row
-      jobRow.classList.add("bg-blue-100");
+      jobRow.classList.add("bg-blue-100", "dark:bg-blue-800");
       const nameField = jobRow.querySelector(".job-name");
       nameField.classList.add("text-blue-600", "font-bold");
 
@@ -442,7 +456,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
             </svg>
           </button>
         </div>
-        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-200">${
+        <div class="job-name p-2 flex-1 truncate cursor-pointer hover:text-blue-600 dark:text-white hover:text-blue-400 hover:underline transition-colors duration-200">${
           jobcode.parent_path_name + jobcode.name
         }</div>
         <div class="job-completed p-2 w-42 text-left" data-completed="${secondsCompletedThisMonth}">
@@ -455,7 +469,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
         </div>
         <div class="job-assigned-container p-2 w-28 text-left relative group">
           <div class="flex items-center justify-start">
-            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 ${valueClass}"
+            <span class="job-assigned-value cursor-pointer group-hover:text-blue-600 dark:group-hover:text-white ${valueClass}"
                   data-value="${
                     jobcode.seconds_assigned !== null
                       ? jobcode.seconds_assigned
@@ -464,7 +478,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
               <span data-time-format-h-m-s>${timeAssignedDisplayHms}</span>
               <span data-time-format-hours-decimal class="hidden">${timeAssignedDisplayHoursDecimal}</span>
             </span>
-            <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none" data-jobcode-id="${
+            <button class="edit-assigned-btn opacity-0 group-hover:opacity-100 ml-2 text-blue-600 focus:outline-none dark:group-hover:text-white" data-jobcode-id="${
               jobcode.id
             }">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
