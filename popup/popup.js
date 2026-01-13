@@ -1059,16 +1059,15 @@ async function initializeColourTheme() {
   });
 
   // Initialize time display format toggle
-  initializeTimeDisplayFormat(userProfile);
+  initializeTimeDisplayFormat();
 }
 
 /**
  * Initializes the time display format toggle and applies the preference stored locally
  * @param {Object} userProfile - The user profile containing preferences
  */
-async function initializeTimeDisplayFormat(userProfile) {
+async function initializeTimeDisplayFormat() {
   const timeFormatToggle = document.getElementById("time-format-toggle");
-  const userPreferences = userProfile.preferences;
   const timeDisplayFormat = userPreferences.time_display_format || "h:m:s";
 
   // Set initial toggle state (checked = hours_decimal, unchecked = h:m:s)
@@ -1079,6 +1078,8 @@ async function initializeTimeDisplayFormat(userProfile) {
 
   // Add event listener for toggle
   timeFormatToggle.addEventListener("change", async () => {
+    const userProfile = AppState.getUserProfile();
+    const userPreferences = userProfile.preferences;
     const newFormat = timeFormatToggle.checked ? "hours_decimal" : "h:m:s";
     const updatedUserProfile = {
       ...userProfile,
