@@ -579,7 +579,7 @@ function renderAllClientsTable(userProfile, allClientsTableSearchTerm = "") {
   setupJobNameClickListeners();
 
   updateActiveRecordingUIWithLatestUserProfile();
-  initializeColourTheme(userProfile);
+  initializeColourTheme();
 }
 
 // Dynamic popup expansion functions
@@ -1028,13 +1028,12 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
  * @function
  * @returns {Promise<void>}
  */
-async function initializeColourTheme(userProfile) {
-  const darkModeToggle = document.getElementById("dark-mode-toggle");
-  const userPreferences = userProfile.preferences;
-  const userThemeChoice = userPreferences.theme_choice;
+async function initializeColourTheme() {
+  const userProfile = AppState.getUserProfile();
 
-  // Set initial theme according to local storage
-  if (userThemeChoice === "dark") {
+  // Set initial theme on pop-up load according to local storage
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  if (userProfile.preferences.theme_choice === "dark") {
     darkModeToggle.checked = true;
     applyTheme("dark");
   } else {
@@ -1042,8 +1041,10 @@ async function initializeColourTheme(userProfile) {
     applyTheme("light");
   }
 
-  // Add event listener for toggle
+  // Add event listener for user to toggle light/dark mode
   darkModeToggle.addEventListener("change", async () => {
+    const userProfile = AppState.getUserProfile();
+    const userPreferences = userProfile.preferences;
     const newThemeChoice = darkModeToggle.checked ? "dark" : "light";
     const updatedUserProfile = {
       ...userProfile,
