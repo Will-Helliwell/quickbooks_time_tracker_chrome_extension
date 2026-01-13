@@ -774,7 +774,11 @@ function setupJobcodeTimeAssignmentEditing() {
         : null;
 
       try {
-        await updateSecondsAssigned(jobcodeId, newValue);
+        const updatedUserProfile = await updateSecondsAssigned(
+          jobcodeId,
+          newValue
+        ); // update local storage
+        AppState.setUserProfile(updatedUserProfile); // update AppState
 
         // Find the job row container using the jobcode ID
         const jobRow = document.querySelector(

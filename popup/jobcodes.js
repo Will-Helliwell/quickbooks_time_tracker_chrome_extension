@@ -25,7 +25,7 @@ export async function updateJobcodesAndTimesheets() {
  * @param {string} jobcodeId - The ID of the job code to update.
  * @param {number|null} secondsAssigned - The number of seconds to assign to the job code.
  *                                         Use `null` to indicate no limit.
- * @returns {Promise<boolean>} A promise that resolves to `true` if the job code was updated successfully,
+ * @returns {Promise<boolean>} A promise that resolves to the updated userProfile if the job code was updated successfully,
  *                             or `false` if the job code does not exist in storage.
  *
  * @throws {Error} If there is an issue retrieving the login details or accessing storage.
@@ -43,10 +43,12 @@ export async function updateSecondsAssigned(jobcodeId, secondsAssigned) {
   return new Promise((resolve) => {
     chrome.storage.local.get("userProfiles", (data) => {
       const userProfiles = data.userProfiles || {};
-      const jobcodes = userProfiles[currentUserId]?.jobcodes || {};
+      const userProfile = userProfiles[currentUserId];
+      const jobcodes = userProfile?.jobcodes || {};
 
       if (jobcodes[jobcodeId]) {
         jobcodes[jobcodeId].seconds_assigned = secondsAssigned;
+        userProfile.jobcodes = jobcodes;
 
         chrome.storage.local.set({
           userProfiles: {
@@ -57,7 +59,7 @@ export async function updateSecondsAssigned(jobcodeId, secondsAssigned) {
             },
           },
         });
-        resolve(true);
+        resolve(userProfile);
       } else {
         resolve(false);
       }
