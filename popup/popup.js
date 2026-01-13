@@ -1067,6 +1067,8 @@ async function initializeColourTheme() {
  * @param {Object} userProfile - The user profile containing preferences
  */
 async function initializeTimeDisplayFormat() {
+  const userProfile = AppState.getUserProfile();
+  const userPreferences = userProfile.preferences;
   const timeFormatToggle = document.getElementById("time-format-toggle");
   const timeDisplayFormat = userPreferences.time_display_format || "h:m:s";
 
