@@ -5,6 +5,7 @@ import {
   getUserProfileFromStorage,
   loadOrFetchUserProfile,
   overwriteUserProfileInStorage,
+  getCurrentUserProfile,
 } from "/popup/user.js";
 import {
   updateSecondsAssigned,
@@ -692,7 +693,7 @@ function setupJobcodeTimeAssignmentEditing() {
 
   // Toggle limit checkbox
   document.querySelectorAll(".limit-checkbox").forEach((checkbox) => {
-    checkbox.addEventListener("change", (e) => {
+    checkbox.addEventListener("change", async (e) => {
       const inputContainer = e.target
         .closest(".edit-form")
         .querySelector(".limit-input-container");
@@ -702,7 +703,7 @@ function setupJobcodeTimeAssignmentEditing() {
         const editForm = e.target.closest(".edit-form");
 
         // Get user's time format preference to focus on the correct input
-        const userProfile = AppState.getUserProfile();
+        const userProfile = await getCurrentUserProfile();
         const timeDisplayFormat =
           userProfile.preferences.time_display_format || "h:m:s";
 
