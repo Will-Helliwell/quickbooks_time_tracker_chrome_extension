@@ -901,7 +901,7 @@ function setupFavoriteButtons() {
     button.addEventListener("click", async (e) => {
       e.stopPropagation();
       const jobcodeId = button.getAttribute("data-jobcode-id");
-      const userProfile = AppState.getUserProfile();
+      const userProfile = await getCurrentUserProfile();
 
       if (!userProfile) return;
 
@@ -952,7 +952,7 @@ function setupFavoriteButtons() {
 function setupFavoritesToggle() {
   const toggle = document.getElementById("favorites-toggle");
   toggle.addEventListener("change", async () => {
-    const userProfile = AppState.getUserProfile();
+    const userProfile = await getCurrentUserProfile();
 
     if (!userProfile) return;
 
@@ -976,8 +976,8 @@ function setupFavoritesToggle() {
 
 function setupClientSearch() {
   const searchInput = document.getElementById("client-search");
-  searchInput.addEventListener("input", () => {
-    const userProfile = AppState.getUserProfile();
+  searchInput.addEventListener("input", async () => {
+    const userProfile = await getCurrentUserProfile();
     const searchTerm = searchInput.value;
 
     if (userProfile) {
@@ -1030,7 +1030,7 @@ async function updateActiveRecordingUIWithLatestUserProfile() {
  * @returns {Promise<void>}
  */
 async function initializeColourTheme() {
-  const userProfile = AppState.getUserProfile();
+  const userProfile = await getCurrentUserProfile();
 
   // Set initial theme on pop-up load according to local storage
   const darkModeToggle = document.getElementById("dark-mode-toggle");
@@ -1044,7 +1044,7 @@ async function initializeColourTheme() {
 
   // Add event listener for user to toggle light/dark mode
   darkModeToggle.addEventListener("change", async () => {
-    const userProfile = AppState.getUserProfile();
+    const userProfile = await getCurrentUserProfile();
     const userPreferences = userProfile.preferences;
     const newThemeChoice = darkModeToggle.checked ? "dark" : "light";
     const updatedUserProfile = {
@@ -1068,7 +1068,7 @@ async function initializeColourTheme() {
  * @param {Object} userProfile - The user profile containing preferences
  */
 async function initializeTimeDisplayFormat() {
-  const userProfile = AppState.getUserProfile();
+  const userProfile = await getCurrentUserProfile();
   const userPreferences = userProfile.preferences;
   const timeFormatToggle = document.getElementById("time-format-toggle");
   const timeDisplayFormat = userPreferences.time_display_format || "h:m:s";
@@ -1081,7 +1081,7 @@ async function initializeTimeDisplayFormat() {
 
   // Add event listener for toggle
   timeFormatToggle.addEventListener("change", async () => {
-    const userProfile = AppState.getUserProfile();
+    const userProfile = await getCurrentUserProfile();
     const userPreferences = userProfile.preferences;
     const newFormat = timeFormatToggle.checked ? "hours_decimal" : "h:m:s";
     const updatedUserProfile = {
@@ -1213,8 +1213,8 @@ function hideMyClientsView() {
   hideTabs();
 }
 
-function showClientInfoView(jobcodeId) {
-  const userProfile = AppState.getUserProfile();
+async function showClientInfoView(jobcodeId) {
+  const userProfile = await getCurrentUserProfile();
 
   // Get the client name from the jobcode
   const jobcode = userProfile.jobcodes[jobcodeId];
@@ -1248,10 +1248,10 @@ function hideClientInfoView() {
   jobcodeDetailScreen.classList.add("hidden");
 }
 
-function showJobcodeDetailView(jobcodeId) {
+async function showJobcodeDetailView(jobcodeId) {
   hideAllTabContent();
   hideMyClientsView();
-  showClientInfoView(jobcodeId);
+  await showClientInfoView(jobcodeId);
 }
 
 // **
