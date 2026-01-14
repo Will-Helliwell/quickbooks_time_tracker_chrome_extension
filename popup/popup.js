@@ -907,35 +907,21 @@ function setupFavoriteButtons() {
       const jobcodes = userProfile.jobcodes || {};
 
       if (jobcodes[jobcodeId]) {
+        // Toggle the favorite state
         jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
 
-        // Update local storage
-        const currentLoginDetails = await getLoginDetailsFromLocalStorage();
-        const currentUserId = currentLoginDetails.currentUserId;
+        // Create updated user profile
+        const updatedUserProfile = {
+          ...userProfile,
+          jobcodes,
+        };
 
-        chrome.storage.local.get("userProfiles", (data) => {
-          const userProfiles = data.userProfiles || {};
-          chrome.storage.local.set(
-            {
-              userProfiles: {
-                ...userProfiles,
-                [currentUserId]: {
-                  ...userProfiles[currentUserId],
-                  jobcodes,
-                },
-              },
-            },
-            () => {
-              // Re-render the table to reflect changes
-              const allCLientsTableSearchTerm =
-                document.getElementById("client-search").value;
-              renderAllClientsTable(
-                updatedUserProfile,
-                allCLientsTableSearchTerm
-              );
-            }
-          );
-        });
+        // Save to storage
+        await overwriteUserProfileInStorage(updatedUserProfile);
+
+        // Re-render the table to reflect changes
+        const searchTerm = document.getElementById("client-search").value;
+        renderAllClientsTable(updatedUserProfile, searchTerm);
       }
     });
   });
