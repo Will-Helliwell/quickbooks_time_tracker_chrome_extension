@@ -31,7 +31,6 @@ import {
   formatStartEndTime,
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
-import { AppState } from "/shared/appState.js";
 import {
   loadLastTypedClientId,
   setupClientIdSessionStorage,
@@ -80,7 +79,6 @@ async function handlePopupOpen() {
     loginScreen.classList.add("hidden");
     mainContent.classList.remove("hidden");
     userProfile = await loadOrFetchUserProfile(loginDetails.currentUserId);
-    AppState.setUserProfile(userProfile);
     await updateUIWithUserProfile(userProfile);
   }
 
@@ -105,7 +103,6 @@ async function handlePopupOpen() {
       userProfile = await updateUserProfileFromAPI();
       await updateJobcodesAndTimesheets();
       userProfile = await getUserProfileFromStorage(userProfile.id); // refresh user profile in memory in case jobcodes/timesheets have updated
-      AppState.setUserProfile(userProfile);
       await updateUIWithUserProfile(userProfile);
     }
   });
@@ -775,11 +772,8 @@ function setupJobcodeTimeAssignmentEditing() {
         : null;
 
       try {
-        const updatedUserProfile = await updateSecondsAssigned(
-          jobcodeId,
-          newValue
-        ); // update local storage
-        AppState.setUserProfile(updatedUserProfile); // update AppState
+        // update local storage
+        await updateSecondsAssigned(jobcodeId, newValue);
 
         // Find the job row container using the jobcode ID
         const jobRow = document.querySelector(
@@ -910,13 +904,6 @@ function setupFavoriteButtons() {
       if (jobcodes[jobcodeId]) {
         jobcodes[jobcodeId].is_favourite = !jobcodes[jobcodeId].is_favourite;
 
-        // Update AppState
-        const updatedUserProfile = {
-          ...userProfile,
-          jobcodes,
-        };
-        AppState.setUserProfile(updatedUserProfile);
-
         // Update local storage
         const currentLoginDetails = await getLoginDetailsFromLocalStorage();
         const currentUserId = currentLoginDetails.currentUserId;
@@ -965,7 +952,6 @@ function setupFavoritesToggle() {
         show_favorites_only: userPreferenceShowFavoritesOnly,
       },
     };
-    AppState.setUserProfile(updatedUserProfile);
     await overwriteUserProfileInStorage(updatedUserProfile);
 
     const allCLientsTableSearchTerm =
@@ -1054,7 +1040,6 @@ async function initializeColourTheme() {
         theme_choice: newThemeChoice,
       },
     };
-    AppState.setUserProfile(updatedUserProfile);
     overwriteUserProfileInStorage(updatedUserProfile);
     applyTheme(newThemeChoice);
   });
@@ -1092,7 +1077,6 @@ async function initializeTimeDisplayFormat() {
       },
     };
 
-    AppState.setUserProfile(updatedUserProfile);
     toggleTimeDisplayFormat(newFormat);
     await overwriteUserProfileInStorage(updatedUserProfile);
     // Trigger background polling to update badge display format
