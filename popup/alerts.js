@@ -1,9 +1,8 @@
-import { overwriteUserProfileInStorage } from "/popup/user.js";
+import { overwriteUserProfileInStorage, getCurrentUserProfile } from "/popup/user.js";
 import {
   formatSecondsToTime,
   formatSecondsToHoursDecimal,
 } from "/shared/formatting.js";
-import { AppState } from "/shared/appState.js";
 
 // Function to add a new alert
 export async function addNewAlert() {
@@ -14,7 +13,7 @@ export async function addNewAlert() {
   const newAlertSelectedClient = document.getElementById("alert-client").value;
 
   // Get user's time format preference
-  const userProfile = AppState.getUserProfile();
+  const userProfile = await getCurrentUserProfile();
   const userPreferenceTimeFormat =
     userProfile.preferences.time_display_format || "h:m:s";
 
@@ -308,7 +307,8 @@ function createAlertElement(alert, userProfile) {
 
   // Delete button
   const deleteButton = document.createElement("button");
-  deleteButton.className = "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 px-3 py-2";
+  deleteButton.className =
+    "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 px-3 py-2";
   deleteButton.innerHTML = "&times;";
   deleteButton.onclick = async () => {
     // Remove from DOM

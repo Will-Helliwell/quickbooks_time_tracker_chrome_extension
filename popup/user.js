@@ -31,6 +31,29 @@ export async function getUserProfileFromStorage(userProfileId) {
 }
 
 /**
+ * Retrieves the current logged-in user's profile from local storage.
+ * This is a convenience wrapper that combines getting login details and the user profile.
+ *
+ * @returns {Promise<Object|null>} A promise resolving to the current user's profile object if found, otherwise null.
+ * @throws {Error} If no user is currently logged in.
+ */
+export async function getCurrentUserProfile() {
+  // First get the current user ID from login details
+  const loginDetails = await new Promise((resolve) => {
+    chrome.storage.local.get("loginDetails", (result) => {
+      resolve(result.loginDetails || {});
+    });
+  });
+
+  if (!loginDetails.currentUserId) {
+    throw new Error('No user currently logged in');
+  }
+
+  // Then get the user profile for that ID
+  return await getUserProfileFromStorage(loginDetails.currentUserId);
+}
+
+/**
  * Fetches the user profile by first checking local storage.
  * If no stored profile is available, it fetches the latest user data from QuickBooks Time and stores the data for future use.
  *
