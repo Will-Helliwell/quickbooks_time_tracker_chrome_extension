@@ -180,7 +180,12 @@ async function updateUIWithUserProfile(userProfile) {
   populateAlerts(userProfile);
   populateClientSelector(userProfile);
 
-  renderAllClientsTable(userProfile);
+  // Load and apply the saved search term
+  const savedSearchTerm = userProfile.preferences.search_term || "";
+  const searchInput = document.getElementById("client-search");
+  searchInput.value = savedSearchTerm;
+
+  renderAllClientsTable(userProfile, savedSearchTerm);
   setupFavoritesToggle();
   setupClientSearch();
 }
@@ -962,12 +967,28 @@ function setupFavoritesToggle() {
 
 function setupClientSearch() {
   const searchInput = document.getElementById("client-search");
+  let debounceTimer;
+
   searchInput.addEventListener("input", async () => {
-    const userProfile = await getCurrentUserProfile();
     const searchTerm = searchInput.value;
+    const userProfile = await getCurrentUserProfile();
 
     if (userProfile) {
+      // Render immediately for responsive UI
       renderAllClientsTable(userProfile, searchTerm);
+
+      // Debounce the save to storage (wait 300ms after user stops typing)
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        const updatedUserProfile = {
+          ...userProfile,
+          preferences: {
+            ...userProfile.preferences,
+            search_term: searchTerm,
+          },
+        };
+        await overwriteUserProfileInStorage(updatedUserProfile);
+      }, 300);
     }
   });
 }

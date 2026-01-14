@@ -75,6 +75,7 @@ export async function updateUserProfileFromAPI() {
     userProfileAPI.preferences.theme_choice = "light"; // add theme_choice to the user profile
     userProfileAPI.preferences.time_display_format = "h:m:s"; // default time format
     userProfileAPI.preferences.alerts = []; // initialize alerts as an array
+    userProfileAPI.preferences.search_term = ""; // default search term (empty)
     overwriteUserProfileInStorage(userProfileAPI);
     return userProfileAPI;
   }
