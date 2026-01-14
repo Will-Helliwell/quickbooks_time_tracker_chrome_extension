@@ -34,7 +34,8 @@ This will watch for changes in your HTML/JS files and automatically rebuild the 
 
 ## Production Deployment
 
-1. Create a production build:
+1. Update the version in `package.json` (see below notes).
+2. Create a production build:
 ```bash
 npm run package
 ```
